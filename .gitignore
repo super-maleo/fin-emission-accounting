@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.edgeone/
+.vercel/
+data/
+Materials/
+.DS_Store
+.env
+.env.*
+*.log
