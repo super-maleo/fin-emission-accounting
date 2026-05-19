@@ -53,6 +53,7 @@ import type {
   SecurityQueryCard,
   UserDashboardResponse,
 } from "./types";
+import { staticApi } from "./staticApi";
 
 type AccountMode = "user" | "admin";
 type UserView = "dashboard" | "query" | "compose" | "cockpit";
@@ -64,9 +65,16 @@ const SOURCE_COLORS = ["#79b600", "#b8d957", "#d5e89b", "#8aa07b"];
 const QUALITY_COLORS = ["#4d8d00", "#79b600", "#b8d957", "#d7e5bf", "#eef6dd"];
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  return response.json() as Promise<T>;
+  try {
+    const response = await fetch(url, init);
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (window.location.hostname.endsWith("github.io")) {
+      return staticApi<T>(url, init);
+    }
+    throw error;
+  }
 }
 
 function formatNumber(value: number, digits = 2) {
