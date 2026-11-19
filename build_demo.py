@@ -113,6 +113,110 @@ css = (ROOT / "styles.css").read_text() + """
   .sidebarCollapsed .sidebar .navLabel{display:inline}
   .taskSearch input{width:200px}
 }
+
+/* role experience */
+body[data-top="首页"] .sidebar{display:none}
+.reportPreview{background:#fff;border:1px solid var(--line);border-top:5px solid var(--green);border-radius:8px;padding:26px 28px;margin-bottom:16px}
+.reportCover .coverLogo{font-weight:900;font-size:22px}
+.reportCover h2{margin:12px 0 4px;font-size:22px}.reportCover p{margin:0 0 16px;color:var(--sub)}
+.reportFacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;margin:0 0 8px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reportFacts dt{color:var(--sub);font-size:12px}.reportFacts dd{margin:3px 0 0}
+.reportPreview h3{font-size:15px;margin:20px 0 8px;border-left:3px solid var(--green);padding-left:8px}
+.reportPreview table{width:100%;border-collapse:collapse}.reportPreview th,.reportPreview td{padding:8px;border-bottom:1px solid #EEF2F6;text-align:left;font-size:13px}
+.reportPreview th{background:var(--greenSoft);color:#405124}
+@media(max-width:760px){.reportFacts{grid-template-columns:1fr}.reportPreview{padding:18px}}
+body:not([data-role="管理者"]) #content button[onclick*="editLcaModel"],body:not([data-role="管理者"]) #content button[onclick*="removeLcaLine"]{display:none}
+.supplierProgress .flowSteps li:not(.now):not(.back){font-size:0;padding-right:14px}
+.supplierProgress .flowSteps{flex-wrap:nowrap}
+body[data-top="首页"] #sidebarToggle{visibility:hidden}
+#identitySelect{height:30px;border:0;background:transparent;font-weight:700;color:#344054;max-width:180px}
+.right .pill{gap:6px}
+.welcome{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.welcome h1{margin:0 0 6px;font-size:24px}
+.welcome p{margin:0;color:var(--sub);font-size:13px}
+.statRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.statTile{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:6px;min-width:0}
+.statTile.clickable{cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.statTile.clickable:hover,.statTile.clickable:focus{border-color:#B9DB86;box-shadow:0 4px 14px rgba(77,127,23,.10);outline:0}
+.statTile span{color:var(--sub);font-size:12px}
+.statTile b{font-size:26px;line-height:1.1;font-weight:700;color:#101828;overflow-wrap:anywhere}
+.statTile small{color:var(--sub);font-size:12px;overflow-wrap:anywhere}
+.homeGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+.homeGrid.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+.homeGrid>div{display:grid;gap:16px;min-width:0}
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.panelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.panelHead h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+.panelHead h3 em{font-style:normal;background:var(--greenLight);color:var(--green3);border-radius:10px;padding:1px 8px;font-size:12px}
+.linkBtn{border:0;background:none;color:var(--green3);cursor:pointer;font-size:13px}
+.todoList,.feed,.supplierProgress{list-style:none;margin:0;padding:0}
+.todoList li{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid #EEF2F6}
+.todoList li:first-child{border-top:0}
+.todoMain{display:grid;gap:3px;min-width:0}
+.todoMain b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.todoMain small{color:var(--sub);font-size:12px}
+.todoMain em{font-style:normal;color:#936B15;font-size:12px;background:#FFF7E6;padding:3px 6px;border-radius:4px;justify-self:start}
+.todoTag{display:inline-block;text-align:center;font-size:12px;padding:3px 6px;border-radius:4px;background:#F2F4F7;color:#475467;white-space:nowrap}
+.todoTag.warn{background:#FFF4DE;color:#A66A00}.todoTag.bad{background:#FDECEC;color:var(--red)}.todoTag.ok{background:var(--greenLight);color:var(--green3)}
+.todoEmpty{padding:18px 0;color:var(--sub);text-align:center;font-size:13px}
+.feed li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:8px 0;border-top:1px solid #EEF2F6;font-size:13px}
+.feed li:first-child{border-top:0}
+.feed time{grid-row:span 2;color:var(--sub);font-size:12px;white-space:nowrap}
+.feed span{color:var(--green3);font-size:12px}
+.quickLinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.quickLinks button{display:grid;grid-template-columns:28px 1fr;gap:2px 8px;text-align:left;border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px;cursor:pointer}
+.quickLinks button:hover{border-color:#B9DB86;background:var(--greenSoft)}
+.quickLinks span{grid-row:span 2;font-size:18px;color:var(--green3);align-self:center;text-align:center}
+.quickLinks b{font-size:13px;font-weight:600}.quickLinks small{color:var(--sub);font-size:12px}
+.progressList,.meterList{display:grid;gap:4px}
+.progressRow,.meterRow{display:grid;grid-template-columns:88px minmax(40px,1fr) 92px;gap:10px;align-items:center;border:0;background:none;padding:8px 4px;border-radius:5px;cursor:pointer;text-align:left;width:100%}
+.meterRow{grid-template-columns:minmax(90px,170px) minmax(40px,1fr) 118px}
+.progressRow:hover,.meterRow:hover{background:var(--greenSoft)}
+.progressTrack,.meterTrack{height:8px;background:#EEF1F4;border-radius:4px;overflow:hidden}
+.progressTrack i,.meterTrack i{display:block;height:100%;background:var(--green);border-radius:4px;transition:width .4s}
+.progressValue,.meterValue{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.progressValue small,.meterValue small,.meterLabel small{display:block;color:var(--sub);font-size:11px}
+.meterLabel{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flowSteps{display:flex;list-style:none;margin:6px 0 14px;padding:0;gap:0;counter-reset:step;flex-wrap:wrap}
+.flowSteps li{display:flex;align-items:center;gap:6px;font-size:12px;color:#98A2B3;padding-right:22px;position:relative}
+.flowSteps li:not(:last-child):after{content:"";position:absolute;right:6px;top:50%;width:10px;height:1px;background:#D0D5DD}
+.flowSteps i{width:20px;height:20px;border-radius:50%;border:1px solid #D0D5DD;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;background:#fff}
+.flowSteps li.done{color:var(--green3)}.flowSteps li.done i{background:var(--green);border-color:var(--green);color:#fff}
+.flowSteps li.now{color:#101828;font-weight:600}.flowSteps li.now i{border-color:var(--green);color:var(--green3)}
+.flowSteps li.back{color:var(--red);font-weight:600}.flowSteps li.back i{border-color:var(--red);color:var(--red)}
+.calcPreview{margin:4px 0 8px;padding:10px 12px;background:var(--greenSoft);border:1px solid #E1EFCC;border-radius:6px;color:#405124;font-size:13px}
+.supplierTask{background:#fff;border:1px solid var(--line);border-top:4px solid var(--green);border-radius:8px;padding:18px 20px;margin-bottom:16px}
+.supplierTaskHead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.supplierTaskHead h2{margin:8px 0 4px;font-size:20px}.supplierTaskHead p{margin:0 0 10px;color:var(--sub);font-size:13px}
+.btn.big{height:40px;padding:0 20px;font-size:14px}
+.factGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:8px 0 0}
+.factGrid div{background:#F9FAFB;border-radius:6px;padding:10px 12px}
+.factGrid dt{color:var(--sub);font-size:12px}.factGrid dd{margin:4px 0 0;font-weight:600}
+.bigFigure b{font-size:30px;font-weight:700}.bigFigure span{margin-left:8px;color:var(--sub)}
+.muted{color:var(--sub);font-size:13px}
+.segTabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.segTabs button{border:1px solid var(--line);background:#fff;border-radius:16px;padding:6px 14px;cursor:pointer;font-size:13px}
+.segTabs button.active{background:var(--greenLight);border-color:#C7E39C;color:var(--green3);font-weight:600}
+.segTabs em{font-style:normal;color:var(--sub);margin-left:2px}
+.scopeStack{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:-4px 0 16px;gap:2px}
+.scopeStack i{cursor:pointer;min-width:3px}
+.supplierProgress>li{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #EEF2F6}
+.supplierProgress>li:first-child{border-top:0}
+.supplierProgress>li>div{display:grid;gap:3px}.supplierProgress small{color:var(--sub);font-size:12px}
+.supplierProgress .flowSteps{margin:0}
+.emptyCell{text-align:center;color:var(--sub);padding:28px}
+.rowActions{white-space:nowrap}.rowActions .btn+.btn{margin-left:6px}
+.taskTable td small{display:block}
+@media(max-width:1100px){.homeGrid,.homeGrid.even{grid-template-columns:1fr}.supplierProgress>li{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .statRow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .factGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .supplierTaskHead{display:block}.supplierTaskHead .btn{margin-top:8px}
+  .todoList li{grid-template-columns:54px minmax(0,1fr)}.todoList li .btn{grid-column:2;justify-self:start}
+  .quickLinks{grid-template-columns:1fr}
+  .meterRow{grid-template-columns:minmax(80px,120px) minmax(30px,1fr) 90px}
+  #identitySelect{max-width:120px}
+}
 """
 script = "\n".join([
     f"const demoSeed = {seed_json};",
@@ -123,6 +227,7 @@ script = "\n".join([
     (ROOT / "scenario-data.js").read_text(),
     (ROOT / "workflow-ui.js").read_text(),
     (ROOT / "lifecycle-sankey.js").read_text(),
+    (ROOT / "role-home.js").read_text(),
     """
 async function startDemo() {
   if (location.protocol.startsWith("http")) {
