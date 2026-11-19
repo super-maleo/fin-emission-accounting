@@ -144,7 +144,9 @@ renderSide = function () {
     const label=sideLabel(group);
     return '<div class="group"><button class="group-btn '+(active?'active':'')+'" title="'+label+
       '" onclick="go(\''+state.top+'\',\''+group+'\')"><span class="navMark">'+
-      ({"首页总览":"⌂","组织碳看板":"▦","数据填报":"▤","盘查准备":"⚙","核算分析":"▥","报告中心":"▧","供应链看板":"▦","供应商管理":"☷","供应商协同任务":"▤","供应链因子中心":"◈","供应链分析与报告":"▧"}[group]||"◇")+
+      ({"首页总览":"⌂","组织碳看板":"▦","数据填报":"▤","盘查准备":"⚙","核算分析":"▥","报告中心":"▧","供应链看板":"▦","供应商管理":"☷","供应商协同任务":"▤","供应链因子中心":"◈","供应链分析与报告":"▧",
+        "产品碳足迹看板":"▦","LCA建模与核算":"◈","产品数据管理":"☷","产品碳足迹分析":"▥","产品报告中心":"▧","碳足迹认证管理":"✓",
+        "因子库管理":"◈","指标模板配置":"▤","系统设置":"⚙","系统说明":"?"}[group]||"◇")+
       '</span><span class="navLabel">'+label+'</span></button>'+
       (active&&visible.length>1?'<div class="sub">'+visible.map(page=>'<button class="'+(state.page===page?'active':'')+
         '" onclick="go(\''+state.top+'\',\''+group+'\',\''+page+'\')">'+page+'</button>').join("")+'</div>':'')+'</div>';
