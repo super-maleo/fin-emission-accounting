@@ -361,6 +361,55 @@ td.wrapCell{white-space:normal;min-width:180px;max-width:320px;line-height:1.6}
   .quoteFacts{grid-template-columns:repeat(2,1fr)}
   .card>.tableWrap{margin:0 -16px -16px}
 }
+/* 年度、目标、履约 */
+#yearSelect{height:30px;border:1px solid #D0D5DD;border-radius:6px;padding:0 8px;background:#fff;color:#1F2937;font-size:13px;font-weight:600;margin-left:8px}
+body.historyMode #yearSelect{border-color:#E9A23B;background:#FFF8EB;color:#8A5300}
+.historyBanner{display:flex;align-items:center;gap:12px;background:#FFF8EB;border:1px solid #F5D9A8;border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.historyBanner div{flex:1;display:grid;gap:2px}.historyBanner small{color:#8A5300}
+.goalStrip{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(320px,1fr);gap:16px;margin-bottom:16px}
+.goalStrip>.panel{margin-bottom:0}
+.goalList{display:grid;gap:8px}
+.goalItem{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(80px,1fr) auto;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
+.goalItem.static{cursor:default}
+.goalItem:not(.static):hover{border-color:#B9DB86;background:var(--greenSoft)}
+.goalItem span:first-child{display:grid;gap:2px;min-width:0}.goalItem small{color:var(--sub);font-size:12px}
+.goalTrack{height:8px;border-radius:4px;background:#EEF1F4;overflow:hidden}.goalTrack i{display:block;height:100%;background:var(--green);border-radius:4px}
+.etsMini .etsMiniBody{display:flex;gap:16px;align-items:center;margin-bottom:12px}
+.countdown{display:flex;align-items:center;gap:8px;background:var(--greenSoft);border-radius:8px;padding:10px 14px}
+.countdown b{font-size:30px;line-height:1;color:var(--green3)}.countdown span{font-size:12px;color:var(--sub);line-height:1.4}
+.etsMini .miniFacts{flex:1;margin:0}
+.okText{color:#26890D!important}.badText{color:#D92D20!important}
+.targetCard .actions{display:flex;gap:8px}
+.targetFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.targetFacts div{background:#F8FAF5;border-radius:6px;padding:10px 12px}.targetFacts .wide{grid-column:1/-1}
+.targetFacts dt{font-size:12px;color:var(--sub)}.targetFacts dd{margin:4px 0 0;font-weight:600}
+.pathTable td:first-child{font-weight:600;white-space:nowrap}
+.trackChart{width:100%;height:auto;display:block;margin:4px 0}
+.chartLegend{display:flex;gap:16px;font-size:12px;color:var(--sub);margin-bottom:8px}
+.chartLegend i{display:inline-block;width:18px;height:0;border-top:2.5px solid #26890D;vertical-align:middle;margin-right:6px}
+.chartLegend i.dash{border-top:2px dashed #98A2B3}
+.yearCompare{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.yearCompare div{display:grid;gap:4px;background:#F8FAF5;border-radius:6px;padding:10px 12px}.yearCompare span{font-size:12px;color:var(--sub)}.yearCompare b{font-size:18px}
+.yearBars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.yearBars button{display:grid;justify-items:center;gap:4px;border:1px solid transparent;background:none;border-radius:8px;padding:8px 4px;cursor:pointer;font:inherit}
+.yearBars button.active{border-color:#C7E39C;background:var(--greenSoft)}
+.yearBar{height:72px;width:28px;display:flex;align-items:flex-end;background:#F2F4F7;border-radius:4px;overflow:hidden}.yearBar i{display:block;width:100%;background:var(--green)}
+.yearBars small{color:var(--sub)}
+.etsSteps{margin:4px 0 14px}
+.coverBar{height:10px;border-radius:5px;background:#EEF1F4;overflow:hidden;margin-bottom:8px}.coverBar span{display:block;height:100%;background:linear-gradient(90deg,#86BC25,#26890D)}
+.planList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.planList li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.planList small{grid-column:1;color:var(--sub);font-size:12px}.planList .btn{grid-row:1/3;grid-column:2}
+.miniFacts.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.muted.small,.small{font-size:12px}
+.panel>.actions{display:flex;gap:8px;margin-top:10px}
+@media(max-width:860px){
+  .goalStrip{grid-template-columns:1fr}
+  .targetFacts,.yearCompare{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .goalItem{grid-template-columns:1fr auto}.goalItem .goalTrack{grid-column:1/-1;grid-row:2}
+  #yearSelect{margin-left:4px;max-width:96px}
+  .historyBanner{flex-wrap:wrap}
+}
 """
 script = "\n".join([
     f"const demoSeed = {seed_json};",
@@ -372,6 +421,7 @@ script = "\n".join([
     (ROOT / "workflow-ui.js").read_text(),
     (ROOT / "lifecycle-sankey.js").read_text(),
     (ROOT / "role-home.js").read_text(),
+    (ROOT / "year-goal-ets.js").read_text(),
     """
 async function startDemo() {
   if (location.protocol.startsWith("http")) {
