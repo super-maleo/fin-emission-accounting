@@ -292,7 +292,7 @@ function supplierHome() {
       {kicker:"申报数据",title:fmt(row.total,3)+" tCO₂e",text:"活动量 "+fmt(row.qty,0)+" "+textHtml(row.unit)+" · 单位碳排 "+row.unitCarbon+" kgCO₂e",button:"填报任务",action:"go('供应链碳排放','供应商协同任务')",art:"wind"}
     ],widget,
     [{icon:"▤",label:"我的填报任务",action:"go('供应链碳排放','供应商协同任务')"},{icon:"◈",label:"已批准数据",action:"go('供应链碳排放','供应链因子中心')"},
-      {icon:"?",label:"填报说明",action:"go('帮助中心')"}]);
+      {icon:"?",label:"常见问题",action:"go('帮助中心','常见问题')"}]);
 }
 
 // ---------- 组织碳看板：只做排放分析，不重复任务列表 ----------

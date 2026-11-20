@@ -544,8 +544,7 @@ function etsTabs() {
     return '<button class="'+(year===sel?'active':'')+'" onclick="setEtsYear('+year+')">'+year+' 年度 <em>'+status.label+'</em></button>';}).join("")+'</div>';
 }
 function etsHead(title,actions="",tabs=true) {
-  return pageHead(title,actions,"碳履约 / "+title)+
-    '<div class="taskContext"><span>'+ETS_ENTITY.name+'</span><span>账户 '+ETS_ENTITY.account+'</span><span>'+ETS_ENTITY.industry+'</span><span>'+ETS_ENTITY.unit+'</span></div>'+(tabs?etsTabs():'');
+  return pageHead(title,actions,"碳履约 / "+title)+(tabs?etsTabs():'');
 }
 function etsFlow(year) {
   const calc=etsCalc(year),cycle=calc.cycle,final=cycle.alloc.final;

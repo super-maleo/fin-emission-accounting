@@ -5,3 +5,6 @@ const html = (await readFile(source, 'utf8')).replaceAll('location.protocol.star
 await mkdir(new URL('./dist/', import.meta.url), { recursive: true });
 await writeFile(new URL('./dist/index.html', import.meta.url), html);
 console.log('Public HTML ready; browser-local persistence enabled.');
+import { cp } from 'node:fs/promises';
+await cp(new URL('../vendor/', import.meta.url), new URL('./dist/vendor/', import.meta.url), { recursive: true });
+console.log('Vendor assets copied.');
