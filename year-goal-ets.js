@@ -4,9 +4,62 @@
 // ---------- 报告年度 ----------
 const REPORT_YEARS = [2023,2024,2025,2026];
 const CURRENT_YEAR = 2026;
-const YEAR_SCALE = {2023:{"1":1.35,"2":1.52,"3":0.86},2024:{"1":1.22,"2":1.34,"3":0.93},2025:{"1":1.08,"2":1.16,"3":0.98}};
-const YEAR_REVENUE = {2023:820,2024:905,2025:968,2026:1030};
+const YEAR_SCALE = {2023:{"1":1.12,"2":1.30,"3":0.86},2024:{"1":1.07,"2":1.18,"3":0.93},2025:{"1":1.03,"2":1.08,"3":0.98}};
+const YEAR_REVENUE = {2023:6200,2024:6650,2025:7020,2026:7450};
+// 热电分公司：燃煤热电联产和厂用电下网，同时是组织盘查的排放源和全国碳市场履约的核算对象
+const CHP_COAL = "燃煤热电联产";
+const CHP_ELEC = "厂用电下网";
+const CHP_PARAMS = {ncv:21.18,cc:0.02634,of:0.98};
+const CHP_COAL_FACTOR = CHP_PARAMS.ncv*CHP_PARAMS.cc*CHP_PARAMS.of*44/12;
+const CHP_HISTORY = {[CHP_COAL]:{2023:99800,2024:97900,2025:101600},[CHP_ELEC]:{2023:3350000,2024:3280000,2025:3210000}};
 const YEAR_CLOSED = {2023:"2024-03-29",2024:"2025-03-28",2025:"2026-03-31"};
+// ---------- 演示企业规模：按大型泵阀装备制造集团（含自备热电）设定 ----------
+directTasks.push(
+  {id:"T-S1-04",org:"嘉兴热电分公司",name:CHP_COAL,unit:"t"},
+  {id:"T-S2-04",org:"嘉兴热电分公司",name:CHP_ELEC,unit:"kWh"}
+);
+const workflowTasksBeforeScale = workflowTasks;
+workflowTasks = function () {
+  return workflowTasksBeforeScale().map(task=>task.id==="T-S1-04"?{...task,owner:"周建华",factor:CHP_COAL_FACTOR,factorLabel:"烟煤 · 发电设施核算指南参数（实测低位发热量）"}:
+    task.id==="T-S2-04"?{...task,owner:"周建华",factor:0.0005703,factorLabel:"全国电网平均排放因子"}:task);
+};
+const SCALE_ENTRIES = {
+  "T-S1-01":{activity:1186000,evidence:"GAS-JX-2026-Q3-021"},
+  "T-S1-02":{activity:86000,evidence:"FUEL-HZ-2026-Q3-008"},
+  "T-S1-03":{activity:85,evidence:"HVAC-2026-CHECK",note:"空调与冷水机组维保补充 R134a 85 kg"},
+  "T-S1-04":{activity:99200,evidence:"MRV-RD-2026-10",status:"通过",note:"1–10 月入厂煤计量 + 11–12 月计划量"},
+  "T-S2-01":{activity:21600000,evidence:"ELE-JX-2026-001"},
+  "T-S2-02":{activity:58000,evidence:"STM-HZ-2026-004"},
+  "T-S2-03":{activity:6500000,evidence:"GEC-2026-019"},
+  "T-S2-04":{activity:3150000,evidence:"ELE-RD-2026-10",status:"通过"}
+};
+const SCALE_RECORDS = {1:58000,2:46000000,3:3600000,4:28500000,5:27000000000};
+const SCALE_SUPPLIERS = {"SC-001":8600000,"SC-002":2100000,"SC-003":9800000,"SC-004":6400000};
+function prepareScale() {
+  if(demo.scaleVersion===3)return;
+  Object.entries(SCALE_ENTRIES).forEach(([id,value])=>{
+    demo.taskEntries[id]={status:"待填报",...demo.taskEntries[id],...value};
+  });
+  demo.records.forEach(row=>{
+    if(!SCALE_RECORDS[row.id])return;
+    row.activity_value=SCALE_RECORDS[row.id];
+    if(demo.taskEntries["REC-"+row.id])demo.taskEntries["REC-"+row.id].activity=row.activity_value;
+  });
+  const resize=row=>{if(row&&SCALE_SUPPLIERS[row.id]){row.qty=SCALE_SUPPLIERS[row.id];row.total=+(row.qty*row.unitCarbon/1000).toFixed(3);}};
+  supplyScope3Items.forEach(resize);
+  Object.values(demo.approvedSuppliers||{}).forEach(resize);
+  Object.values(demo.supplierVersionHistory||{}).forEach(list=>list.forEach(resize));
+  demo.supplierRows=[...supplyScope3Items];
+  delete demo.yearArchive;delete demo.targets;delete demo.ets;
+  demo.scaleVersion=3;
+  persistDemo();
+}
+const prepareWorkflowBeforeScale = prepareWorkflow;
+prepareWorkflow = function () {
+  prepareWorkflowBeforeScale();
+  prepareScale();
+};
+
 let reportYear = CURRENT_YEAR;
 try {
   const savedYear=Number(localStorage.getItem("carbon-demo-year"));
@@ -17,11 +70,24 @@ let etsYear = reportYear===CURRENT_YEAR?2025:reportYear;
 function isHistoryYear(){return reportYear!==CURRENT_YEAR;}
 function yearText(year=reportYear){return year===CURRENT_YEAR?year+" 年度（盘查进行中）":year+" 年度（已关账）";}
 
-const approvedDetailLive = approvedDetail;
+let liveCalculationRef = null;
+function approvedDetailLive() {
+  return (liveCalculationRef||backendState.calculation)?.detail||[];
+}
+// 历史年度以完整的填报口径为基础（含当年尚未审核的任务），按年度系数和热电实际量生成
+function baselineRows() {
+  return workflowTasks().flatMap(task=>{
+    const entry=taskEntry(task);
+    const activity=Number(entry.activity);
+    if(!(activity>0))return [];
+    return [{scope:task.scope,category_code:task.scope==="3"?task.category:"S"+task.scope,source_name:task.name,org:task.locked?demoOrg:task.org,
+      activity_value:activity,activity_unit:task.unit,factor_value:task.factor,gwp_value:1,emission_tco2e:activity*task.factor}];
+  });
+}
 function yearArchive() {
-  if(!demo.yearArchive?.length) {
-    const rows=approvedDetailLive();
-    if(rows.length){demo.yearArchive=rows.map(row=>({...row}));persistDemo();}
+  if(!demo.yearArchive?.length&&backendState.ready) {
+    demo.yearArchive=baselineRows();
+    persistDemo();
   }
   return demo.yearArchive||[];
 }
@@ -29,9 +95,9 @@ function detailForYear(year) {
   if(year===CURRENT_YEAR)return approvedDetailLive();
   const scale=YEAR_SCALE[year]||{};
   return yearArchive().map((row,index)=>{
-    const factor=(scale[String(row.scope)]||1)*(1+Math.sin(index*1.7+year)*0.03);
-    return {...row,period:String(year),activity_value:+(row.activity_value*factor).toFixed(2),emission_tco2e:row.emission_tco2e*factor,
-      evidence:year+" 年度归档凭证"};
+    const fixed=CHP_HISTORY[row.source_name]?.[year];
+    const activity=fixed??row.activity_value*(scale[String(row.scope)]||1)*(1+Math.sin(index*1.7+year)*0.02);
+    return {...row,period:String(year),activity_value:+activity.toFixed(2),emission_tco2e:activity*row.factor_value,evidence:year+" 年度归档凭证"};
   });
 }
 approvedDetail = function () {
@@ -54,8 +120,9 @@ function withYearCalculation(fn) {
   if(!isHistoryYear()||!live)return fn();
   yearArchive();
   const detail=detailForYear(reportYear);
+  liveCalculationRef=live;
   backendState.calculation={...live,detail,categories:categoriesFrom(detail),total_emission:detail.reduce((sum,row)=>sum+row.emission_tco2e,0)};
-  try {return fn();} finally {backendState.calculation=live;}
+  try {return fn();} finally {backendState.calculation=live;liveCalculationRef=null;}
 }
 const workflowIssuesLive = workflowIssues;
 workflowIssues = function () {return isHistoryYear()?[]:workflowIssuesLive();};
@@ -132,8 +199,8 @@ homeLayout = function (greet,slides,widget,links) {
 
 // ---------- 减排目标 ----------
 const DEFAULT_TARGETS = {baseYear:2023,items:[
-  {id:"TG-01",name:"范围一+二 绝对量减排",scope:"12",type:"absolute",reduction:42,targetYear:2030,basis:"对齐 SBTi 1.5°C 情景，年均线性减排约 4.2%"},
-  {id:"TG-02",name:"范围三 排放强度下降",scope:"3",type:"intensity",reduction:30,targetYear:2030,basis:"tCO₂e / 百万元营收，覆盖外购商品、运输和产品使用"}
+  {id:"TG-01",name:"范围一+二 排放强度下降",scope:"12",type:"intensity",reduction:35,targetYear:2030,basis:"tCO₂e / 百万元营收。主要路径：热电机组掺烧生物质与煤改气、余热回收、扩大绿电采购"},
+  {id:"TG-02",name:"范围三 排放强度下降",scope:"3",type:"intensity",reduction:25,targetYear:2030,basis:"tCO₂e / 百万元营收。产品使用阶段占范围三 90% 以上，依靠 IE4/IE5 高效电机和变频水泵降低用电"}
 ]};
 function targets() {
   demo.targets ||= structuredClone(DEFAULT_TARGETS);
@@ -153,7 +220,7 @@ function targetPath(target,year) {
   const ratio=Math.min(Math.max((year-baseYear)/(target.targetYear-baseYear),0),1);
   return base*(1-target.reduction/100*ratio);
 }
-function targetDigits(target){return target.type==="intensity"?3:1;}
+function targetDigits(target){const base=targetBase(target);return base>=1000?0:base>=10?1:3;}
 function targetStatus(target,year=CURRENT_YEAR) {
   const actual=targetActual(target,year),path=targetPath(target,year);
   const gap=path?(actual-path)/path*100:0;
@@ -238,7 +305,7 @@ function targetTrackPage() {
           statTile(CURRENT_YEAR+" 路径值",fmt(status.path,targetDigits(target)),"目标 "+target.targetYear+" 年下降 "+target.reduction+"%")+
           statTile("与路径差距",(status.gap>0?"+":"")+status.gap.toFixed(1)+"%",status.ahead?"优于路径":"需额外减排 "+fmt((status.actual-status.path)*(target.type==="intensity"?YEAR_REVENUE[CURRENT_YEAR]:1),1)+" tCO₂e")+'</div>'+
         trackChart(target)+
-        (status.ahead?'':'<p class="reviewNote small">落后原因提示：'+(target.scope==="3"?'外购钢材和产品使用电力占范围三的 90% 以上，建议优先推动关键供应商提供低碳材料并提升产品能效。':'外购电力占比较高，建议扩大绿电采购和能效改造。')+'</p>')+'</section>';
+        (status.ahead?'':'<p class="reviewNote small">落后原因提示：'+(target.scope==="3"?'售出产品使用阶段用电约占范围三的 99%，建议加快 IE4/IE5 高效电机和变频水泵替代，并为客户提供能效改造服务。':'热电机组燃煤约占范围一+二的九成，建议推进生物质掺烧、煤改气和余热回收，同时扩大绿电采购。')+'</p>')+'</section>';
     }).join("");
 }
 function setBaseYear(value){targets().baseYear=Number(value);persistDemo();render();showToast("基准年已调整为 "+value);}
@@ -277,16 +344,16 @@ const ETS_DEFAULT = {
   verifier:"（演示）浙江某第三方核查机构",
   cycles:{
     2023:{year:2023,deadline:"2024-12-31",status:"已履约",settledAt:"2024-11-26",verifiedAt:"2024-05-20",
-      power:181500,powerBench:0.8218,heat:398000,heatBench:0.1111,correction:1,coal:99800,ncv:21.15,cc:0.02637,of:0.98,elec:3350,elecFactor:0.5703,carryIn:0,ccerUsed:1850},
+      power:181500,powerBench:0.8218,heat:398000,heatBench:0.1111,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:1850},
     2024:{year:2024,deadline:"2025-12-31",status:"已履约",settledAt:"2025-12-09",verifiedAt:"2025-05-16",
-      power:189500,powerBench:0.8218,heat:405000,heatBench:0.1111,correction:1,coal:97900,ncv:21.22,cc:0.02631,of:0.98,elec:3280,elecFactor:0.5703,carryIn:0,ccerUsed:0},
+      power:189500,powerBench:0.8218,heat:405000,heatBench:0.1111,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:0},
     2025:{year:2025,deadline:"2026-12-31",status:"待清缴",verifiedAt:"2026-05-22",
-      power:186400,powerBench:0.8180,heat:412000,heatBench:0.1105,correction:1,coal:101600,ncv:21.18,cc:0.02634,of:0.98,elec:3210,elecFactor:0.5703,carryIn:480,ccerUsed:3200},
+      power:186400,powerBench:0.8180,heat:412000,heatBench:0.1105,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:600,ccerUsed:3200},
     2026:{year:2026,deadline:"2027-12-31",status:"监测中",estimate:true,
-      power:187000,powerBench:0.8180,heat:415000,heatBench:0.1105,correction:1,coal:99200,ncv:21.2,cc:0.0263,of:0.98,elec:3150,elecFactor:0.5703,carryIn:0,ccerUsed:0}
+      power:187000,powerBench:0.8180,heat:415000,heatBench:0.1105,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:0}
   },
   trades:[
-    {id:"TR-2401",date:"2024-10-15",cycle:2023,side:"买入",product:"CEA",qty:4800,price:88.4,channel:"挂牌协议"},
+    {id:"TR-2401",date:"2024-10-15",cycle:2023,side:"买入",product:"CEA",qty:6800,price:88.4,channel:"挂牌协议"},
     {id:"TR-2501",date:"2025-11-06",cycle:2024,side:"卖出",product:"CEA",qty:1950,price:91.2,channel:"大宗协议"},
     {id:"TR-2601",date:"2026-09-18",cycle:2025,side:"买入",product:"CEA",qty:1500,price:94.6,channel:"挂牌协议"}
   ],
@@ -299,6 +366,14 @@ const ETS_DEFAULT = {
 };
 function ets() {
   demo.ets ||= structuredClone(ETS_DEFAULT);
+  Object.values(demo.ets.cycles).forEach(cycle=>{
+    const rows=detailForYear(Math.min(cycle.year,CURRENT_YEAR));
+    const coal=rows.find(row=>row.source_name===CHP_COAL);
+    const elec=rows.find(row=>row.source_name===CHP_ELEC);
+    cycle.coal=coal?Number(coal.activity_value):0;
+    cycle.elec=elec?Number(elec.activity_value)/1000:0;
+    cycle.coalApproved=!!coal;
+  });
   return demo.ets;
 }
 function etsCycle(year){return ets().cycles[year];}
@@ -371,10 +446,11 @@ function etsOverview() {
         '<ul class="planList"><li><b>使用 CCER 抵销 '+fmt(fromCcer,0)+' tCO₂</b><small>上限内剩余额度 '+fmt(Math.max(0,result.cap-cycle.ccerUsed),0)+'，持仓可用 '+fmt(ccerAvailable(cycle.year)-cycle.ccerUsed,0)+'</small><button class="btn" onclick="go(\'碳履约\',\'CCER 抵销\')">调整抵销</button></li>'+
           '<li><b>买入 CEA '+fmt(shortfall-fromCcer,0)+' tCO₂</b><small>按参考价 '+price.toFixed(2)+' 元/吨，约 '+fmt((shortfall-fromCcer)*price/10000,1)+' 万元</small><button class="btn primary" onclick="openTradeModal()">登记交易</button></li></ul>')+
     '</div><div>'+
-      card("与组织盘查联动",'<dl class="miniFacts cols2"><div><dt>组织盘查 '+Math.min(cycle.year,CURRENT_YEAR)+' 范围一+二</dt><dd>'+fmt(org["1"]+org["2"],1)+' tCO₂e</dd></div>'+
-        '<div><dt>履约口径核查排放</dt><dd>'+fmt(result.verified,0)+' tCO₂</dd></div><div><dt>本年度交易净额</dt><dd>'+(result.cost>=0?'支出 ':'收入 ')+fmt(Math.abs(result.cost)/10000,1)+' 万元</dd></div>'+
-        '<div><dt>CEA 参考价</dt><dd>'+price.toFixed(2)+' 元/吨</dd></div></dl>'+
-        '<p class="muted small">嘉兴热电分公司为重点排放单位，按发电设施核算指南单独核算并履约；组织盘查按 GHG Protocol 汇总制造板块。两套口径共用排放因子库和凭证，履约成本计入年度碳绩效。</p>'+
+      card("数据来自组织盘查",'<dl class="miniFacts cols2"><div><dt>组织盘查 '+Math.min(cycle.year,CURRENT_YEAR)+' 范围一+二</dt><dd>'+fmt(org["1"]+org["2"],0)+' tCO₂e</dd></div>'+
+        '<div><dt>其中热电分公司（履约边界）</dt><dd>'+fmt(result.verified,0)+' tCO₂ · 占 '+pct(result.verified,org["1"]+org["2"])+'%</dd></div>'+
+        '<div><dt>燃煤热电联产（范围一）</dt><dd>'+fmt(cycle.coal,0)+' t 原煤</dd></div><div><dt>厂用电下网（范围二）</dt><dd>'+fmt(cycle.elec,0)+' MWh</dd></div></dl>'+
+        '<p class="muted small">核查排放量直接取自组织盘查中嘉兴热电分公司的两项已审核数据，燃煤排放因子按发电设施核算指南参数计算（'+CHP_COAL_FACTOR.toFixed(4)+' tCO₂/t），与组织盘查使用同一因子，两套口径一致。'+
+          (cycle.coalApproved?'':'<b class="badText">当前年度燃煤数据尚未审核通过，核查排放暂不完整。</b>')+'本年度交易净额 '+(result.cost>=0?'支出 ':'收入 ')+fmt(Math.abs(result.cost)/10000,1)+' 万元。</p>'+
         '<div class="actions"><button class="btn" onclick="go(\'组织碳排放\',\'核算分析\',\'排放清单\')">组织排放清单</button><button class="btn" onclick="go(\'碳履约\',\'排放核查\')">核查明细</button></div>')+
     '</div></div>'+
     card("履约记录",(ets().log.length?'<ul class="feed">'+ets().log.slice(-6).reverse().map(row=>'<li><time>'+textHtml(row.at)+'</time><span>'+textHtml(row.actor)+'</span>'+textHtml(row.text)+'</li>').join("")+'</ul>':'')+
@@ -416,27 +492,31 @@ function etsVerificationPage() {
     '<div class="statRow">'+statTile("核查排放量",fmt(result.verified,0),"tCO₂")+statTile("化石燃料燃烧",fmt(coalEmission,0),"占 "+(coalEmission/result.verified*100).toFixed(1)+"%")+
       statTile("购入电力",fmt(cycle.elec*cycle.elecFactor,0),"tCO₂")+statTile("核查状态",cycle.estimate?"监测中":"已核查",cycle.estimate?"每月 MRV 月报":"核查于 "+cycle.verifiedAt)+'</div>'+
     card("排放量计算",'<div class="tableWrap"><table><thead><tr><th>排放源</th><th>活动数据</th><th>低位发热量</th><th>单位热值含碳量</th><th>碳氧化率</th><th>排放因子</th><th>排放(tCO₂)</th></tr></thead><tbody>'+
-      '<tr><td>燃煤（烟煤）</td><td>'+fmt(cycle.coal,0)+' t</td><td>'+cycle.ncv+' GJ/t</td><td>'+cycle.cc+' tC/GJ</td><td>'+(cycle.of*100).toFixed(0)+'%</td><td>—</td><td>'+fmt(coalEmission,0)+'</td></tr>'+
-      '<tr><td>购入电力</td><td>'+fmt(cycle.elec,0)+' MWh</td><td>—</td><td>—</td><td>—</td><td>'+cycle.elecFactor+' tCO₂/MWh</td><td>'+fmt(cycle.elec*cycle.elecFactor,0)+'</td></tr>'+
+      '<tr><td>燃煤（烟煤）<small>组织盘查 · 范围一 · '+CHP_COAL+'</small></td><td>'+fmt(cycle.coal,0)+' t</td><td>'+cycle.ncv+' GJ/t</td><td>'+cycle.cc+' tC/GJ</td><td>'+(cycle.of*100).toFixed(0)+'%</td><td>—</td><td>'+fmt(coalEmission,0)+'</td></tr>'+
+      '<tr><td>购入电力<small>组织盘查 · 范围二 · '+CHP_ELEC+'</small></td><td>'+fmt(cycle.elec,0)+' MWh</td><td>—</td><td>—</td><td>—</td><td>'+cycle.elecFactor+' tCO₂/MWh</td><td>'+fmt(cycle.elec*cycle.elecFactor,0)+'</td></tr>'+
       '<tr><td colspan="6"><strong>合计</strong></td><td><strong>'+fmt(result.verified,0)+'</strong></td></tr></tbody></table></div>'+
       '<p class="muted small">燃料燃烧排放 = 消耗量 × 低位发热量 × 单位热值含碳量 × 碳氧化率 × 44/12；购入电力排放 = 电量 × 电网排放因子。参数为演示值。</p>')+
     card("核查信息",'<dl class="miniFacts cols2"><div><dt>核查机构</dt><dd>'+textHtml(ets().verifier)+'</dd></div><div><dt>核查报告</dt><dd>'+(cycle.verifiedAt||"待核查")+'</dd></div>'+
-      '<div><dt>数据来源</dt><dd>DCS 燃料计量、入厂煤化验、电表抄表</dd></div><div><dt>核查结论</dt><dd>'+(cycle.estimate?"—":"排放报告数据经核查确认，无重大偏差")+'</dd></div></dl>');
+      '<div><dt>数据来源</dt><dd>组织盘查已审核数据（入厂煤计量、煤质化验、关口电表）</dd></div><div><dt>核查结论</dt><dd>'+(cycle.estimate?"—":"排放报告数据经核查确认，无重大偏差")+'</dd></div></dl>');
 }
 function openMrvModal() {
   const cycle=etsCycle(etsYear);
-  openModal('<h2>更新 '+etsYear+' 年度监测数据</h2><p class="desc">按 1–10 月 MRV 月报年化，保存后核查排放和配额盈缺实时更新。</p><div class="modalForm">'+
-    '<label>燃煤消耗量（t）<input id="mrvCoal" type="number" value="'+cycle.coal+'"></label><label>低位发热量（GJ/t）<input id="mrvNcv" type="number" step="0.01" value="'+cycle.ncv+'"></label>'+
-    '<label>购入电力（MWh）<input id="mrvElec" type="number" value="'+cycle.elec+'"></label><label>供电量（MWh）<input id="mrvPower" type="number" value="'+cycle.power+'"></label>'+
+  openModal('<h2>更新 '+etsYear+' 年度监测数据</h2><p class="desc">1–10 月实际加 11–12 月计划量。燃煤和厂用电会同步更新组织盘查中热电分公司的对应任务。</p><div class="modalForm">'+
+    '<label>燃煤消耗量（t）<input id="mrvCoal" type="number" value="'+cycle.coal+'"></label>'+
+    '<label>厂用电下网（MWh）<input id="mrvElec" type="number" value="'+cycle.elec+'"></label><label>供电量（MWh）<input id="mrvPower" type="number" value="'+cycle.power+'"></label>'+
     '<label>供热量（GJ）<input id="mrvHeat" type="number" value="'+cycle.heat+'"></label></div>'+
     '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveMrv()">保存</button></div>');
 }
-function saveMrv() {
+async function saveMrv() {
   const cycle=etsCycle(etsYear);
   const read=id=>Number(document.getElementById(id).value);
-  const values={coal:read("mrvCoal"),ncv:read("mrvNcv"),elec:read("mrvElec"),power:read("mrvPower"),heat:read("mrvHeat")};
+  const values={coal:read("mrvCoal"),elec:read("mrvElec"),power:read("mrvPower"),heat:read("mrvHeat")};
   if(Object.values(values).some(value=>!(value>0))){showToast("请填写大于 0 的数值");return;}
-  Object.assign(cycle,values);
+  cycle.power=values.power;cycle.heat=values.heat;
+  demo.taskEntries["T-S1-04"]={...demo.taskEntries["T-S1-04"],activity:values.coal};
+  demo.taskEntries["T-S2-04"]={...demo.taskEntries["T-S2-04"],activity:values.elec*1000};
+  persistDemo();
+  await loadBackendData();
   ets().log.push({at:new Date().toLocaleString("zh-CN",{hour12:false}),actor:MANAGER_NAME,text:"更新 "+etsYear+" 年度监测数据"});
   persistDemo();closeModal();render();showToast("监测数据已更新");
 }
@@ -516,7 +596,7 @@ orgWorkbench = function () {
     return before?(now-before)/before*100:null;};
   const trend='<section class="panel"><div class="panelHead"><h3>年度对比与目标</h3><button class="linkBtn" onclick="go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')">目标跟踪 ›</button></div>'+
     '<div class="yearCompare">'+[["all","总量"],["1","范围一"],["2","范围二"],["3","范围三"]].map(([scope,label])=>{const value=yoy(scope);
-      return '<div><span>'+label+' 较上年</span><b class="'+(value===null?'':value<=0?'okText':'badText')+'">'+(value===null?'基准年':(value>0?'+':'')+value.toFixed(1)+'%')+'</b></div>';}).join("")+
+      return '<div><span>'+label+' 较上年'+(reportYear===CURRENT_YEAR?'（已审核口径）':'')+'</span><b class="'+(value===null?'':value<=0?'okText':'badText')+'">'+(value===null?'基准年':(value>0?'+':'')+value.toFixed(1)+'%')+'</b></div>';}).join("")+
     '</div><div class="yearBars">'+REPORT_YEARS.map(year=>{const t=yearTotals(year);const sum=t["1"]+t["2"]+t["3"];
       const max=Math.max(...REPORT_YEARS.map(y=>{const v=yearTotals(y);return v["1"]+v["2"]+v["3"];}));
       return '<button class="'+(year===reportYear?'active':'')+'" onclick="setReportYear('+year+')"><span class="yearBar"><i style="height:'+(sum/max*100)+'%"></i></span><b>'+fmt(sum,0)+'</b><small>'+year+'</small></button>';}).join("")+'</div>'+
@@ -542,7 +622,7 @@ render = function () {
     content.innerHTML=historyBanner()+content.innerHTML
       .replace(/2026 年 7 月/g,reportYear+" 年度").replace(/2026-07/g,reportYear+" 年度");
   } else if(yearScoped) {
-    content.innerHTML=content.innerHTML.replace(/2026-07 (组织盘查|数据填报)/g,"2026 年度$1");
+    content.innerHTML=content.innerHTML.replace(/2026-07/g,"2026 年度");
   }
   if(!document.getElementById("yearSelect")) {
     document.getElementById("roleSelect").insertAdjacentHTML("afterend",

@@ -6,7 +6,7 @@ const SUPPLIER_PROFILES = {
   "嘉兴联运物流":{category:"公路运输服务",contact:"钱海峰",email:"qian.hf@lianyun.example",level:"一般供应商"},
   "常州鑫叠电机材料":{category:"电工钢 / 原材料",contact:"蒋莉",email:"jiang.li@xindie.example",level:"关键供应商"}
 };
-const DEADLINE = "2026-08-10";
+const DEADLINE = "2026-12-15";
 let supplierStatusFilter = "";
 
 function fmt(value,digits=2) {
@@ -517,7 +517,7 @@ removeLcaLine = function (...args) {
 };
 
 // ---------- 报告中心：可预览、生成快照、下载可打印报告 ----------
-const BOUNDARY_TEXT = "运营控制权法 · 杭州总部、嘉兴装配工厂、湖州机加工基地，范围三按 GHG Protocol 15 类识别";
+const BOUNDARY_TEXT = "运营控制权法 · 杭州总部、嘉兴装配工厂、湖州机加工基地、嘉兴热电分公司，范围三按 GHG Protocol 15 类识别";
 function reportScopeRows(detail) {
   const total=detail.reduce((sum,row)=>sum+row.emission_tco2e,0);
   return {total,scopes:["1","2","3"].map(scope=>{

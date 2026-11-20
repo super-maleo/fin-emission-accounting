@@ -161,20 +161,20 @@ function workflowTasks() {
   const direct=directTasks.map((row,index)=>({
     ...row,scope:row.id.startsWith("T-S1")?"1":"2",category:"",
     org:scenarioText(row.org),owner:index%2?"周建华":"陈晓宁",period:demoPeriod,
-    deadline:"2026-08-10",origin:"企业填报",
+    deadline:"2026-12-15",origin:"企业填报",
     factor:[.0021622,.00268,1.43,.0005703,.11,0][index],
     factorLabel:["天然气综合因子","柴油综合因子","R134a 制冷剂场景因子","外购电力因子","外购蒸汽情景因子","绿电凭证披露项（电量不重复计排）"][index],
     locked:false
   }));
   const records=demo.records.map(row=>({
     id:"REC-"+row.id,scope:"3",category:row.category_code,name:scenarioText(row.source_name),
-    unit:row.activity_unit,org:"杭州总部",owner:"沈嘉禾",period:row.period,deadline:"2026-08-10",
+    unit:row.activity_unit,org:"杭州总部",owner:"沈嘉禾",period:row.period,deadline:"2026-12-15",
     origin:"企业填报",factor:Number(demo.factors.find(f=>f.id===row.factor_id)?.factor_value||0),
     factorLabel:demo.factors.find(f=>f.id===row.factor_id)?.name||"待匹配",locked:false
   }));
   const suppliers=supplyScope3Items.map((row,index)=>({
     id:"SUP-"+row.id,scope:"3",category:row.category,name:row.part,unit:row.unit,
-    org:"嘉兴装配工厂",owner:row.supplier,period:demoPeriod,deadline:"2026-08-10",origin:"供应商",
+    org:"嘉兴装配工厂",owner:row.supplier,period:demoPeriod,deadline:"2026-12-15",origin:"供应商",
     factor:row.unitCarbon/1000,factorLabel:row.factorSource||"供应商碳排因子",
     supplierIndex:index,locked:true
   }));
@@ -183,7 +183,7 @@ function workflowTasks() {
       const source=demo.sources.find(row=>row.category_code===category.code);
       const factor=demo.factors.find(row=>row.id===source?.default_factor_id);
       return {id:"T-S3-"+category.code,scope:"3",category:category.code,name:source?.name||category.name,
-        unit:source?.activity_unit||"项",org:"杭州总部",owner:"沈嘉禾",period:demoPeriod,deadline:"2026-08-10",
+        unit:source?.activity_unit||"项",org:"杭州总部",owner:"沈嘉禾",period:demoPeriod,deadline:"2026-12-15",
         origin:"企业填报",factor:Number(factor?.factor_value||0),factorLabel:factor?.name||"待匹配",locked:false};
     });
   return [...direct,...records,...missing,...suppliers];
@@ -442,7 +442,7 @@ editDemoSupplier = function (index,review=false) {
   supplierUpload=row.attachment||null;
   const log=demo.auditLog.filter(item=>item.taskId==="SUP-"+row.id);
   openModal('<h2>'+textHtml(row.part)+'</h2><div class="taskContext">'+textHtml(row.supplier)+' · '+row.task+
-    ' · '+demoPeriod+' · 截止 2026-08-10</div>'+flowSteps(taskEntry({locked:true,supplierIndex:index}).status,true)+(row.reviewNote?'<p class="reviewNote">退回意见 · '+textHtml(row.reviewNote)+'</p>':'')+
+    ' · '+demoPeriod+' · 截止 2026-12-15</div>'+flowSteps(taskEntry({locked:true,supplierIndex:index}).status,true)+(row.reviewNote?'<p class="reviewNote">退回意见 · '+textHtml(row.reviewNote)+'</p>':'')+
     '<div class="modalForm"><label>活动量（'+textHtml(row.unit)+'）<input id="demoSupplierQuantity" type="number" min="0" step="any" value="'+row.qty+'" oninput="previewSupplierEmission()" '+(!editable?'readonly':'')+'></label>'+
     '<label>单位碳排（kgCO₂e / '+row.unit+'）<input id="demoSupplierCarbon" type="number" min="0" step="any" value="'+row.unitCarbon+'" oninput="previewSupplierEmission()" '+(!editable?'readonly':'')+'></label>'+
     '<label>凭证编号<input id="supplierEvidence" value="'+textHtml(row.evidence)+'" '+(!editable?'readonly':'')+'></label>'+
