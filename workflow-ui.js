@@ -146,7 +146,7 @@ renderSide = function () {
       '" onclick="go(\''+state.top+'\',\''+group+'\')"><span class="navMark">'+
       ({"首页总览":"⌂","组织碳看板":"▦","数据填报":"▤","盘查准备":"⚙","核算分析":"▥","报告中心":"▧","供应链看板":"▦","供应商管理":"☷","供应商协同任务":"▤","供应链因子中心":"◈","供应链分析与报告":"▧",
         "产品碳足迹看板":"▦","LCA建模与核算":"◈","产品数据管理":"☷","产品碳足迹分析":"▥","产品报告中心":"▧","碳足迹认证管理":"✓",
-        "碳目标管理":"◎","履约总览":"▦","配额管理":"▤","排放核查":"✓","CCER 抵销":"◈","配额交易":"⇄","因子库管理":"◈","指标模板配置":"▤","系统设置":"⚙","系统说明":"?"}[group]||"◇")+
+        "碳目标管理":"◎","履约工作台":"▦","配额管理":"▤","排放监测":"✓","CCER 抵销":"◈","交易委托":"⇄","配额清缴":"◉","因子库管理":"◈","指标模板配置":"▤","系统设置":"⚙","系统说明":"?"}[group]||"◇")+
       '</span><span class="navLabel">'+label+'</span></button>'+
       (active&&visible.length>1?'<div class="sub">'+visible.map(page=>'<button class="'+(state.page===page?'active':'')+
         '" onclick="go(\''+state.top+'\',\''+group+'\',\''+page+'\')">'+page+'</button>').join("")+'</div>':'')+'</div>';
@@ -279,7 +279,7 @@ function openUnifiedTask(id,review=false) {
     '<div id="taskAttachmentLabel">'+(entry.attachment?'<a href="'+entry.attachment.data+'" download="'+textHtml(entry.attachment.name)+'">'+textHtml(entry.attachment.name)+'</a>':'')+'</div>'+
     '<p class="calcPreview" id="taskPreview">'+taskPreviewText(entry.activity,task.factor)+'</p>'+
     '<details class="calculationHelp"><summary>核算因子与口径</summary><p>'+textHtml(task.factorLabel)+' · '+task.factor+
-    ' tCO₂e / '+textHtml(task.unit)+'</p><p>活动量 × 排放因子，审核通过后计入核算。</p></details>'+
+    ' tCO₂e / '+textHtml(task.unit)+'</p></details>'+
     (taskLog.length?'<details class="calculationHelp"><summary>操作记录</summary>'+taskLog.map(row=>'<p>'+row.at+' · '+row.action+' · '+row.actor+'</p>').join("")+'</details>':'')+
     '<div class="modalActions">'+(review&&entry.status==="待审核"&&currentRole==="管理者"?
       '<input id="taskReviewNote" placeholder="退回时填写原因"><button class="btn red" onclick="reviewUnifiedTask(false)">退回</button><button class="btn primary" onclick="reviewUnifiedTask(true)">审核通过</button>':

@@ -11,7 +11,6 @@ const CHP_COAL = "燃煤热电联产";
 const CHP_ELEC = "厂用电下网";
 const CHP_PARAMS = {ncv:21.18,cc:0.02634,of:0.98};
 const CHP_COAL_FACTOR = CHP_PARAMS.ncv*CHP_PARAMS.cc*CHP_PARAMS.of*44/12;
-const CHP_HISTORY = {[CHP_COAL]:{2023:99800,2024:97900,2025:101600},[CHP_ELEC]:{2023:3350000,2024:3280000,2025:3210000}};
 const YEAR_CLOSED = {2023:"2024-03-29",2024:"2025-03-28",2025:"2026-03-31"};
 // ---------- 演示企业规模：按大型泵阀装备制造集团（含自备热电）设定 ----------
 directTasks.push(
@@ -20,7 +19,7 @@ directTasks.push(
 );
 const workflowTasksBeforeScale = workflowTasks;
 workflowTasks = function () {
-  return workflowTasksBeforeScale().map(task=>task.id==="T-S1-04"?{...task,owner:"周建华",factor:CHP_COAL_FACTOR,factorLabel:"烟煤 · 发电设施核算指南参数（实测低位发热量）"}:
+  return workflowTasksBeforeScale().map(task=>task.id==="T-S1-04"?{...task,owner:"周建华",factor:etsCoalFactor(),factorLabel:"烟煤 · 发电设施核算指南（月度实测加权）"}:
     task.id==="T-S2-04"?{...task,owner:"周建华",factor:0.0005703,factorLabel:"全国电网平均排放因子"}:task);
 };
 const SCALE_ENTRIES = {
@@ -65,7 +64,6 @@ try {
   const savedYear=Number(localStorage.getItem("carbon-demo-year"));
   if(REPORT_YEARS.includes(savedYear))reportYear=savedYear;
 } catch {}
-let etsYear = reportYear===CURRENT_YEAR?2025:reportYear;
 
 function isHistoryYear(){return reportYear!==CURRENT_YEAR;}
 function yearText(year=reportYear){return year===CURRENT_YEAR?year+" 年度（盘查进行中）":year+" 年度（已关账）";}
@@ -95,9 +93,9 @@ function detailForYear(year) {
   if(year===CURRENT_YEAR)return approvedDetailLive();
   const scale=YEAR_SCALE[year]||{};
   return yearArchive().map((row,index)=>{
-    const fixed=CHP_HISTORY[row.source_name]?.[year];
-    const activity=fixed??row.activity_value*(scale[String(row.scope)]||1)*(1+Math.sin(index*1.7+year)*0.02);
-    return {...row,period:String(year),activity_value:+activity.toFixed(2),emission_tco2e:activity*row.factor_value,evidence:year+" 年度归档凭证"};
+    const chp=chpAnnual(row.source_name,year);
+    const activity=chp?chp.activity:row.activity_value*(scale[String(row.scope)]||1)*(1+Math.sin(index*1.7+year)*0.02);
+    return {...row,period:String(year),activity_value:+activity.toFixed(2),emission_tco2e:chp?chp.emission:activity*row.factor_value,evidence:year+" 年度归档凭证"};
   });
 }
 approvedDetail = function () {
@@ -133,7 +131,7 @@ if(typeof showOrgCategory==="function") {
 
 function setReportYear(value) {
   reportYear=Number(value);
-  etsYear=reportYear===CURRENT_YEAR?2025:reportYear;
+  etsYear=isHistoryYear()?reportYear:null;
   try {localStorage.setItem("carbon-demo-year",String(reportYear));} catch {}
   render();
   showToast(isHistoryYear()?"已切换到 "+reportYear+" 年度归档数据（只读）":"已回到 "+CURRENT_YEAR+" 年度当前盘查");
@@ -156,7 +154,7 @@ downloadOrgReport = function (...args) {
 
 function historyBanner() {
   return '<div class="historyBanner"><span class="todoTag">归档</span><div><b>正在查看 '+reportYear+' 年度归档数据</b>'+
-    '<small>该年度已于 '+YEAR_CLOSED[reportYear]+' 关账，任务和数据只读，报告按归档数据生成。</small></div>'+
+    '<small>关账日期 '+YEAR_CLOSED[reportYear]+' · 只读</small></div>'+
     '<button class="btn" onclick="setReportYear('+CURRENT_YEAR+')">回到 '+CURRENT_YEAR+' 年度</button></div>';
 }
 function archiveTaskPage(supplier) {
@@ -230,9 +228,6 @@ function targetStatus(target,year=CURRENT_YEAR) {
 }
 function goalStrip() {
   const list=targets().items;
-  const cycle=etsCycle(2025);
-  const result=etsResult(cycle);
-  const days=daysUntil(cycle.deadline);
   return '<div class="goalStrip">'+
     '<section class="panel"><div class="panelHead"><h3>减排目标</h3><button class="linkBtn" onclick="go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')">目标跟踪 ›</button></div>'+
       '<div class="goalList">'+list.map(target=>{
@@ -240,10 +235,7 @@ function goalStrip() {
         return '<button class="goalItem" onclick="go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')"><span><b>'+textHtml(target.name)+'</b><small>'+targets().baseYear+' → '+target.targetYear+' 减 '+target.reduction+'% · 已减 '+status.reduced.toFixed(1)+'%</small></span>'+
           '<span class="goalTrack"><i style="width:'+status.progress+'%"></i></span><span class="status '+(status.ahead?'ok':'bad')+'">'+(status.ahead?'符合路径':'落后路径')+'</span></button>';
       }).join("")+'</div></section>'+
-    '<section class="panel etsMini"><div class="panelHead"><h3>碳履约 · 2025 年度</h3><span class="demoBadge">演示数据</span></div>'+
-      '<div class="etsMiniBody"><div class="countdown"><b>'+Math.max(days,0)+'</b><span>天后截止<br>'+cycle.deadline+'</span></div>'+
-      '<dl class="miniFacts"><div><dt>核查排放</dt><dd>'+fmt(result.verified,0)+' t</dd></div><div><dt>'+(result.gap>=0?'配额盈余':'配额缺口')+'</dt><dd class="'+(result.gap>=0?'okText':'badText')+'">'+fmt(Math.abs(result.gap),0)+' t</dd></div></dl></div>'+
-      '<button class="btn primary wide" onclick="go(\'碳履约\',\'履约总览\')">'+(cycle.status==="已履约"?'查看履约结果':result.gap>=0?'去提交清缴':'补足缺口')+'</button></section>'+
+    etsMiniCard()+
   '</div>';
 }
 
@@ -276,7 +268,7 @@ function targetSetupPage() {
   return pageHead("目标设定",helpButton("目标设定","设置基准年、覆盖范围、减排类型（绝对量或强度）和目标年。系统按线性路径拆分到每一年，并用各年度已审核排放跟踪进度。")+
       (manager?'<button class="btn primary" onclick="openTargetModal()">新增目标</button>':''),"组织碳排放 / 碳目标管理 / 目标设定")+
     '<div class="lcaMeta"><span>基准年 <b>'+config.baseYear+'</b></span><span>基准年排放（范围一+二+三） <b>'+fmt(Object.values(yearTotals(config.baseYear)).reduce((a,b)=>a+b,0),1)+' tCO₂e</b></span>'+
-      '<span>营收口径 百万元（演示）</span>'+(manager?'<label>调整基准年 <select onchange="setBaseYear(this.value)">'+[2023,2024,2025].map(year=>'<option '+(year===config.baseYear?'selected':'')+'>'+year+'</option>').join("")+'</select></label>':'')+'</div>'+
+      '<span>强度口径 tCO₂e / 百万元营收</span>'+(manager?'<label>调整基准年 <select onchange="setBaseYear(this.value)">'+[2023,2024,2025].map(year=>'<option '+(year===config.baseYear?'selected':'')+'>'+year+'</option>').join("")+'</select></label>':'')+'</div>'+
     config.items.map(target=>{
       const years=[];for(let year=config.baseYear;year<=target.targetYear;year++)years.push(year);
       return '<section class="panel targetCard"><div class="panelHead"><h3>'+textHtml(target.name)+'</h3><div class="actions">'+
@@ -305,7 +297,7 @@ function targetTrackPage() {
           statTile(CURRENT_YEAR+" 路径值",fmt(status.path,targetDigits(target)),"目标 "+target.targetYear+" 年下降 "+target.reduction+"%")+
           statTile("与路径差距",(status.gap>0?"+":"")+status.gap.toFixed(1)+"%",status.ahead?"优于路径":"需额外减排 "+fmt((status.actual-status.path)*(target.type==="intensity"?YEAR_REVENUE[CURRENT_YEAR]:1),1)+" tCO₂e")+'</div>'+
         trackChart(target)+
-        (status.ahead?'':'<p class="reviewNote small">落后原因提示：'+(target.scope==="3"?'售出产品使用阶段用电约占范围三的 99%，建议加快 IE4/IE5 高效电机和变频水泵替代，并为客户提供能效改造服务。':'热电机组燃煤约占范围一+二的九成，建议推进生物质掺烧、煤改气和余热回收，同时扩大绿电采购。')+'</p>')+'</section>';
+        '</section>';
     }).join("");
 }
 function setBaseYear(value){targets().baseYear=Number(value);persistDemo();render();showToast("基准年已调整为 "+value);}
@@ -338,251 +330,617 @@ function removeTarget(id) {
 }
 
 // ---------- 碳履约（全国碳市场） ----------
-const ETS_DEFAULT = {
-  entity:"江南流体装备 嘉兴热电分公司",
-  unit:"1# 2×25MW 燃煤热电联产机组",
-  verifier:"（演示）浙江某第三方核查机构",
-  cycles:{
-    2023:{year:2023,deadline:"2024-12-31",status:"已履约",settledAt:"2024-11-26",verifiedAt:"2024-05-20",
-      power:181500,powerBench:0.8218,heat:398000,heatBench:0.1111,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:1850},
-    2024:{year:2024,deadline:"2025-12-31",status:"已履约",settledAt:"2025-12-09",verifiedAt:"2025-05-16",
-      power:189500,powerBench:0.8218,heat:405000,heatBench:0.1111,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:0},
-    2025:{year:2025,deadline:"2026-12-31",status:"待清缴",verifiedAt:"2026-05-22",
-      power:186400,powerBench:0.8180,heat:412000,heatBench:0.1105,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:600,ccerUsed:3200},
-    2026:{year:2026,deadline:"2027-12-31",status:"监测中",estimate:true,
-      power:187000,powerBench:0.8180,heat:415000,heatBench:0.1105,correction:1,ncv:21.18,cc:0.02634,of:0.98,elecFactor:0.5703,carryIn:0,ccerUsed:0}
-  },
-  trades:[
-    {id:"TR-2401",date:"2024-10-15",cycle:2023,side:"买入",product:"CEA",qty:6800,price:88.4,channel:"挂牌协议"},
-    {id:"TR-2501",date:"2025-11-06",cycle:2024,side:"卖出",product:"CEA",qty:1950,price:91.2,channel:"大宗协议"},
-    {id:"TR-2601",date:"2026-09-18",cycle:2025,side:"买入",product:"CEA",qty:1500,price:94.6,channel:"挂牌协议"}
-  ],
-  ccer:[
-    {id:"CCER-01",project:"（演示）浙江某海上风电项目",type:"风电",vintage:2024,qty:2000},
-    {id:"CCER-02",project:"（演示）江苏某林业碳汇项目",type:"林业碳汇",vintage:2023,qty:1200},
-    {id:"CCER-03",project:"（演示）福建某红树林修复项目",type:"红树林营造",vintage:2025,qty:600}
-  ],
-  log:[]
+const ETS_ENTITY = {name:"江南流体装备集团嘉兴热电分公司",account:"CEA-330400-01873",unit:"2×25 MW 燃煤热电联产机组",industry:"发电（热电联产）",region:"浙江省嘉兴市"};
+const ETS_YEARS = [2023,2024,2025,2026];
+const ETS_GRID_FACTOR = 0.5703;
+const ETS_CCER_CAP = 0.05;
+const ETS_MONTH_WEIGHT = [1.12,1.05,0.98,0.9,0.86,0.92,1.0,1.02,0.94,0.96,1.07,1.18];
+const ETS_PROFILE = {
+  2023:{coal:99800,elec:3350,supply:197800,heat:330500,be:0.7960,bh:0.1260},
+  2024:{coal:97900,elec:3280,supply:194600,heat:325100,be:0.7930,bh:0.1258},
+  2025:{coal:101600,elec:3210,supply:199300,heat:341200,be:0.7856,bh:0.1252},
+  2026:{coal:99200,elec:3150,supply:196900,heat:336000,be:0.7800,bh:0.1250}
 };
-function ets() {
-  demo.ets ||= structuredClone(ETS_DEFAULT);
-  Object.values(demo.ets.cycles).forEach(cycle=>{
-    const rows=detailForYear(Math.min(cycle.year,CURRENT_YEAR));
-    const coal=rows.find(row=>row.source_name===CHP_COAL);
-    const elec=rows.find(row=>row.source_name===CHP_ELEC);
-    cycle.coal=coal?Number(coal.activity_value):0;
-    cycle.elec=elec?Number(elec.activity_value)/1000:0;
-    cycle.coalApproved=!!coal;
+const ETS_VERIFIER = "浙江省环科碳核查技术服务中心";
+const ETS_AUTHORITY = "浙江省生态环境厅";
+const CCER_PRICE = 78.6;
+const CCER_LISTINGS = [
+  {project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,price:79.2},
+  {project:"甘肃玉门光热发电项目",type:"并网光热发电",vintage:2024,price:77.8},
+  {project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,price:86.5},
+  {project:"浙江安吉造林碳汇项目",type:"造林碳汇",vintage:2024,price:82.0}
+];
+const MONTH_NAMES = ["1 月","2 月","3 月","4 月","5 月","6 月","7 月","8 月","9 月","10 月","11 月","12 月"];
+let etsYear = null;
+
+function todayText() {
+  const now=new Date();
+  return now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+}
+function nowText(){return new Date().toLocaleString("zh-CN",{hour12:false}).replace(/\//g,"-");}
+function daysUntil(date){return Math.ceil((new Date(date+"T23:59:59")-new Date())/86400000);}
+function etsPrice(){return marketSeries().at(-1);}
+function etsSplit(total,digits=0) {
+  const sum=ETS_MONTH_WEIGHT.reduce((a,b)=>a+b,0);
+  let acc=0;
+  return ETS_MONTH_WEIGHT.map((weight,index)=>{
+    if(index===11)return +(total-acc).toFixed(digits);
+    const value=+(total*weight/sum).toFixed(digits);acc+=value;return value;
   });
+}
+function etsMonthsBuild(year) {
+  const p=ETS_PROFILE[year];
+  const coal=etsSplit(p.coal),elec=etsSplit(p.elec,1),supply=etsSplit(p.supply),heat=etsSplit(p.heat);
+  return coal.map((value,index)=>{
+    const month=index+1;
+    let status="已存证";
+    let at=(month===12?(year+1)+"-01":year+"-"+String(month+1).padStart(2,"0"))+"-08";
+    if(year===CURRENT_YEAR&&month===10){status="待存证";at="";}
+    if(year===CURRENT_YEAR&&month>10){status="未到期";at="";}
+    return {month,coal:value,ncv:+(21.18+0.21*Math.sin(month*1.3+year)).toFixed(2),cc:+(0.02634+0.00006*Math.cos(month*0.8+year)).toFixed(5),
+      supply:supply[index],heat:heat[index],elec:elec[index],status,at,evidence:status==="未到期"?"":"MRV-RD-"+year+String(month).padStart(2,"0")};
+  });
+}
+function etsMonthEmission(row) {
+  const coal=row.coal*row.ncv*row.cc*CHP_PARAMS.of*44/12;
+  return {coal,elec:row.elec*ETS_GRID_FACTOR,total:coal+row.elec*ETS_GRID_FACTOR};
+}
+function etsSums(months) {
+  const sum={coal:0,elec:0,supply:0,heat:0,coalEmission:0,elecEmission:0,emission:0};
+  months.forEach(row=>{const e=etsMonthEmission(row);sum.coal+=row.coal;sum.elec+=row.elec;sum.supply+=row.supply;sum.heat+=row.heat;
+    sum.coalEmission+=e.coal;sum.elecEmission+=e.elec;sum.emission+=e.total;});
+  return sum;
+}
+function etsAllocFormula(year,months) {
+  const p=ETS_PROFILE[year],sum=etsSums(months);
+  return {power:Math.round(sum.supply*p.be),heat:Math.round(sum.heat*p.bh),qty:Math.round(sum.supply*p.be)+Math.round(sum.heat*p.bh)};
+}
+function etsBuild() {
+  const data={v:2,monthly:{},cycles:{},ledger:[],orders:[],ccer:[],log:[],seq:0};
+  ETS_YEARS.forEach(year=>data.monthly[year]=etsMonthsBuild(year));
+  const add=(date,type,vintage,qty,ref,year)=>data.ledger.push({id:"LG"+String(++data.seq).padStart(5,"0"),date,type,vintage,qty,ref,year});
+  const balance=year=>data.ledger.filter(row=>row.vintage<=year).reduce((sum,row)=>sum+row.qty,0);
+  const surrender=(year,qty,date,ref)=>{
+    let left=qty;
+    [...new Set(data.ledger.map(row=>row.vintage))].sort().forEach(vintage=>{
+      if(vintage>year||left<=0)return;
+      const have=data.ledger.filter(row=>row.vintage===vintage).reduce((sum,row)=>sum+row.qty,0);
+      const take=Math.min(have,left);
+      if(take>0){add(date,"清缴注销",vintage,-take,ref,year);left-=take;}
+    });
+  };
+  const order=(at,side,product,vintage,qty,price,year,extra={})=>{
+    const id="WT"+at.replace(/-/g,"")+String(data.orders.length+31).padStart(4,"0");
+    data.orders.push({id,at:at+" 10:"+String(12+data.orders.length*7).padStart(2,"0"),side,product,vintage,qty,price,filledPrice:price,status:"已成交",filledAt:at,channel:"挂牌协议",year,...extra});
+    return id;
+  };
+  [2023,2024].forEach(year=>{
+    const months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months);
+    const pre=Math.round(alloc.qty*0.7);
+    const ccer=year===2023?1850:0;
+    data.cycles[year]={year,deadline:(year+1)+"-12-31",
+      report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-ZJ-0"+(412+year-2023)},
+      alloc:{pre:{qty:pre,at:(year+1)+"-03-15"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:(year+1)+"-09-27",status:"已确认",confirmedAt:(year+1)+"-10-0"+(year-2021)}},
+      surrender:{status:"未清缴"}};
+    add((year+1)+"-03-15","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
+    add((year+1)+"-10-0"+(year-2021),"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
+    if(ccer)data.ccer.push({id:"CCER-"+year+"-0412",project:"浙江安吉竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
+    const short=verified-ccer-balance(year);
+    if(short>0){const qty=Math.ceil(short/100)*100,price=year===2023?78.4:96.2,id=order((year+1)+"-11-1"+(year-2020),"买入","CEA",year,qty,price,year);add((year+1)+"-11-1"+(year-2020),"买入",year,qty,id,year);}
+    else if(-short>1500){const qty=Math.floor((-short-600)/50)*50,price=97.8,id=order((year+1)+"-11-20","卖出","CEA",year,qty,price,year);add((year+1)+"-11-20","卖出",year,-qty,id,year);}
+    const date=(year+1)+"-12-1"+(year-2015);
+    const cert="QJ-"+year+"-330400-0187";
+    surrender(year,verified-ccer,date,cert);
+    Object.assign(data.cycles[year].surrender,{status:"已清缴",at:date,cea:verified-ccer,ccer,cert});
+  });
+  {
+    const year=2025,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months);
+    const pre=Math.round(alloc.qty*0.7);
+    data.cycles[year]={year,deadline:"2026-12-31",
+      report:{status:"已核查",no:"ER-2025-330400-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-ZJ-0438"},
+      alloc:{pre:{qty:pre,at:"2026-03-16"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:"2026-11-12",status:"待确认",confirmBy:"2026-11-26"}},
+      surrender:{status:"未清缴"}};
+    add("2026-03-16","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
+    const id=order("2026-09-18","买入","CEA",2025,1500,93.4,year);
+    add("2026-09-18","买入",2025,1500,id,year);
+    const c1=order("2026-08-21","买入","CCER",2024,1200,79.6,year,{project:"福建平潭海上风电项目"});
+    const c2=order("2026-10-15","买入","CCER",2024,800,85.9,year,{project:"广西北海红树林营造项目"});
+    data.ccer.push({id:"CCER-2026-1036",project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,qty:1200,acquiredAt:"2026-08-21",price:79.6,status:"可用",ref:c1});
+    data.ccer.push({id:"CCER-2026-1187",project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,qty:800,acquiredAt:"2026-10-15",price:85.9,status:"可用",ref:c2});
+  }
+  data.cycles[2026]={year:2026,deadline:"2027-12-31",report:{status:"监测中"},alloc:{},surrender:{status:"未清缴"}};
+  data.ledger.sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+  data.orders.sort((a,b)=>b.at.localeCompare(a.at));
+  data.log=[
+    {at:"2026-11-12 16:20",actor:"系统",text:"收到 "+ETS_AUTHORITY+" 2025 年度配额核定结果"},
+    {at:"2026-11-08 09:42",actor:"周建华",text:"2026 年 9 月监测数据存证"},
+    {at:"2026-10-15 14:05",actor:MANAGER_NAME,text:"买入 CCER 800 tCO₂e · 广西北海红树林营造项目"},
+    {at:"2026-09-18 10:26",actor:MANAGER_NAME,text:"买入 CEA 2025 1,500 t"},
+    {at:"2026-06-26 11:30",actor:ETS_VERIFIER,text:"出具 2025 年度核查报告"}
+  ];
+  return data;
+}
+function ets() {
+  if(demo.ets?.v!==2){demo.ets=etsBuild();persistDemo();}
   return demo.ets;
 }
+function etsSel(){return etsYear??etsFocusYear();}
+function etsFocusYear() {
+  const data=ets();
+  return ETS_YEARS.find(year=>data.cycles[year].surrender.status!=="已清缴"&&data.cycles[year].report.status==="已核查")||CURRENT_YEAR;
+}
 function etsCycle(year){return ets().cycles[year];}
-function etsVerified(cycle){return cycle.coal*cycle.ncv*cycle.cc*cycle.of*44/12+cycle.elec*cycle.elecFactor;}
-function etsAllocation(cycle){return (cycle.power*cycle.powerBench+cycle.heat*cycle.heatBench)*cycle.correction;}
-function etsNetTrades(year){
-  return ets().trades.filter(row=>row.cycle===year&&row.product==="CEA").reduce((sum,row)=>sum+(row.side==="买入"?row.qty:-row.qty),0);
+function etsHoldings() {
+  const map={};
+  ets().ledger.forEach(row=>{map[row.vintage]=(map[row.vintage]||0)+row.qty;});
+  return map;
 }
-function etsResult(cycle) {
-  const verified=etsVerified(cycle);
-  const allocation=etsAllocation(cycle);
-  const net=etsNetTrades(cycle.year);
-  const cap=verified*0.05;
-  const position=allocation+cycle.carryIn+net+cycle.ccerUsed;
-  return {verified,allocation,net,cap,position,gap:position-verified,
-    cost:ets().trades.filter(row=>row.cycle===cycle.year).reduce((sum,row)=>sum+(row.side==="买入"?1:-1)*row.qty*row.price,0)};
+function etsAvailable(year){return Object.entries(etsHoldings()).filter(([vintage])=>Number(vintage)<=year).reduce((sum,[,qty])=>sum+qty,0);}
+function etsCcerFor(year){return ets().ccer.filter(row=>row.usedFor===year&&row.status!=="可用").reduce((sum,row)=>sum+row.qty,0);}
+function etsCalc(year) {
+  const cycle=etsCycle(year),months=ets().monthly[year],sums=etsSums(months);
+  const verifiedDone=cycle.report.status==="已核查";
+  const verified=verifiedDone?cycle.report.verifiedQty:Math.round(sums.emission);
+  const settled=cycle.surrender.status==="已清缴";
+  const final=cycle.alloc.final;
+  const estimateAlloc=final?final.qty:etsAllocFormula(year,months).qty;
+  const pending=final&&final.status!=="已确认"?final.qty-(cycle.alloc.pre?.qty||0):0;
+  const available=settled?0:etsAvailable(year);
+  const ccer=settled?cycle.surrender.ccer:etsCcerFor(year);
+  const need=settled?0:verified-ccer;
+  const gap=settled?0:final?available+pending-need:estimateAlloc-verified;
+  return {cycle,sums,verified,verifiedDone,settled,alloc:estimateAlloc,allocFinal:!!final,pending,available,ccer,need,gap,
+    cap:Math.floor(verified*ETS_CCER_CAP),attested:months.filter(row=>row.status==="已存证").length};
 }
-function ccerAvailable(exceptYear) {
-  const used=Object.values(ets().cycles).filter(cycle=>cycle.year!==exceptYear).reduce((sum,cycle)=>sum+cycle.ccerUsed,0);
-  return ets().ccer.reduce((sum,row)=>sum+row.qty,0)+1850-used;
+function etsResult(cycle){return etsCalc(cycle.year);}
+function etsStatus(year) {
+  const calc=etsCalc(year),cycle=calc.cycle;
+  if(calc.settled)return {label:"已履约",tone:"ok"};
+  if(cycle.report.status==="已核查")return calc.gap>=0?{label:"待清缴",tone:"warn"}:{label:"待补足",tone:"bad"};
+  if(cycle.report.status==="已提交")return {label:"核查中",tone:"warn"};
+  if(cycle.report.status==="待提交")return {label:"待报告",tone:"warn"};
+  return {label:"监测中",tone:"gray"};
 }
-function daysUntil(date) {
-  const today=new Date();today.setHours(0,0,0,0);
-  return Math.round((new Date(date+"T00:00:00")-today)/86400000);
+function etsCoalFactor(year=CURRENT_YEAR) {
+  if(demo.ets?.v!==2)return CHP_COAL_FACTOR;
+  const sums=etsSums(demo.ets.monthly[year]);
+  return sums.coal?sums.coalEmission/sums.coal:CHP_COAL_FACTOR;
 }
-function etsStatus(cycle,result) {
-  if(cycle.status==="已履约")return {label:"已履约",tone:"ok"};
-  if(cycle.estimate)return {label:"监测中",tone:""};
-  return result.gap>=0?{label:"可清缴",tone:"ok"}:{label:"存在缺口",tone:"bad"};
+function chpAnnual(name,year) {
+  if(name!==CHP_COAL&&name!==CHP_ELEC)return null;
+  const sums=etsSums(ets().monthly[year]);
+  return name===CHP_COAL?{activity:sums.coal,emission:sums.coalEmission}:{activity:sums.elec*1000,emission:sums.elecEmission};
 }
+function etsEditable(){return currentRole==="管理者";}
+function etsLog(text,actor=MANAGER_NAME){ets().log.unshift({at:nowText().slice(0,16),actor,text});}
+function etsTodos() {
+  const list=[];
+  ETS_YEARS.forEach(year=>{
+    const calc=etsCalc(year),cycle=calc.cycle;
+    if(calc.settled)return;
+    const months=ets().monthly[year];
+    months.filter(row=>row.status==="待存证").forEach(row=>list.push({year,tag:"监测",title:year+" 年 "+MONTH_NAMES[row.month-1]+"监测数据待存证",meta:"截止 "+year+"-"+String(row.month+1).padStart(2,"0")+"-10",button:"去存证",action:"openEtsMonth("+year+","+row.month+")"}));
+    if(cycle.report.status==="待提交")list.push({year,tag:"报告",title:year+" 年度排放报告待提交",meta:"截止 "+(year+1)+"-03-31",button:"提交",action:"openEtsReport("+year+")",primary:true});
+    if(cycle.report.status==="已提交")list.push({year,tag:"核查",title:year+" 年度排放报告核查中",meta:"提交于 "+cycle.report.submittedAt,button:"登记结论",action:"openEtsVerify("+year+")"});
+    const final=cycle.alloc.final;
+    if(final?.status==="待确认")list.push({year,tag:"配额",title:year+" 年度配额核定结果待确认",meta:"核定 "+fmt(final.qty,0)+" t · 确认截止 "+final.confirmBy,button:"确认",action:"go('碳履约','配额管理')",primary:true});
+    if(final?.status==="异议处理中")list.push({year,tag:"配额",title:year+" 年度配额核定异议处理中",meta:"提交于 "+final.objection.at,button:"查看",action:"go('碳履约','配额管理')"});
+    if(cycle.report.status==="已核查"&&final&&calc.gap<0) {
+      const room=Math.max(0,Math.min(calc.cap-calc.ccer,etsCcerFree()));
+      if(room>0)list.push({year,tag:"CCER",title:"可用 CCER "+fmt(room,0)+" tCO₂e 未申请抵销",meta:year+" 年度上限 "+fmt(calc.cap,0)+" · 已用 "+fmt(calc.ccer,0),button:"申请抵销",action:"openCcerApply("+year+")"});
+      const buy=Math.max(0,-calc.gap-room);
+      if(buy>0)list.push({year,tag:"交易",title:year+" 年度配额缺口 "+fmt(-calc.gap,0)+" t",meta:"需买入 CEA "+fmt(buy,0)+" t · 参考价 "+etsPrice().toFixed(2)+" 元/t",button:"买入",action:"openEtsOrder('买入','CEA',"+buy+")",primary:true});
+    }
+    if(cycle.report.status==="已核查"&&final?.status==="已确认"&&calc.gap>=0)list.push({year,tag:"清缴",title:year+" 年度配额可清缴",meta:"应清缴 "+fmt(calc.verified,0)+" t · 截止 "+cycle.deadline,button:"去清缴",action:"go('碳履约','配额清缴')",primary:true});
+  });
+  return list;
+}
+function etsCcerFree(){return ets().ccer.filter(row=>row.status==="可用").reduce((sum,row)=>sum+row.qty,0);}
+
 function setEtsYear(year){etsYear=Number(year);render();}
 function etsTabs() {
-  return '<div class="segTabs">'+Object.values(ets().cycles).map(cycle=>{
-    const status=etsStatus(cycle,etsResult(cycle));
-    return '<button class="'+(cycle.year===etsYear?'active':'')+'" onclick="setEtsYear('+cycle.year+')">'+cycle.year+' 年度 <em>'+status.label+'</em></button>';
-  }).join("")+'</div>';
+  const sel=etsSel();
+  return '<div class="segTabs">'+ETS_YEARS.map(year=>{const status=etsStatus(year);
+    return '<button class="'+(year===sel?'active':'')+'" onclick="setEtsYear('+year+')">'+year+' 年度 <em>'+status.label+'</em></button>';}).join("")+'</div>';
 }
-function etsHead(title,actions,crumb) {
-  return pageHead(title,'<span class="demoBadge">演示数据</span>'+actions,"碳履约 / "+crumb)+
-    '<div class="taskContext"><span>'+textHtml(ets().entity)+'</span><span>'+textHtml(ets().unit)+'</span><span>全国碳排放权交易市场 · 发电行业</span></div>'+etsTabs();
+function etsHead(title,actions="",tabs=true) {
+  return pageHead(title,actions,"碳履约 / "+title)+
+    '<div class="taskContext"><span>'+ETS_ENTITY.name+'</span><span>账户 '+ETS_ENTITY.account+'</span><span>'+ETS_ENTITY.industry+'</span><span>'+ETS_ENTITY.unit+'</span></div>'+(tabs?etsTabs():'');
 }
-function etsSteps(cycle,result) {
-  const steps=["月度监测与报告","第三方核查","配额核定","交易与抵销","配额清缴"];
-  const reached=cycle.status==="已履约"?5:cycle.estimate?1:result.gap>=0?4:3;
-  return '<ol class="flowSteps etsSteps">'+steps.map((step,index)=>'<li class="'+(index<reached?'done':index===reached?'now':'')+'">'+step+'</li>').join("")+'</ol>';
+function etsFlow(year) {
+  const calc=etsCalc(year),cycle=calc.cycle,final=cycle.alloc.final;
+  const steps=[
+    ["月度监测",calc.attested===12?"done":"now",calc.attested+" / 12 已存证"],
+    ["排放报告",["已提交","已核查"].includes(cycle.report.status)?"done":cycle.report.status==="待提交"?"now":"",cycle.report.submittedAt?"提交 "+cycle.report.submittedAt:"截止 "+(year+1)+"-03-31"],
+    ["第三方核查",cycle.report.status==="已核查"?"done":cycle.report.status==="已提交"?"now":"",cycle.report.verifiedAt?fmt(cycle.report.verifiedQty,0)+" t · "+cycle.report.verifiedAt:"—"],
+    ["配额核定",final?.status==="已确认"?"done":final?"now":"",final?(final.status==="已确认"?fmt(final.qty,0)+" t · "+final.confirmedAt:final.status):cycle.alloc.pre?"预分配 "+fmt(cycle.alloc.pre.qty,0):"未下发"],
+    ["交易与抵销",calc.settled||(final&&calc.gap>=0)?"done":final?"now":"",calc.settled?"CCER "+fmt(cycle.surrender.ccer,0):final?(calc.gap>=0?"盈余 "+fmt(calc.gap,0):"缺口 "+fmt(-calc.gap,0)):"—"],
+    ["配额清缴",calc.settled?"done":final?.status==="已确认"&&calc.gap>=0?"now":"",calc.settled?cycle.surrender.at:"截止 "+cycle.deadline]
+  ];
+  return '<ol class="etsFlow">'+steps.map(([name,tone,note],index)=>'<li class="'+tone+'"><i>'+(tone==="done"?"✓":index+1)+'</i><b>'+name+'</b><small>'+note+'</small></li>').join("")+'</ol>';
 }
-function etsOverview() {
-  const cycle=etsCycle(etsYear);
-  const result=etsResult(cycle);
-  const status=etsStatus(cycle,result);
+function etsTile(label,value,note,tone){return statTile(label,tone?'<i class="'+tone+'" style="font-style:normal">'+value+'</i>':value,note);}
+function etsWorkbench() {
+  const year=etsSel(),calc=etsCalc(year),cycle=calc.cycle,status=etsStatus(year);
   const days=daysUntil(cycle.deadline);
-  const ccerRoom=Math.max(0,Math.min(result.cap-cycle.ccerUsed,ccerAvailable(cycle.year)-cycle.ccerUsed));
-  const shortfall=Math.max(0,-result.gap);
-  const fromCcer=Math.min(shortfall,ccerRoom);
-  const org=yearTotals(Math.min(cycle.year,CURRENT_YEAR));
-  const price=marketSeries().at(-1);
-  return etsHead("履约总览",(cycle.status!=="已履约"&&!cycle.estimate?'<button class="btn primary" onclick="surrenderEts('+cycle.year+')" '+(result.gap<0?'disabled title="配额不足，需先补足缺口"':'')+'>提交清缴</button>':''),"履约总览")+
-    '<div class="statRow">'+statTile("核查排放量",fmt(result.verified,0),"tCO₂ · "+(cycle.estimate?"1–10 月监测年化预估":"核查于 "+cycle.verifiedAt))+
-      statTile("可用于清缴",fmt(result.position,0),"配额 "+fmt(result.allocation,0)+" + 结转 "+fmt(cycle.carryIn,0)+" + 交易 "+fmt(result.net,0)+" + CCER "+fmt(cycle.ccerUsed,0))+
-      statTile(result.gap>=0?"配额盈余":"配额缺口",'<i class="'+(result.gap>=0?'okText':'badText')+'" style="font-style:normal">'+fmt(Math.abs(result.gap),0)+'</i>',"tCO₂ · 状态 "+status.label)+
-      statTile(cycle.status==="已履约"?"清缴完成":"距履约截止",cycle.status==="已履约"?cycle.settledAt:(days>=0?days+" 天":"已逾期"),"截止日期 "+cycle.deadline)+'</div>'+
-    '<section class="panel"><div class="panelHead"><h3>履约进度</h3><span class="status '+status.tone+'">'+status.label+'</span></div>'+etsSteps(cycle,result)+
-      '<div class="coverBar"><span style="width:'+Math.min(100,result.position/result.verified*100)+'%"></span></div>'+
-      '<p class="muted small">清缴覆盖率 '+(result.position/result.verified*100).toFixed(1)+'%，CCER 抵销上限为核查排放量的 5%（'+fmt(result.cap,0)+' tCO₂），本年度已使用 '+fmt(cycle.ccerUsed,0)+'。</p></section>'+
+  const todos=etsTodos();
+  return etsHead("履约工作台")+
+    '<div class="statRow five">'+etsTile(calc.verifiedDone?"应清缴（核查量）":"预计排放",fmt(calc.verified,0),"tCO₂"+(calc.verifiedDone?" · "+cycle.report.verifyNo:" · 1–12 月监测"+(year===CURRENT_YEAR?"含计划":"")))+
+      (calc.settled?etsTile("已清缴 CEA",fmt(cycle.surrender.cea,0),"t · "+cycle.surrender.at):etsTile(calc.allocFinal?"可用配额":"预计配额",fmt(calc.allocFinal?calc.available:calc.alloc,0),calc.pending?"另有待确认补发 "+fmt(calc.pending,0)+" t":calc.allocFinal?"含结转与交易":"按 "+year+" 年基准值测算"))+
+      etsTile("CCER 抵销",fmt(calc.ccer,0),"上限 "+fmt(calc.cap,0)+" tCO₂e")+
+      (calc.settled?etsTile("履约状态","已履约","凭证 "+cycle.surrender.cert,"okText"):etsTile(calc.gap>=0?(calc.allocFinal?"配额盈余":"预计盈余"):(calc.allocFinal?"配额缺口":"预计缺口"),fmt(Math.abs(calc.gap),0),"t",calc.gap>=0?"okText":"badText"))+
+      etsTile(calc.settled?"清缴日期":"距清缴截止",calc.settled?cycle.surrender.at:days+" 天","截止 "+cycle.deadline)+'</div>'+
+    '<section class="panel"><div class="panelHead"><h3>'+year+' 年度履约进度</h3><span class="status '+status.tone+'">'+status.label+'</span></div>'+etsFlow(year)+'</section>'+
     '<div class="homeGrid even"><div>'+
-      card(cycle.status==="已履约"?"履约结果":result.gap>=0?"清缴准备":"缺口补足建议",
-        cycle.status==="已履约"?'<p class="muted">已于 '+cycle.settledAt+' 完成清缴，'+(result.gap>=0?'盈余 '+fmt(result.gap,0)+' tCO₂ 可出售或结转至下一年度。':'')+'</p>':
-        cycle.estimate?'<p class="muted">本年度仍在监测中。按当前预估，'+(result.gap>=0?'预计盈余 '+fmt(result.gap,0)+' tCO₂。':'预计缺口 '+fmt(-result.gap,0)+' tCO₂，建议提前锁定 CCER 或分批买入配额。')+'</p>':
-        result.gap>=0?'<p class="muted">配额与抵销已足以覆盖核查排放，可提交清缴。清缴后剩余 '+fmt(result.gap,0)+' tCO₂ 可出售或结转。</p>':
-        '<ul class="planList"><li><b>使用 CCER 抵销 '+fmt(fromCcer,0)+' tCO₂</b><small>上限内剩余额度 '+fmt(Math.max(0,result.cap-cycle.ccerUsed),0)+'，持仓可用 '+fmt(ccerAvailable(cycle.year)-cycle.ccerUsed,0)+'</small><button class="btn" onclick="go(\'碳履约\',\'CCER 抵销\')">调整抵销</button></li>'+
-          '<li><b>买入 CEA '+fmt(shortfall-fromCcer,0)+' tCO₂</b><small>按参考价 '+price.toFixed(2)+' 元/吨，约 '+fmt((shortfall-fromCcer)*price/10000,1)+' 万元</small><button class="btn primary" onclick="openTradeModal()">登记交易</button></li></ul>')+
+      card("待办事项",todos.length?'<ul class="todoList etsTodo">'+todos.map(item=>'<li><span class="todoTag'+(item.primary?' warn':'')+'">'+item.tag+'</span><div><b>'+item.title+'</b><small>'+item.meta+'</small></div>'+
+        (etsEditable()?'<button class="btn'+(item.primary?' primary':'')+'" onclick="'+item.action+'">'+item.button+'</button>':'')+'</li>').join("")+'</ul>':'<div class="todoEmpty">暂无待办</div>')+
     '</div><div>'+
-      card("数据来自组织盘查",'<dl class="miniFacts cols2"><div><dt>组织盘查 '+Math.min(cycle.year,CURRENT_YEAR)+' 范围一+二</dt><dd>'+fmt(org["1"]+org["2"],0)+' tCO₂e</dd></div>'+
-        '<div><dt>其中热电分公司（履约边界）</dt><dd>'+fmt(result.verified,0)+' tCO₂ · 占 '+pct(result.verified,org["1"]+org["2"])+'%</dd></div>'+
-        '<div><dt>燃煤热电联产（范围一）</dt><dd>'+fmt(cycle.coal,0)+' t 原煤</dd></div><div><dt>厂用电下网（范围二）</dt><dd>'+fmt(cycle.elec,0)+' MWh</dd></div></dl>'+
-        '<p class="muted small">核查排放量直接取自组织盘查中嘉兴热电分公司的两项已审核数据，燃煤排放因子按发电设施核算指南参数计算（'+CHP_COAL_FACTOR.toFixed(4)+' tCO₂/t），与组织盘查使用同一因子，两套口径一致。'+
-          (cycle.coalApproved?'':'<b class="badText">当前年度燃煤数据尚未审核通过，核查排放暂不完整。</b>')+'本年度交易净额 '+(result.cost>=0?'支出 ':'收入 ')+fmt(Math.abs(result.cost)/10000,1)+' 万元。</p>'+
-        '<div class="actions"><button class="btn" onclick="go(\'组织碳排放\',\'核算分析\',\'排放清单\')">组织排放清单</button><button class="btn" onclick="go(\'碳履约\',\'排放核查\')">核查明细</button></div>')+
+      card("操作记录",'<ul class="feed">'+ets().log.slice(0,8).map(row=>'<li><time>'+textHtml(row.at)+'</time><span>'+textHtml(row.actor)+'</span>'+textHtml(row.text)+'</li>').join("")+'</ul>')+
     '</div></div>'+
-    card("履约记录",(ets().log.length?'<ul class="feed">'+ets().log.slice(-6).reverse().map(row=>'<li><time>'+textHtml(row.at)+'</time><span>'+textHtml(row.actor)+'</span>'+textHtml(row.text)+'</li>').join("")+'</ul>':'')+
-      '<ul class="feed">'+[cycle.settledAt&&[cycle.settledAt,"完成配额清缴"],cycle.verifiedAt&&[cycle.verifiedAt,"核查报告出具 · "+ets().verifier],
-        [cycle.year+1+"-03-31","提交上年度排放报告"]].filter(Boolean).map(([at,text])=>'<li><time>'+at+'</time><span>系统</span>'+text+'</li>').join("")+'</ul>');
+    card("历年履约",'<div class="tableWrap"><table><thead><tr><th>年度</th><th>核查排放 (t)</th><th>核定配额 (t)</th><th>CCER 抵销</th><th>清缴 CEA</th><th>核定−核查</th><th>清缴日期</th><th>状态</th><th>凭证</th></tr></thead><tbody>'+
+      ETS_YEARS.map(y=>{const c=etsCalc(y),cy=c.cycle,s=etsStatus(y);
+        const result=c.settled?cy.alloc.final.qty-c.verified:c.gap;
+        return '<tr><td><button class="linkBtn" onclick="setEtsYear('+y+')">'+y+'</button></td><td>'+(c.verifiedDone?fmt(c.verified,0):'<span class="muted">'+fmt(c.verified,0)+'（预计）</span>')+'</td><td>'+(cy.alloc.final?fmt(cy.alloc.final.qty,0):'—')+'</td><td>'+fmt(c.ccer,0)+'</td><td>'+(c.settled?fmt(cy.surrender.cea,0):'—')+
+          '</td><td class="'+(result>=0?'okText':'badText')+'">'+(cy.alloc.final?(result>=0?'+':'')+fmt(result,0):'—')+'</td><td>'+(cy.surrender.at||'—')+'</td><td><span class="status '+s.tone+'">'+s.label+'</span></td><td>'+(c.settled?'<button class="linkBtn" onclick="showEtsCert('+y+')">'+cy.surrender.cert+'</button>':'—')+'</td></tr>';}).join("")+
+      '</tbody></table></div>');
 }
-function surrenderEts(year) {
-  const cycle=etsCycle(year);
-  const result=etsResult(cycle);
-  if(result.gap<0){showToast("配额不足，还差 "+fmt(-result.gap,0)+" tCO₂");return;}
-  cycle.status="已履约";
-  cycle.settledAt=new Date().toISOString().slice(0,10);
-  ets().log.push({at:new Date().toLocaleString("zh-CN",{hour12:false}),actor:MANAGER_NAME,text:"提交 "+year+" 年度配额清缴 "+fmt(result.verified,0)+" tCO₂"});
-  persistDemo();render();showToast(year+" 年度已完成清缴");
+
+// 排放监测
+function etsMonitorPage() {
+  const year=etsSel(),calc=etsCalc(year),cycle=calc.cycle,months=ets().monthly[year],sums=calc.sums;
+  const report=cycle.report;
+  const canSubmit=etsEditable()&&calc.attested===12&&["监测中","待提交"].includes(report.status);
+  return etsHead("排放监测",'<button class="btn" onclick="exportFirstTable()">导出</button>'+(canSubmit?'<button class="btn primary" onclick="openEtsReport('+year+')">提交年度报告</button>':''))+
+    '<div class="statRow five">'+statTile("入炉煤量",fmt(sums.coal,0),"t")+statTile("燃煤排放",fmt(sums.coalEmission,0),"tCO₂")+statTile("下网电量",fmt(sums.elec,1),"MWh · "+fmt(sums.elecEmission,0)+" tCO₂")+
+      statTile("供电量",fmt(sums.supply,0),"MWh · 供热 "+fmt(sums.heat,0)+" GJ")+statTile("已存证",calc.attested+" / 12","月")+'</div>'+
+    '<section class="panel"><div class="panelHead"><h3>月度数据</h3><span class="muted small">氧化率 '+CHP_PARAMS.of+' · 电网因子 '+ETS_GRID_FACTOR+' tCO₂/MWh</span></div>'+
+    '<div class="tableWrap"><table class="monthTable"><thead><tr><th>月份</th><th>入炉煤量 (t)</th><th>低位发热量 (GJ/t)</th><th>单位热值含碳量 (tC/GJ)</th><th>供电量 (MWh)</th><th>供热量 (GJ)</th><th>下网电量 (MWh)</th><th>排放量 (tCO₂)</th><th>凭证</th><th>状态</th><th></th></tr></thead><tbody>'+
+      months.map(row=>{const e=etsMonthEmission(row);const tone={"已存证":"ok","待存证":"warn","未到期":"gray"}[row.status];
+        return '<tr><td>'+MONTH_NAMES[row.month-1]+'</td><td>'+fmt(row.coal,0)+'</td><td>'+row.ncv.toFixed(2)+'</td><td>'+row.cc.toFixed(5)+'</td><td>'+fmt(row.supply,0)+'</td><td>'+fmt(row.heat,0)+'</td><td>'+fmt(row.elec,1)+'</td><td>'+fmt(e.total,0)+'</td><td>'+(row.evidence||'—')+'</td>'+
+          '<td><span class="status '+tone+'">'+(row.status==="未到期"?"计划值":row.status)+'</span>'+(row.at?'<small>'+row.at+'</small>':'')+'</td><td>'+
+          (row.status==="待存证"&&etsEditable()?'<button class="btn primary" onclick="openEtsMonth('+year+','+row.month+')">填报</button>':
+           row.status==="已存证"?'<button class="linkBtn" onclick="openEtsMonth('+year+','+row.month+')">查看</button>':'')+'</td></tr>';}).join("")+
+      '<tr class="sumRow"><td>合计</td><td>'+fmt(sums.coal,0)+'</td><td>'+(sums.coal?(months.reduce((s,r)=>s+r.coal*r.ncv,0)/sums.coal).toFixed(2):'—')+'</td><td>—</td><td>'+fmt(sums.supply,0)+'</td><td>'+fmt(sums.heat,0)+'</td><td>'+fmt(sums.elec,1)+'</td><td>'+fmt(sums.emission,0)+'</td><td></td><td></td><td></td></tr>'+
+    '</tbody></table></div></section>'+
+    '<div class="homeGrid even"><div>'+card("年度排放报告",'<dl class="miniFacts cols2"><div><dt>报告编号</dt><dd>'+(report.no||'—')+'</dd></div><div><dt>状态</dt><dd><span class="status '+({"已核查":"ok","已提交":"warn"}[report.status]||"gray")+'">'+report.status+'</span></dd></div>'+
+        '<div><dt>提交日期</dt><dd>'+(report.submittedAt||'截止 '+(year+1)+'-03-31')+'</dd></div><div><dt>报告排放量</dt><dd>'+(report.reportedQty?fmt(report.reportedQty,0):report.status==="已核查"?fmt(report.verifiedQty,0):'—')+' tCO₂</dd></div></dl>')+
+    '</div><div>'+card("核查结论",report.status==="已核查"?'<dl class="miniFacts cols2"><div><dt>核查机构</dt><dd>'+textHtml(report.verifier)+'</dd></div><div><dt>核查报告</dt><dd>'+report.verifyNo+'</dd></div>'+
+        '<div><dt>核查日期</dt><dd>'+report.verifiedAt+'</dd></div><div><dt>核查排放量</dt><dd>'+fmt(report.verifiedQty,0)+' tCO₂</dd></div></dl>':
+        report.status==="已提交"?'<div class="todoEmpty">核查中</div>'+(etsEditable()?'<div class="actions"><button class="btn primary" onclick="openEtsVerify('+year+')">登记核查结论</button></div>':''):'<div class="todoEmpty">未开始</div>')+'</div></div>';
 }
-function etsAllocationPage() {
-  const cycles=Object.values(ets().cycles);
-  const cycle=etsCycle(etsYear);
-  const result=etsResult(cycle);
-  return etsHead("配额管理",'<button class="btn" onclick="exportFirstTable()">导出</button>',"配额管理")+
-    '<div class="statRow">'+statTile(etsYear+" 核定配额",fmt(result.allocation,0),"tCO₂ · "+(cycle.estimate?"预分配口径":"最终核定"))+
-      statTile("预分配（70%）",fmt(result.allocation*0.7,0),"年初发放")+statTile("上年结转",fmt(cycle.carryIn,0),"tCO₂")+
-      statTile("交易净额",(result.net>=0?"+":"")+fmt(result.net,0),"tCO₂ · 买入为正")+'</div>'+
-    card(etsYear+" 年度配额计算（基准线法）",'<div class="tableWrap"><table><thead><tr><th>项目</th><th>活动水平</th><th>基准值</th><th>修正系数</th><th>配额(tCO₂)</th></tr></thead><tbody>'+
-      '<tr><td>供电量</td><td>'+fmt(cycle.power,0)+' MWh</td><td>'+cycle.powerBench+' tCO₂/MWh</td><td>'+cycle.correction+'</td><td>'+fmt(cycle.power*cycle.powerBench*cycle.correction,0)+'</td></tr>'+
-      '<tr><td>供热量</td><td>'+fmt(cycle.heat,0)+' GJ</td><td>'+cycle.heatBench+' tCO₂/GJ</td><td>'+cycle.correction+'</td><td>'+fmt(cycle.heat*cycle.heatBench*cycle.correction,0)+'</td></tr>'+
-      '<tr><td colspan="4"><strong>合计</strong></td><td><strong>'+fmt(result.allocation,0)+'</strong></td></tr></tbody></table></div><p class="muted small">基准值为演示值，实际以主管部门发布的年度配额分配方案为准。</p>')+
-    card("历年配额与排放",'<div class="tableWrap"><table><thead><tr><th>年度</th><th>核定配额</th><th>核查排放</th><th>盈缺</th><th>CCER 抵销</th><th>状态</th><th>截止</th></tr></thead><tbody>'+
-      cycles.map(row=>{const r=etsResult(row),s=etsStatus(row,r);
-        return '<tr><td>'+row.year+'</td><td>'+fmt(r.allocation,0)+'</td><td>'+fmt(r.verified,0)+'</td><td class="'+(r.allocation-r.verified>=0?'okText':'badText')+'">'+fmt(r.allocation-r.verified,0)+
-          '</td><td>'+fmt(row.ccerUsed,0)+'</td><td><span class="status '+s.tone+'">'+s.label+'</span></td><td>'+row.deadline+'</td></tr>';}).join("")+'</tbody></table></div>');
+function openEtsMonth(year,month) {
+  const row=ets().monthly[year][month-1];
+  const edit=row.status==="待存证"&&etsEditable();
+  const field=(id,label,value,step)=>'<label>'+label+'<input id="'+id+'" type="number" min="0" step="'+step+'" value="'+value+'" '+(edit?'':'disabled')+'></label>';
+  openModal('<h2>'+year+' 年 '+MONTH_NAMES[row.month-1]+'监测数据</h2><div class="modalForm">'+
+    field("mCoal","入炉煤量 (t)",row.coal,1)+field("mNcv","低位发热量 (GJ/t)",row.ncv,0.01)+field("mCc","单位热值含碳量 (tC/GJ)",row.cc,0.00001)+
+    field("mSupply","供电量 (MWh)",row.supply,1)+field("mHeat","供热量 (GJ)",row.heat,1)+field("mElec","下网电量 (MWh)",row.elec,0.1)+
+    '<label>凭证编号<input id="mEvidence" value="'+textHtml(row.evidence||"")+'" '+(edit?'':'disabled')+'></label>'+
+    '<label>状态<input value="'+row.status+(row.at?" · "+row.at:"")+'" disabled></label></div>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">'+(edit?'取消':'关闭')+'</button>'+
+    (edit?'<button class="btn" onclick="saveEtsMonth('+year+','+month+',false)">保存</button><button class="btn primary" onclick="saveEtsMonth('+year+','+month+',true)">保存并存证</button>':'')+'</div>');
 }
-function etsVerificationPage() {
-  const cycle=etsCycle(etsYear);
-  const result=etsResult(cycle);
-  const coalEmission=cycle.coal*cycle.ncv*cycle.cc*cycle.of*44/12;
-  const editable=cycle.estimate&&currentRole==="管理者";
-  return etsHead("排放核查",editable?'<button class="btn primary" onclick="openMrvModal()">更新监测数据</button>':'',"排放核查")+
-    '<div class="statRow">'+statTile("核查排放量",fmt(result.verified,0),"tCO₂")+statTile("化石燃料燃烧",fmt(coalEmission,0),"占 "+(coalEmission/result.verified*100).toFixed(1)+"%")+
-      statTile("购入电力",fmt(cycle.elec*cycle.elecFactor,0),"tCO₂")+statTile("核查状态",cycle.estimate?"监测中":"已核查",cycle.estimate?"每月 MRV 月报":"核查于 "+cycle.verifiedAt)+'</div>'+
-    card("排放量计算",'<div class="tableWrap"><table><thead><tr><th>排放源</th><th>活动数据</th><th>低位发热量</th><th>单位热值含碳量</th><th>碳氧化率</th><th>排放因子</th><th>排放(tCO₂)</th></tr></thead><tbody>'+
-      '<tr><td>燃煤（烟煤）<small>组织盘查 · 范围一 · '+CHP_COAL+'</small></td><td>'+fmt(cycle.coal,0)+' t</td><td>'+cycle.ncv+' GJ/t</td><td>'+cycle.cc+' tC/GJ</td><td>'+(cycle.of*100).toFixed(0)+'%</td><td>—</td><td>'+fmt(coalEmission,0)+'</td></tr>'+
-      '<tr><td>购入电力<small>组织盘查 · 范围二 · '+CHP_ELEC+'</small></td><td>'+fmt(cycle.elec,0)+' MWh</td><td>—</td><td>—</td><td>—</td><td>'+cycle.elecFactor+' tCO₂/MWh</td><td>'+fmt(cycle.elec*cycle.elecFactor,0)+'</td></tr>'+
-      '<tr><td colspan="6"><strong>合计</strong></td><td><strong>'+fmt(result.verified,0)+'</strong></td></tr></tbody></table></div>'+
-      '<p class="muted small">燃料燃烧排放 = 消耗量 × 低位发热量 × 单位热值含碳量 × 碳氧化率 × 44/12；购入电力排放 = 电量 × 电网排放因子。参数为演示值。</p>')+
-    card("核查信息",'<dl class="miniFacts cols2"><div><dt>核查机构</dt><dd>'+textHtml(ets().verifier)+'</dd></div><div><dt>核查报告</dt><dd>'+(cycle.verifiedAt||"待核查")+'</dd></div>'+
-      '<div><dt>数据来源</dt><dd>组织盘查已审核数据（入厂煤计量、煤质化验、关口电表）</dd></div><div><dt>核查结论</dt><dd>'+(cycle.estimate?"—":"排放报告数据经核查确认，无重大偏差")+'</dd></div></dl>');
-}
-function openMrvModal() {
-  const cycle=etsCycle(etsYear);
-  openModal('<h2>更新 '+etsYear+' 年度监测数据</h2><p class="desc">1–10 月实际加 11–12 月计划量。燃煤和厂用电会同步更新组织盘查中热电分公司的对应任务。</p><div class="modalForm">'+
-    '<label>燃煤消耗量（t）<input id="mrvCoal" type="number" value="'+cycle.coal+'"></label>'+
-    '<label>厂用电下网（MWh）<input id="mrvElec" type="number" value="'+cycle.elec+'"></label><label>供电量（MWh）<input id="mrvPower" type="number" value="'+cycle.power+'"></label>'+
-    '<label>供热量（GJ）<input id="mrvHeat" type="number" value="'+cycle.heat+'"></label></div>'+
-    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveMrv()">保存</button></div>');
-}
-async function saveMrv() {
-  const cycle=etsCycle(etsYear);
+async function saveEtsMonth(year,month,attest) {
+  etsYear=year;
+  const row=ets().monthly[year][month-1];
   const read=id=>Number(document.getElementById(id).value);
-  const values={coal:read("mrvCoal"),elec:read("mrvElec"),power:read("mrvPower"),heat:read("mrvHeat")};
+  const values={coal:read("mCoal"),ncv:read("mNcv"),cc:read("mCc"),supply:read("mSupply"),heat:read("mHeat"),elec:read("mElec")};
   if(Object.values(values).some(value=>!(value>0))){showToast("请填写大于 0 的数值");return;}
-  cycle.power=values.power;cycle.heat=values.heat;
-  demo.taskEntries["T-S1-04"]={...demo.taskEntries["T-S1-04"],activity:values.coal};
-  demo.taskEntries["T-S2-04"]={...demo.taskEntries["T-S2-04"],activity:values.elec*1000};
-  persistDemo();
-  await loadBackendData();
-  ets().log.push({at:new Date().toLocaleString("zh-CN",{hour12:false}),actor:MANAGER_NAME,text:"更新 "+etsYear+" 年度监测数据"});
-  persistDemo();closeModal();render();showToast("监测数据已更新");
+  if(values.ncv<15||values.ncv>30){showToast("低位发热量超出合理范围（15–30 GJ/t）");return;}
+  const evidence=document.getElementById("mEvidence").value.trim();
+  if(attest&&!evidence){showToast("存证前请填写凭证编号");return;}
+  Object.assign(row,values,{evidence});
+  if(attest){row.status="已存证";row.at=todayText();}
+  etsLog(year+" 年 "+MONTH_NAMES[month-1]+"监测数据"+(attest?"存证":"保存"));
+  const cycle=etsCycle(year);
+  if(cycle.report.status==="监测中"&&ets().monthly[year].every(item=>item.status==="已存证"))cycle.report.status="待提交";
+  if(year===CURRENT_YEAR) {
+    const sums=etsSums(ets().monthly[year]);
+    demo.taskEntries["T-S1-04"]={...demo.taskEntries["T-S1-04"],activity:Math.round(sums.coal),evidence:"MRV-RD-"+year+String(month).padStart(2,"0")};
+    demo.taskEntries["T-S2-04"]={...demo.taskEntries["T-S2-04"],activity:Math.round(sums.elec*1000),evidence:"MRV-RD-"+year+String(month).padStart(2,"0")};
+    persistDemo();
+    await loadBackendData();
+  }
+  persistDemo();closeModal();render();showToast(attest?"已存证，组织盘查热电数据已同步":"已保存");
 }
-function etsCcerPage() {
-  const cycle=etsCycle(etsYear);
-  const result=etsResult(cycle);
-  const available=ccerAvailable(cycle.year);
-  const editable=cycle.status!=="已履约"&&currentRole==="管理者";
-  return etsHead("CCER 抵销",'',"CCER 抵销")+
-    '<div class="statRow">'+statTile("抵销上限（5%）",fmt(result.cap,0),"tCO₂e · 核查排放 × 5%")+statTile("本年度已使用",fmt(cycle.ccerUsed,0),"占上限 "+pct(cycle.ccerUsed,result.cap)+"%")+
-      statTile("持仓可用",fmt(available-cycle.ccerUsed,0),"tCO₂e · 未被其他年度使用")+statTile("CCER 参考价","78.60","元/吨 · 演示")+'</div>'+
-    card("本年度抵销计划",editable?'<div class="lcaMeta"><label>计划使用量 <input id="ccerUse" type="number" min="0" step="10" value="'+cycle.ccerUsed+'"></label>'+
-        '<button class="btn primary" onclick="saveCcerUse()">保存</button><span class="muted">最多 '+fmt(Math.min(result.cap,available),0)+' tCO₂e（上限与持仓取小）</span></div>':
-      '<p class="muted">'+(cycle.status==="已履约"?"该年度已完成清缴，抵销量已锁定。":"仅管理者可调整抵销计划。")+'</p>')+
-    card("CCER 持仓",'<div class="tableWrap"><table><thead><tr><th>编号</th><th>项目</th><th>类型</th><th>减排量产生年份</th><th>数量(tCO₂e)</th></tr></thead><tbody>'+
-      ets().ccer.map(row=>'<tr><td>'+row.id+'</td><td>'+textHtml(row.project)+'</td><td>'+row.type+'</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td></tr>').join("")+
-      '</tbody></table></div><p class="muted small">项目名称与数量为演示数据。抵销比例上限按全国碳市场规则取应清缴配额的 5%。</p>');
+function openEtsReport(year) {
+  const sums=etsSums(ets().monthly[year]);
+  openModal('<h2>提交 '+year+' 年度排放报告</h2><dl class="miniFacts cols2"><div><dt>重点排放单位</dt><dd>'+ETS_ENTITY.name+'</dd></div><div><dt>报告年度</dt><dd>'+year+'</dd></div>'+
+    '<div><dt>燃煤排放</dt><dd>'+fmt(sums.coalEmission,0)+' tCO₂</dd></div><div><dt>购入电力排放</dt><dd>'+fmt(sums.elecEmission,0)+' tCO₂</dd></div>'+
+    '<div><dt>排放总量</dt><dd><b>'+fmt(sums.emission,0)+' tCO₂</b></dd></div><div><dt>供电量 / 供热量</dt><dd>'+fmt(sums.supply,0)+' MWh / '+fmt(sums.heat,0)+' GJ</dd></div></dl>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="submitEtsReport('+year+')">确认提交</button></div>');
 }
-function saveCcerUse() {
-  const cycle=etsCycle(etsYear);
-  const result=etsResult(cycle);
-  const value=Number(document.getElementById("ccerUse").value);
-  const max=Math.min(result.cap,ccerAvailable(cycle.year));
-  if(!(value>=0)){showToast("请输入有效数量");return;}
-  if(value>max){showToast("超过可用上限 "+fmt(max,0)+" tCO₂e");return;}
-  cycle.ccerUsed=Math.round(value);
-  ets().log.push({at:new Date().toLocaleString("zh-CN",{hour12:false}),actor:MANAGER_NAME,text:etsYear+" 年度 CCER 抵销计划调整为 "+fmt(value,0)});
-  persistDemo();render();showToast("抵销计划已保存");
+function submitEtsReport(year) {
+  etsYear=year;
+  const cycle=etsCycle(year),sums=etsSums(ets().monthly[year]);
+  Object.assign(cycle.report,{status:"已提交",no:"ER-"+year+"-330400-0187",submittedAt:todayText(),reportedQty:Math.round(sums.emission)});
+  etsLog("提交 "+year+" 年度排放报告 "+fmt(sums.emission,0)+" tCO₂");
+  persistDemo();closeModal();render();showToast("排放报告已提交");
 }
+function openEtsVerify(year) {
+  const cycle=etsCycle(year);
+  openModal('<h2>登记 '+year+' 年度核查结论</h2><div class="modalForm">'+
+    '<label>核查机构<input id="vOrg" value="'+ETS_VERIFIER+'"></label><label>核查报告编号<input id="vNo" value="HC-'+(year+1)+'-ZJ-"></label>'+
+    '<label>核查日期<input id="vDate" type="date" value="'+todayText()+'"></label><label>核查排放量 (tCO₂)<input id="vQty" type="number" min="0" value="'+(cycle.report.reportedQty||0)+'"></label></div>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveEtsVerify('+year+')">保存</button></div>');
+}
+function saveEtsVerify(year) {
+  etsYear=year;
+  const qty=Number(document.getElementById("vQty").value),no=document.getElementById("vNo").value.trim();
+  if(!(qty>0)||no.length<12){showToast("请填写核查报告编号和核查排放量");return;}
+  Object.assign(etsCycle(year).report,{status:"已核查",verifier:document.getElementById("vOrg").value.trim(),verifyNo:no,verifiedAt:document.getElementById("vDate").value,verifiedQty:Math.round(qty)});
+  etsLog("登记 "+year+" 年度核查结论 "+fmt(qty,0)+" tCO₂");
+  persistDemo();closeModal();render();showToast("核查结论已登记");
+}
+
+// 配额管理
+function etsLedgerRows(filterYear) {
+  let balance=0;
+  const rows=ets().ledger.map(row=>{balance+=row.qty;return {...row,balance};});
+  return rows.filter(row=>!filterYear||row.year===filterYear).reverse();
+}
+function etsAllocPage() {
+  const year=etsSel(),cycle=etsCycle(year),final=cycle.alloc.final,p=ETS_PROFILE[year];
+  const holdings=etsHoldings();
+  const est=etsAllocFormula(year,ets().monthly[year]);
+  const sums=etsSums(ets().monthly[year]);
+  const formula=final||est;
+  const editable=etsEditable()&&final&&final.status==="待确认";
+  return etsHead("配额管理",'<button class="btn" onclick="exportFirstTable()">导出流水</button>')+
+    '<div class="statRow">'+Object.keys(holdings).sort().filter(vintage=>holdings[vintage]>0).map(vintage=>statTile(vintage+" 年度配额",fmt(holdings[vintage],0),"t")).join("")+statTile("账户合计",fmt(Object.values(holdings).reduce((a,b)=>a+b,0),0),"t · "+ETS_ENTITY.account)+'</div>'+
+    '<section class="panel"><div class="panelHead"><h3>'+year+' 年度配额核定</h3>'+(final?'<span class="status '+({"已确认":"ok","待确认":"warn"}[final.status]||"bad")+'">'+final.status+'</span>':'<span class="status gray">'+(cycle.alloc.pre?'已预分配':'未下发')+'</span>')+'</div>'+
+      '<div class="tableWrap"><table><thead><tr><th>项目</th><th>产出量</th><th>基准值</th><th>修正系数</th><th>配额 (t)</th></tr></thead><tbody>'+
+        '<tr><td>供电</td><td>'+fmt(sums.supply,0)+' MWh</td><td>'+p.be+' tCO₂/MWh</td><td>1.000</td><td>'+fmt(formula.power,0)+'</td></tr>'+
+        '<tr><td>供热</td><td>'+fmt(sums.heat,0)+' GJ</td><td>'+p.bh+' tCO₂/GJ</td><td>1.000</td><td>'+fmt(formula.heat,0)+'</td></tr>'+
+        '<tr class="sumRow"><td>'+(final?'核定配额':'预计配额')+'</td><td></td><td></td><td></td><td>'+fmt(formula.qty,0)+'</td></tr>'+
+        (cycle.alloc.pre?'<tr><td>预分配（'+cycle.alloc.pre.at+'）</td><td></td><td></td><td></td><td>'+fmt(cycle.alloc.pre.qty,0)+'</td></tr>':'')+
+        (final?'<tr><td>核定补发'+(final.status==="已确认"?'（'+final.confirmedAt+' 到账）':'（待确认）')+'</td><td></td><td></td><td></td><td>'+fmt(final.qty-cycle.alloc.pre.qty,0)+'</td></tr>':'')+
+      '</tbody></table></div>'+
+      (final?'<dl class="miniFacts cols2"><div><dt>核定机关</dt><dd>'+ETS_AUTHORITY+'</dd></div><div><dt>下发日期</dt><dd>'+final.at+'</dd></div>'+
+        (final.status==="待确认"?'<div><dt>确认截止</dt><dd>'+final.confirmBy+'（剩余 '+Math.max(0,daysUntil(final.confirmBy))+' 天）</dd></div>':'')+
+        (final.objection?'<div><dt>异议</dt><dd>'+textHtml(final.objection.reason)+' · '+final.objection.at+'</dd></div>':'')+'</dl>':'')+
+      (editable?'<div class="actions"><button class="btn" onclick="openAllocObjection('+year+')">提出异议</button><button class="btn primary" onclick="confirmAlloc('+year+')">确认核定结果</button></div>':
+       etsEditable()&&final?.status==="异议处理中"?'<div class="actions"><button class="btn" onclick="withdrawObjection('+year+')">撤回异议</button></div>':'')+
+    '</section>'+
+    card("配额账户流水",'<div class="tableWrap"><table><thead><tr><th>流水号</th><th>日期</th><th>业务类型</th><th>配额年度</th><th>变动 (t)</th><th>余额 (t)</th><th>关联单据</th></tr></thead><tbody>'+
+      etsLedgerRows().map(row=>'<tr><td>'+row.id+'</td><td>'+row.date+'</td><td>'+row.type+'</td><td>'+row.vintage+'</td><td class="'+(row.qty>=0?'okText':'badText')+'">'+(row.qty>=0?'+':'')+fmt(row.qty,0)+'</td><td>'+fmt(row.balance,0)+'</td><td>'+textHtml(row.ref)+'</td></tr>').join("")+
+    '</tbody></table></div>');
+}
+function confirmAlloc(year) {
+  etsYear=year;
+  const cycle=etsCycle(year),final=cycle.alloc.final;
+  if(final.status!=="待确认")return;
+  final.status="已确认";final.confirmedAt=todayText();
+  const data=ets();
+  data.ledger.push({id:"LG"+String(++data.seq).padStart(5,"0"),date:todayText(),type:"核定补发",vintage:year,qty:final.qty-cycle.alloc.pre.qty,ref:ETS_AUTHORITY+" 核定",year});
+  etsLog("确认 "+year+" 年度配额核定结果 "+fmt(final.qty,0)+" t，补发 "+fmt(final.qty-cycle.alloc.pre.qty,0)+" t 到账");
+  persistDemo();render();showToast("核定结果已确认，补发配额已到账");
+}
+function openAllocObjection(year) {
+  openModal('<h2>'+year+' 年度配额核定异议</h2><div class="modalForm"><label>异议事项<select id="objType"><option>供电量与核查报告不一致</option><option>供热量与核查报告不一致</option><option>修正系数适用有误</option><option>其他</option></select></label>'+
+    '<label>说明<input id="objReason" placeholder="具体数据与依据"></label></div>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveAllocObjection('+year+')">提交异议</button></div>');
+}
+function saveAllocObjection(year) {
+  etsYear=year;
+  const reason=document.getElementById("objType").value+(document.getElementById("objReason").value.trim()?"：":"")+document.getElementById("objReason").value.trim();
+  const final=etsCycle(year).alloc.final;
+  final.status="异议处理中";final.objection={at:todayText(),reason};
+  etsLog("对 "+year+" 年度配额核定提出异议");
+  persistDemo();closeModal();render();showToast("异议已提交至 "+ETS_AUTHORITY);
+}
+function withdrawObjection(year) {
+  etsYear=year;
+  const final=etsCycle(year).alloc.final;
+  final.status="待确认";delete final.objection;
+  etsLog("撤回 "+year+" 年度配额核定异议");
+  persistDemo();render();showToast("异议已撤回");
+}
+
+// 交易委托
 function etsTradePage() {
-  const rows=ets().trades.filter(row=>row.cycle===etsYear);
-  const result=etsResult(etsCycle(etsYear));
-  const bought=rows.filter(row=>row.side==="买入").reduce((sum,row)=>sum+row.qty,0);
-  const sold=rows.filter(row=>row.side==="卖出").reduce((sum,row)=>sum+row.qty,0);
-  return etsHead("配额交易",currentRole==="管理者"?'<button class="btn primary" onclick="openTradeModal()">登记交易</button>':'',"配额交易")+
-    '<div class="statRow">'+statTile("买入",fmt(bought,0),"tCO₂")+statTile("卖出",fmt(sold,0),"tCO₂")+statTile("交易净额",(result.cost>=0?"支出 ":"收入 ")+fmt(Math.abs(result.cost)/10000,2),"万元")+
-      statTile(result.gap>=0?"清缴后盈余":"仍需补足",fmt(Math.abs(result.gap),0),"tCO₂")+'</div>'+
-    '<div class="homeGrid even"><div>'+card("交易记录",'<div class="tableWrap"><table><thead><tr><th>编号</th><th>日期</th><th>方向</th><th>品种</th><th>数量(t)</th><th>价格(元/t)</th><th>金额(万元)</th><th>方式</th></tr></thead><tbody>'+
-      (rows.length?rows.map(row=>'<tr><td>'+row.id+'</td><td>'+row.date+'</td><td><span class="status '+(row.side==="买入"?'warn':'ok')+'">'+row.side+'</span></td><td>'+row.product+'</td><td>'+fmt(row.qty,0)+'</td><td>'+row.price.toFixed(2)+
-        '</td><td>'+fmt(row.qty*row.price/10000,2)+'</td><td>'+row.channel+'</td></tr>').join(""):'<tr><td colspan="8" class="emptyCell">本年度暂无交易</td></tr>')+'</tbody></table></div>')+'</div>'+
-    '<div>'+card("CEA 价格走势",sparkline(marketSeries())+'<p class="muted small">近 30 个交易日收盘价，演示数据，非实时行情。</p>','<span class="demoBadge">演示数据</span>')+'</div></div>';
+  const price=etsPrice(),series=marketSeries();
+  const orders=ets().orders;
+  const filled=orders.filter(row=>row.status==="已成交");
+  const spend=filled.filter(row=>row.at.startsWith(String(CURRENT_YEAR))).reduce((sum,row)=>sum+(row.side==="买入"?1:-1)*row.qty*row.filledPrice,0);
+  const holdings=etsHoldings();
+  return etsHead("交易委托",etsEditable()?'<button class="btn" onclick="openEtsOrder(\'卖出\',\'CEA\')">卖出</button><button class="btn primary" onclick="openEtsOrder(\'买入\',\'CEA\')">买入</button>':'',false)+
+    '<div class="statRow five">'+statTile("CEA 收盘价",price.toFixed(2),"元/t · "+((price-series.at(-2))>=0?"+":"")+(price-series.at(-2)).toFixed(2))+statTile("CCER 参考价",CCER_PRICE.toFixed(2),"元/tCO₂e")+
+      statTile("CEA 持仓",fmt(Object.values(holdings).reduce((a,b)=>a+b,0),0),"t · 市值 "+fmt(Object.values(holdings).reduce((a,b)=>a+b,0)*price/10000,1)+" 万元")+
+      statTile("CCER 可用",fmt(etsCcerFree(),0),"tCO₂e")+statTile(CURRENT_YEAR+" 年交易净支出",fmt(spend/10000,1),"万元")+'</div>'+
+    card("委托记录",'<div class="tableWrap"><table><thead><tr><th>委托号</th><th>委托时间</th><th>方向</th><th>品种</th><th>年度</th><th>数量</th><th>委托价</th><th>成交价</th><th>金额 (元)</th><th>方式</th><th>状态</th><th></th></tr></thead><tbody>'+
+      orders.map(row=>'<tr><td>'+row.id+'</td><td>'+row.at+'</td><td class="'+(row.side==="买入"?'badText':'okText')+'">'+row.side+'</td><td>'+row.product+(row.project?'<small>'+textHtml(row.project)+'</small>':'')+'</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td><td>'+row.price.toFixed(2)+'</td><td>'+(row.status==="已成交"?row.filledPrice.toFixed(2):'—')+'</td><td>'+
+        (row.status==="已成交"?fmt(row.qty*row.filledPrice,0):'—')+'</td><td>'+row.channel+'</td><td><span class="status '+({"已成交":"ok","已报":"warn"}[row.status]||"gray")+'">'+row.status+'</span></td><td>'+
+        (row.status==="已报"&&etsEditable()?'<button class="linkBtn" onclick="cancelEtsOrder(\''+row.id+'\')">撤单</button>':'')+'</td></tr>').join("")+
+    '</tbody></table></div>');
 }
-function openTradeModal() {
-  if(currentRole!=="管理者")return;
-  const result=etsResult(etsCycle(etsYear));
-  openModal('<h2>登记配额交易 · '+etsYear+' 年度</h2><div class="modalForm">'+
-    '<label>方向<select id="trSide"><option>买入</option><option>卖出</option></select></label><label>品种<select id="trProduct"><option>CEA</option></select></label>'+
-    '<label>数量（t）<input id="trQty" type="number" min="1" value="'+Math.max(100,Math.ceil(Math.max(0,-result.gap)/10)*10)+'"></label>'+
-    '<label>成交价（元/t）<input id="trPrice" type="number" step="0.01" value="'+marketSeries().at(-1).toFixed(2)+'"></label>'+
-    '<label>成交日期<input id="trDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></label>'+
-    '<label>交易方式<select id="trChannel"><option>挂牌协议</option><option>大宗协议</option><option>单向竞价</option></select></label></div>'+
-    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveTrade()">保存交易</button></div>');
+function openEtsOrder(side,product="CEA",qty) {
+  const year=etsFocusYear(),calc=etsCalc(year);
+  const price=product==="CEA"?etsPrice():CCER_LISTINGS[0].price;
+  const holdings=etsHoldings();
+  const vintages=side==="买入"?[CURRENT_YEAR-1,CURRENT_YEAR-2]:Object.keys(holdings).filter(v=>holdings[v]>0).map(Number);
+  const defaultQty=qty||(side==="买入"&&calc.gap<0?Math.max(0,-calc.gap-Math.min(Math.max(0,calc.cap-calc.ccer),etsCcerFree())):1000)||1000;
+  openModal('<h2>'+side+'委托</h2><div class="modalForm">'+
+    '<label>品种<select id="oProduct" onchange="openEtsOrder(\''+side+'\',this.value)" '+(side==="卖出"?'disabled':'')+'><option '+(product==="CEA"?'selected':'')+'>CEA</option><option '+(product==="CCER"?'selected':'')+'>CCER</option></select></label>'+
+    (product==="CCER"?'<label>项目<select id="oProject" onchange="document.getElementById(\'oPrice\').value=this.selectedOptions[0].dataset.price">'+CCER_LISTINGS.map(row=>'<option value="'+textHtml(row.project)+'" data-price="'+row.price+'">'+row.project+' · '+row.type+' · '+row.price.toFixed(2)+'</option>').join("")+'</select></label>':
+      '<label>配额年度<select id="oVintage">'+vintages.map(v=>'<option value="'+v+'">'+v+(side==="卖出"?' · 持有 '+fmt(holdings[v],0):'')+'</option>').join("")+'</select></label>')+
+    '<label>数量 ('+(product==="CEA"?"t":"tCO₂e")+')<input id="oQty" type="number" min="100" step="100" value="'+Math.ceil(defaultQty/100)*100+'"></label>'+
+    '<label>委托价 (元)<input id="oPrice" type="number" min="1" step="0.01" value="'+price.toFixed(2)+'"></label>'+
+    '<label>交易方式<select id="oChannel"><option>挂牌协议</option><option>大宗协议</option></select></label>'+
+    '<label>资金账户<input value="浙商银行嘉兴分行 · 碳交易结算户" disabled></label></div>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveEtsOrder(\''+side+'\',\''+product+'\')">提交委托</button></div>');
 }
-function saveTrade() {
-  const qty=Number(document.getElementById("trQty").value),price=Number(document.getElementById("trPrice").value);
-  if(!(qty>0&&price>0)){showToast("请填写数量和成交价");return;}
-  const row={id:"TR-"+String(etsYear).slice(2)+String(Date.now()).slice(-3),date:document.getElementById("trDate").value,cycle:etsYear,
-    side:document.getElementById("trSide").value,product:document.getElementById("trProduct").value,qty,price,channel:document.getElementById("trChannel").value};
-  ets().trades.push(row);
-  ets().log.push({at:new Date().toLocaleString("zh-CN",{hour12:false}),actor:MANAGER_NAME,text:row.side+" "+row.product+" "+fmt(qty,0)+" t @ "+price.toFixed(2)});
-  persistDemo();closeModal();render();showToast("交易已登记，配额盈缺已更新");
+function saveEtsOrder(side,product) {
+  const qty=Number(document.getElementById("oQty").value),price=Number(document.getElementById("oPrice").value);
+  if(!(qty>=100)||qty%100){showToast("数量需为 100 的整数倍");return;}
+  if(!(price>0)){showToast("请填写委托价");return;}
+  const data=ets();
+  const vintage=product==="CEA"?Number(document.getElementById("oVintage").value):2024;
+  const project=product==="CCER"?document.getElementById("oProject").value:"";
+  const market=product==="CEA"?etsPrice():CCER_LISTINGS.find(row=>row.project===project).price;
+  if(side==="卖出"&&(etsHoldings()[vintage]||0)<qty){showToast(vintage+" 年度配额余额不足");return;}
+  if(price>market*1.1||price<market*0.9){showToast("委托价超出 ±10% 涨跌幅限制（"+(market*0.9).toFixed(2)+"–"+(market*1.1).toFixed(2)+"）");return;}
+  const fill=side==="买入"?price>=market:price<=market;
+  const at=nowText();
+  const id="WT"+todayText().replace(/-/g,"")+String(data.orders.length+31).padStart(4,"0");
+  const order={id,at:at.slice(0,16),side,product,vintage,qty,price,filledPrice:fill?+market.toFixed(2):null,status:fill?"已成交":"已报",filledAt:fill?todayText():"",channel:document.getElementById("oChannel").value,year:etsFocusYear(),project};
+  data.orders.unshift(order);
+  if(fill)etsSettleOrder(order);
+  etsLog((fill?"成交 ":"委托 ")+side+" "+product+" "+fmt(qty,0)+" t @ "+price.toFixed(2)+(project?" · "+project:""));
+  persistDemo();closeModal();render();
+  showToast(fill?side+"成交 "+fmt(qty,0)+" t，成交价 "+market.toFixed(2)+" 元":"委托已报，等待成交");
+}
+function etsSettleOrder(order) {
+  const data=ets();
+  if(order.product==="CEA")data.ledger.push({id:"LG"+String(++data.seq).padStart(5,"0"),date:todayText(),type:order.side,vintage:order.vintage,qty:order.side==="买入"?order.qty:-order.qty,ref:order.id,year:order.year});
+  else data.ccer.push({id:"CCER-"+CURRENT_YEAR+"-"+String(1200+data.ccer.length*37).padStart(4,"0"),project:order.project,type:CCER_LISTINGS.find(row=>row.project===order.project).type,vintage:2024,qty:order.qty,acquiredAt:todayText(),price:order.filledPrice,status:"可用",ref:order.id});
+}
+function cancelEtsOrder(id) {
+  const order=ets().orders.find(row=>row.id===id);
+  if(!order||order.status!=="已报")return;
+  order.status="已撤单";
+  etsLog("撤单 "+id);
+  persistDemo();render();showToast("已撤单");
+}
+
+// CCER 抵销
+function etsCcerPage() {
+  const year=etsSel(),calc=etsCalc(year);
+  const canApply=etsEditable()&&!calc.settled&&calc.verifiedDone&&calc.cap>calc.ccer&&etsCcerFree()>0;
+  return etsHead("CCER 抵销",etsEditable()?'<button class="btn" onclick="openEtsOrder(\'买入\',\'CCER\')">购买 CCER</button>'+(canApply?'<button class="btn primary" onclick="openCcerApply('+year+')">申请抵销</button>':''):'')+
+    '<div class="statRow">'+statTile("抵销上限",fmt(calc.cap,0),"tCO₂e · 应清缴量 × 5%")+statTile(year+" 年度已申请",fmt(calc.ccer,0),"tCO₂e · 占上限 "+pct(calc.ccer,calc.cap)+"%")+
+      statTile("可用持仓",fmt(etsCcerFree(),0),"tCO₂e")+statTile("剩余额度",fmt(Math.max(0,calc.cap-calc.ccer),0),"tCO₂e")+'</div>'+
+    card("CCER 持仓",'<div class="tableWrap"><table><thead><tr><th>登记编号</th><th>项目</th><th>方法学类型</th><th>减排量年份</th><th>数量 (tCO₂e)</th><th>取得日期</th><th>成本 (元/t)</th><th>状态</th><th>用于</th><th></th></tr></thead><tbody>'+
+      ets().ccer.map(row=>'<tr><td>'+row.id+'</td><td>'+textHtml(row.project)+'</td><td>'+row.type+'</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td><td>'+row.acquiredAt+'</td><td>'+row.price.toFixed(2)+'</td><td><span class="status '+({"可用":"ok","已锁定":"warn"}[row.status]||"gray")+'">'+row.status+'</span></td><td>'+(row.usedFor?row.usedFor+' 年度':'—')+'</td><td>'+
+        (row.status==="已锁定"&&etsEditable()&&!etsCalc(row.usedFor).settled?'<button class="linkBtn" onclick="releaseCcer(\''+row.id+'\')">撤回</button>':'')+'</td></tr>').join("")+
+    '</tbody></table></div>');
+}
+function openCcerApply(year) {
+  const calc=etsCalc(year),room=calc.cap-calc.ccer;
+  const rows=ets().ccer.filter(row=>row.status==="可用");
+  openModal('<h2>'+year+' 年度 CCER 抵销申请</h2><dl class="miniFacts cols2"><div><dt>抵销上限</dt><dd>'+fmt(calc.cap,0)+' tCO₂e</dd></div><div><dt>剩余额度</dt><dd>'+fmt(room,0)+' tCO₂e</dd></div></dl>'+
+    '<div class="tableWrap"><table class="compact"><thead><tr><th></th><th>登记编号</th><th>项目</th><th>数量</th></tr></thead><tbody>'+
+    rows.map(row=>'<tr><td><input type="checkbox" class="ccerPick" value="'+row.id+'" data-qty="'+row.qty+'" checked onchange="ccerPickSum('+room+')"></td><td>'+row.id+'</td><td>'+textHtml(row.project)+'</td><td>'+fmt(row.qty,0)+'</td></tr>').join("")+
+    '</tbody></table></div><p id="ccerPickTotal" class="small"></p>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveCcerApply('+year+')">提交申请</button></div>');
+  ccerPickSum(room);
+}
+function ccerPickSum(room) {
+  const total=[...document.querySelectorAll(".ccerPick:checked")].reduce((sum,box)=>sum+Number(box.dataset.qty),0);
+  const node=document.getElementById("ccerPickTotal");
+  if(node)node.innerHTML='已选 <b>'+fmt(total,0)+'</b> tCO₂e'+(total>room?' <span class="badText">超出剩余额度 '+fmt(total-room,0)+'</span>':'');
+  return total;
+}
+function saveCcerApply(year) {
+  etsYear=year;
+  const calc=etsCalc(year),room=calc.cap-calc.ccer;
+  const ids=[...document.querySelectorAll(".ccerPick:checked")].map(box=>box.value);
+  const total=ccerPickSum(room);
+  if(!ids.length){showToast("请选择要抵销的 CCER");return;}
+  if(total>room){showToast("超出 5% 抵销上限");return;}
+  ets().ccer.forEach(row=>{if(ids.includes(row.id)){row.status="已锁定";row.usedFor=year;}});
+  etsLog("申请 "+year+" 年度 CCER 抵销 "+fmt(total,0)+" tCO₂e");
+  persistDemo();closeModal();render();showToast("抵销申请已提交，CCER 已锁定");
+}
+function releaseCcer(id) {
+  const row=ets().ccer.find(item=>item.id===id);
+  if(!row||row.status!=="已锁定")return;
+  etsLog("撤回 CCER 抵销 "+id);
+  row.status="可用";delete row.usedFor;
+  persistDemo();render();showToast("已撤回，CCER 恢复可用");
+}
+
+// 配额清缴
+function etsSurrenderPlan(year) {
+  const calc=etsCalc(year),holdings=etsHoldings();
+  let left=calc.need;const plan=[];
+  Object.keys(holdings).map(Number).sort().forEach(vintage=>{
+    if(vintage>year||left<=0||holdings[vintage]<=0)return;
+    const take=Math.min(holdings[vintage],left);plan.push({vintage,take});left-=take;
+  });
+  return {plan,short:left};
+}
+function etsSurrenderPage() {
+  const year=etsSel(),calc=etsCalc(year),cycle=calc.cycle;
+  if(calc.settled) {
+    return etsHead("配额清缴",'<button class="btn" onclick="showEtsCert('+year+')">清缴凭证</button>')+
+      '<div class="statRow">'+statTile("核查排放",fmt(calc.verified,0),"tCO₂")+statTile("清缴 CEA",fmt(cycle.surrender.cea,0),"t")+statTile("CCER 抵销",fmt(cycle.surrender.ccer,0),"tCO₂e")+
+        statTile("清缴日期",cycle.surrender.at,cycle.surrender.cert)+'</div>'+etsSurrenderLedger(year);
+  }
+  const {plan,short}=etsSurrenderPlan(year);
+  const checks=[
+    ["排放报告核查完成",calc.verifiedDone,calc.verifiedDone?cycle.report.verifyNo:"未核查"],
+    ["配额核定结果已确认",cycle.alloc.final?.status==="已确认",cycle.alloc.final?cycle.alloc.final.status:"未下发"],
+    ["CEA 余额满足清缴",short<=0,short>0?"缺 "+fmt(short,0)+" t":"满足"],
+    ["CCER 抵销不超过 5%",calc.ccer<=calc.cap,fmt(calc.ccer,0)+" / "+fmt(calc.cap,0)]
+  ];
+  const ready=checks.every(item=>item[1]);
+  return etsHead("配额清缴",etsEditable()?'<button class="btn primary" '+(ready?'':'disabled')+' onclick="openEtsSurrender('+year+')">提交清缴</button>':'')+
+    '<div class="statRow five">'+statTile("应清缴",fmt(calc.verified,0),"tCO₂ · "+(calc.verifiedDone?"核查量":"预计"))+statTile("CCER 抵销",fmt(calc.ccer,0),"tCO₂e")+
+      statTile("需注销 CEA",fmt(calc.need,0),"t")+statTile("可用 CEA",fmt(calc.available,0),"t · 年度 ≤ "+year)+statTile("截止",cycle.deadline,daysUntil(cycle.deadline)+" 天")+'</div>'+
+    '<div class="homeGrid even"><div>'+card("清缴条件",'<ul class="checkList">'+checks.map(([label,ok,note])=>'<li class="'+(ok?'ok':'bad')+'"><i>'+(ok?'✓':'!')+'</i><b>'+label+'</b><small>'+note+'</small></li>').join("")+'</ul>')+'</div><div>'+
+      card("注销明细",'<div class="tableWrap"><table class="compact"><thead><tr><th>品种</th><th>年度</th><th>注销数量</th></tr></thead><tbody>'+
+        plan.map(row=>'<tr><td>CEA</td><td>'+row.vintage+'</td><td>'+fmt(row.take,0)+'</td></tr>').join("")+
+        ets().ccer.filter(row=>row.usedFor===year&&row.status==="已锁定").map(row=>'<tr><td>CCER</td><td>'+row.vintage+' · '+textHtml(row.project)+'</td><td>'+fmt(row.qty,0)+'</td></tr>').join("")+
+        '<tr class="sumRow"><td>合计</td><td></td><td>'+fmt(calc.need-Math.max(0,short)+calc.ccer,0)+'</td></tr></tbody></table></div>')+'</div></div>';
+}
+function etsSurrenderLedger(year) {
+  return card("注销记录",'<div class="tableWrap"><table><thead><tr><th>流水号</th><th>日期</th><th>品种</th><th>年度</th><th>数量</th><th>凭证</th></tr></thead><tbody>'+
+    ets().ledger.filter(row=>row.type==="清缴注销"&&row.year===year).map(row=>'<tr><td>'+row.id+'</td><td>'+row.date+'</td><td>CEA</td><td>'+row.vintage+'</td><td>'+fmt(-row.qty,0)+'</td><td>'+textHtml(row.ref)+'</td></tr>').join("")+
+    ets().ccer.filter(row=>row.usedFor===year).map(row=>'<tr><td>'+row.id+'</td><td>'+etsCycle(year).surrender.at+'</td><td>CCER</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td><td>'+etsCycle(year).surrender.cert+'</td></tr>').join("")+
+  '</tbody></table></div>');
+}
+function openEtsSurrender(year) {
+  const calc=etsCalc(year);
+  openModal('<h2>确认提交 '+year+' 年度配额清缴</h2><dl class="miniFacts cols2"><div><dt>重点排放单位</dt><dd>'+ETS_ENTITY.name+'</dd></div><div><dt>登记账户</dt><dd>'+ETS_ENTITY.account+'</dd></div>'+
+    '<div><dt>应清缴</dt><dd>'+fmt(calc.verified,0)+' tCO₂</dd></div><div><dt>注销 CEA</dt><dd>'+fmt(calc.need,0)+' t</dd></div><div><dt>注销 CCER</dt><dd>'+fmt(calc.ccer,0)+' tCO₂e</dd></div>'+
+    '<div><dt>清缴后结余</dt><dd>'+fmt(calc.available-calc.need,0)+' t</dd></div></dl>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="submitEtsSurrender('+year+')">确认清缴</button></div>');
+}
+function submitEtsSurrender(year) {
+  etsYear=year;
+  const calc=etsCalc(year),cycle=calc.cycle,data=ets();
+  const {plan,short}=etsSurrenderPlan(year);
+  if(short>0||!calc.verifiedDone||cycle.alloc.final?.status!=="已确认"){showToast("清缴条件未满足");return;}
+  const cert="QJ-"+year+"-330400-0187";
+  plan.forEach(row=>data.ledger.push({id:"LG"+String(++data.seq).padStart(5,"0"),date:todayText(),type:"清缴注销",vintage:row.vintage,qty:-row.take,ref:cert,year}));
+  data.ccer.forEach(row=>{if(row.usedFor===year&&row.status==="已锁定")row.status="已注销";});
+  Object.assign(cycle.surrender,{status:"已清缴",at:todayText(),cea:calc.need,ccer:calc.ccer,cert});
+  etsLog("完成 "+year+" 年度配额清缴：CEA "+fmt(calc.need,0)+" t，CCER "+fmt(calc.ccer,0)+" tCO₂e");
+  persistDemo();closeModal();render();showEtsCert(year);showToast(year+" 年度清缴完成");
+}
+function showEtsCert(year) {
+  const cycle=etsCycle(year),s=cycle.surrender;
+  openModal('<div class="certDoc"><div class="certTitle">全国碳排放权注册登记系统<br><b>配额清缴确认单</b></div>'+
+    '<dl class="miniFacts cols2"><div><dt>确认单编号</dt><dd>'+s.cert+'</dd></div><div><dt>履约年度</dt><dd>'+year+'</dd></div>'+
+    '<div><dt>重点排放单位</dt><dd>'+ETS_ENTITY.name+'</dd></div><div><dt>登记账户</dt><dd>'+ETS_ENTITY.account+'</dd></div>'+
+    '<div><dt>核查排放量</dt><dd>'+fmt(cycle.report.verifiedQty,0)+' tCO₂</dd></div><div><dt>清缴日期</dt><dd>'+s.at+'</dd></div>'+
+    '<div><dt>注销 CEA</dt><dd>'+fmt(s.cea,0)+' t</dd></div><div><dt>注销 CCER</dt><dd>'+fmt(s.ccer,0)+' tCO₂e</dd></div></dl>'+
+    '<div class="certStamp">已完成清缴</div></div>'+
+    '<div class="modalActions"><button class="btn" data-close-modal="1">关闭</button><button class="btn primary" onclick="window.print()">打印</button></div>');
+}
+
+function etsPage() {
+  return ({"排放监测":etsMonitorPage,"配额管理":etsAllocPage,"交易委托":etsTradePage,"CCER 抵销":etsCcerPage,"配额清缴":etsSurrenderPage}[state.group]||etsWorkbench)();
+}
+function etsMiniCard() {
+  const year=etsFocusYear(),calc=etsCalc(year),cycle=calc.cycle,status=etsStatus(year);
+  const days=daysUntil(cycle.deadline);
+  return '<section class="panel etsMini"><div class="panelHead"><h3>碳履约 · '+year+' 年度</h3><button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button></div>'+
+    '<div class="etsMiniBody"><div class="countdown"><b>'+(calc.settled?'✓':days)+'</b><span>'+(calc.settled?'已履约<br>'+cycle.surrender.at:'天<br>截止 '+cycle.deadline)+'</span></div>'+
+    '<dl class="miniFacts cols2"><div><dt>应清缴</dt><dd>'+fmt(calc.verified,0)+' t</dd></div><div><dt>'+(calc.gap>=0?'盈余':'缺口')+'</dt><dd class="'+(calc.gap>=0?'okText':'badText')+'">'+fmt(Math.abs(calc.gap),0)+' t</dd></div>'+
+    '<div><dt>CCER 抵销</dt><dd>'+fmt(calc.ccer,0)+' / '+fmt(calc.cap,0)+'</dd></div><div><dt>状态</dt><dd><span class="status '+status.tone+'">'+status.label+'</span></dd></div></dl></div></section>';
+}
+function etsSlide() {
+  const year=etsFocusYear(),calc=etsCalc(year),cycle=calc.cycle;
+  const todos=etsTodos();
+  return {kicker:"碳履约",title:calc.settled?year+" 年度已完成清缴":year+" 年度履约 · 距截止 "+daysUntil(cycle.deadline)+" 天",
+    text:"应清缴 "+fmt(calc.verified,0)+" t · "+(calc.gap>=0?"盈余 ":"缺口 ")+fmt(Math.abs(calc.gap),0)+" t<br>待办 "+todos.length+" 项",button:"履约工作台",action:"go('碳履约','履约工作台')",art:"wind"};
 }
 
 // ---------- 菜单与外壳 ----------
 TOPS.splice(TOPS.indexOf("基础配置"),0,"碳履约");
-MENUS["碳履约"] = {"履约总览":[],"配额管理":[],"排放核查":[],"CCER 抵销":[],"配额交易":[]};
+MENUS["碳履约"] = {"履约工作台":[],"排放监测":[],"配额管理":[],"交易委托":[],"CCER 抵销":[],"配额清缴":[]};
 MENUS["组织碳排放"] = Object.fromEntries(Object.entries(MENUS["组织碳排放"]).flatMap(entry=>
   entry[0]==="组织碳看板"?[entry,["碳目标管理",["目标设定","目标跟踪"]]]:[entry]));
 
@@ -612,7 +970,7 @@ render = function () {
   withYearCalculation(renderBeforeYear);
   const content=document.getElementById("content");
   let page=null;
-  if(state.top==="碳履约")page=({"履约总览":etsOverview,"配额管理":etsAllocationPage,"排放核查":etsVerificationPage,"CCER 抵销":etsCcerPage,"配额交易":etsTradePage})[state.group]||etsOverview;
+  if(state.top==="碳履约")page=etsPage;
   else if(state.top==="组织碳排放"&&state.group==="碳目标管理")page=state.page==="目标跟踪"?targetTrackPage:targetSetupPage;
   else if(isHistoryYear()&&state.top==="组织碳排放"&&state.group==="数据填报")page=()=>archiveTaskPage(false);
   else if(isHistoryYear()&&state.top==="供应链碳排放"&&state.group==="供应商协同任务")page=()=>archiveTaskPage(true);

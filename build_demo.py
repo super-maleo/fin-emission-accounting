@@ -396,6 +396,27 @@ body.historyMode #yearSelect{border-color:#E9A23B;background:#FFF8EB;color:#8A53
 .yearBar{height:72px;width:28px;display:flex;align-items:flex-end;background:#F2F4F7;border-radius:4px;overflow:hidden}.yearBar i{display:block;width:100%;background:var(--green)}
 .yearBars small{color:var(--sub)}
 .etsSteps{margin:4px 0 14px}
+.etsFlow{list-style:none;margin:4px 0 4px;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.etsFlow li{position:relative;display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.etsFlow li i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;background:#F2F4F7;color:var(--sub)}
+.etsFlow li b{font-size:14px}.etsFlow li small{font-size:12px;color:var(--sub)}
+.etsFlow li.done{border-color:#C7E39C;background:#F8FCF3}.etsFlow li.done i{background:var(--green2);color:#fff}
+.etsFlow li.now{border-color:#F5C26B;background:#FFFAF0}.etsFlow li.now i{background:#F79009;color:#fff}
+.checkList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checkList li{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.checkList li i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#fff;background:#D92D20}
+.checkList li.ok i{background:var(--green2)}.checkList li small{color:var(--sub)}
+.sumRow td{font-weight:700;background:#F8FAF5}
+table.compact{min-width:0}
+.statRow.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1100px){.statRow.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.etsTodo li div{display:grid;gap:2px;min-width:0}.etsTodo li small{color:var(--sub);font-size:12px}
+.monthTable td small,.taskTable td small{display:block;color:var(--sub);font-size:11px}
+td small{display:block;color:var(--sub);font-size:11px}
+.certDoc{position:relative;border:1px solid var(--line);border-radius:8px;padding:20px;margin-bottom:12px}
+.certTitle{text-align:center;color:var(--sub);font-size:13px;margin-bottom:14px;line-height:1.8}.certTitle b{font-size:18px;color:var(--ink)}
+.certStamp{position:absolute;right:24px;top:18px;border:2px solid #D92D20;color:#D92D20;border-radius:6px;padding:4px 10px;font-weight:700;transform:rotate(-8deg);opacity:.8}
+@media(max-width:900px){.etsFlow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .coverBar{height:10px;border-radius:5px;background:#EEF1F4;overflow:hidden;margin-bottom:8px}.coverBar span{display:block;height:100%;background:linear-gradient(90deg,#86BC25,#26890D)}
 .planList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .planList li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px 12px}

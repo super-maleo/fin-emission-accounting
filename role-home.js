@@ -19,8 +19,8 @@ function greeting() {
 function pct(part,total) {
   return total?Math.round(part/total*100):0;
 }
-function helpButton(title,text) {
-  return '<button class="helpIcon" title="'+textHtml(title)+'" onclick="openInfoModal(\''+textHtml(title)+'\',\''+textHtml(text)+'\')">?</button>';
+function helpButton() {
+  return '';
 }
 function pageHead(title,actions="",crumb="") {
   return (crumb?'<div class="breadcrumb">'+textHtml(crumb)+'</div>':'')+
@@ -217,9 +217,9 @@ function managerHome() {
       help:helpButton("管理者工作台","首页只放需要你处理的事和关键动态。排放分析在组织碳看板，产品碳足迹在产品碳排放，供应商协同在供应链碳排放。")},
     [
       {kicker:"组织盘查",title:"已审核排放 "+fmt(total,1)+" tCO₂e",text:"范围一 "+fmt(totals["1"],1)+" · 范围二 "+fmt(totals["2"],1)+" · 范围三 "+fmt(totals["3"],1)+"<br>"+open.length+" 项待填报，"+pending.length+" 项等你审核",button:"查看组织碳看板",action:"go('组织碳排放','组织碳看板')",art:"chart"},
-      {kicker:"供应链协同",title:supDone+" / "+supplyScope3Items.length+" 家供应商数据已计入范围三",text:"供应商在自己的工作台提交，审核通过后自动关联，组织端无需重复填报",button:"邀请或催办供应商",action:"go('供应链碳排放','供应商管理')",art:"chain"},
-      {kicker:"产品碳足迹",title:model.name+" "+fmt(lcaTotal(model)/1000,2)+" tCO₂e / 台",text:"五阶段生命周期建模，桑基图追溯每项活动的贡献",button:"打开产品看板",action:"go('产品碳排放','产品碳足迹看板')",art:"product"},
-      {kicker:"绿色能源",title:"绿电与能效是范围二最直接的减排抓手",text:"绿电采购凭证已纳入填报任务，审核后单独披露、不重复计排",button:"查看范围二任务",action:"openTaskList('2')",art:"wind"}
+      {kicker:"供应链协同",title:supDone+" / "+supplyScope3Items.length+" 家供应商数据已计入范围三",text:["待审核","退回","待填报","草稿"].map(status=>status+" "+supplyScope3Items.filter((row,index)=>supplierState(index)===status).length).join(" · "),button:"供应商管理",action:"go('供应链碳排放','供应商管理')",art:"chain"},
+      {kicker:"产品碳足迹",title:model.name+" "+fmt(lcaTotal(model)/1000,2)+" tCO₂e / 台",text:"LCA 模型 "+demo.lcaModels.length+" 个 · "+model.stages.length+" 个生命周期阶段 · "+model.stages.reduce((sum,stage)=>sum+stage.lines.length,0)+" 条活动数据",button:"产品碳足迹看板",action:"go('产品碳排放','产品碳足迹看板')",art:"product"},
+      etsSlide()
     ],
     taskWidget({title:"我的任务",more:{label:"全部任务",action:"openTaskList()"},
       counts:[{label:"待审核",value:pending.length,tone:"warn",action:"setHomeTaskTab('todo')"},{label:"已退回",value:returned.length,tone:"bad",action:"setHomeTaskTab('todo')"},
@@ -252,15 +252,16 @@ function fillerHome() {
     {title:fillerIdentity+"，"+greeting(),sub:"2026-07 数据填报 · 截止 "+DEADLINE+" · 你负责 "+mine.length+" 项任务",
       help:helpButton("如何填报","点击任务后填写活动量并上传凭证。保存草稿不会进入核算；提交后由管理者审核，退回的任务会显示退回意见，修改后重新提交即可。")},
     [
-      {kicker:"本期填报",title:todo.length?"还有 "+todo.length+" 项任务待你处理":"本期任务都已提交",text:returned?returned+" 项被退回，请按退回意见修改后重新提交":"提交后由管理者审核，通过即计入核算",button:todo.length?"立即处理":"查看我的任务",action:todo.length?"openUnifiedTask('"+todo[0].id+"')":"openTaskList()",art:"chart"},
-      {kicker:"填报小贴士",title:"凭证编号和附件一起提交，审核更快",text:"支持 PDF、图片、Excel，单个文件 3 MB 以内；录入活动量时会实时显示预计排放",art:"wind"},
-      {kicker:"产品数据",title:"你也可以维护产品生命周期活动",text:"原材料、制造、运输、使用、回收五个阶段的活动数据，修改后核算结果即时更新",button:"进入 LCA 清单",action:"go('产品碳排放','LCA建模与核算','模型库')",art:"product"}
+      {kicker:"本期填报",title:todo.length?"待处理 "+todo.length+" 项":"本期任务已全部提交",text:"已退回 "+returned+" · 审核中 "+submitted.length+" · 已完成 "+done.length,button:todo.length?"立即处理":"我的任务",action:todo.length?"openUnifiedTask('"+todo[0].id+"')":"openTaskList()",art:"chart"},
+      (()=>{const ids=mine.map(task=>task.id);const last=demo.auditLog.filter(row=>ids.includes(row.taskId)&&row.actor.startsWith("管理者")).at(-1);
+        return {kicker:"审核反馈",title:last?taskTitle(last.taskId)+" · "+last.action.split("：")[0]:"暂无审核反馈",text:last?last.at+" · "+last.actor:"—",button:"我的任务",action:"openTaskList()",art:"wind"};})(),
+      {kicker:"产品数据",title:demo.lcaModels[0].name,text:"LCA 模型 "+demo.lcaModels.length+" 个 · 活动数据 "+demo.lcaModels[0].stages.reduce((sum,stage)=>sum+stage.lines.length,0)+" 条",button:"LCA 清单",action:"go('产品碳排放','LCA建模与核算','模型库')",art:"product"}
     ],
     taskWidget({title:"我的任务",more:{label:"全部任务",action:"openTaskList()"},
       counts:[{label:"待处理",value:todo.length,tone:"warn",action:"setHomeTaskTab('todo')"},{label:"已退回",value:returned,tone:"bad",action:"setHomeTaskTab('todo')"},
         {label:"审核中",value:submitted.length,action:"setHomeTaskTab('open')"},{label:"已完成",value:done.length,tone:"ok",action:"setHomeTaskTab('done')"}],
       progress:{done:done.length,total:mine.length},
-      tabs:[{key:"todo",label:"待处理",items:todo.map(item),empty:"所有任务都已提交，辛苦了"},
+      tabs:[{key:"todo",label:"待处理",items:todo.map(item),empty:"暂无待处理任务"},
         {key:"open",label:"审核中",items:submitted.map(item),empty:"没有审核中的任务"},
         {key:"done",label:"已完成",items:done.map(item),empty:"暂无已完成任务"}]}),
     [{icon:"▤",label:"我的全部任务",action:"openTaskList()"},{icon:"◈",label:"产品活动数据",action:"go('产品碳排放','LCA建模与核算','模型库')"},
@@ -286,9 +287,9 @@ function supplierHome() {
     {title:textHtml(row.supplier),sub:"联系人 "+textHtml(profile.contact||"—")+" · 客户 江南流体装备 · 嘉兴装配工厂",
       help:helpButton("供应商填报说明","请按采购合同口径填写本期供货活动量和单位产品碳排放，注明因子来源并上传凭证。提交后由江南流体装备审核，审核通过的数据会进入客户的范围三核算；更新数据会形成新版本，旧版本仍保留。")},
     [
-      {kicker:"本期任务",title:status==="通过"?"本期数据已被客户采用":status==="待审核"?"已提交，等待客户审核":"请提交 "+row.part+" 碳数据",text:"对应客户范围三「"+textHtml(categoryName(row.category))+"」· 截止 "+DEADLINE,button:button,action:"editDemoSupplier("+index+")",art:"chain"},
-      {kicker:"数据质量",title:"提供一手数据，让你的产品更具竞争力",text:"优先使用工厂实测能耗或 EPD，比行业平均因子更能体现你的减排成果",art:"product"},
-      {kicker:"出口合规",title:"CBAM 与产品碳足迹要求正在传导到供应链",text:"持续、可追溯的碳数据将成为进入头部客户供应体系的基础条件",art:"wind"}
+      {kicker:"本期任务",title:row.part+" · "+status,text:"范围三 "+textHtml(categoryName(row.category))+" · 截止 "+DEADLINE,button:button,action:"editDemoSupplier("+index+")",art:"chain"},
+      {kicker:"已批准数据",title:approved?"V"+(versions.length||1)+" · "+fmt(approved.total,3)+" tCO₂e":"暂无已批准版本",text:approved?"单位碳排 "+approved.unitCarbon+" kgCO₂e / "+textHtml(approved.unit)+" · 活动量 "+fmt(approved.qty,0)+" "+textHtml(approved.unit):"—",button:"已批准数据",action:"go('供应链碳排放','供应链因子中心')",art:"product"},
+      {kicker:"申报数据",title:fmt(row.total,3)+" tCO₂e",text:"活动量 "+fmt(row.qty,0)+" "+textHtml(row.unit)+" · 单位碳排 "+row.unitCarbon+" kgCO₂e",button:"填报任务",action:"go('供应链碳排放','供应商协同任务')",art:"wind"}
     ],widget,
     [{icon:"▤",label:"我的填报任务",action:"go('供应链碳排放','供应商协同任务')"},{icon:"◈",label:"已批准数据",action:"go('供应链碳排放','供应链因子中心')"},
       {icon:"?",label:"填报说明",action:"go('帮助中心')"}]);
@@ -419,7 +420,7 @@ function supplierProfile(name) {
 }
 function inviteSupplier() {
   const categories=demo.categories.map(row=>'<option value="'+row.code+'">'+textHtml(row.name)+'</option>').join("");
-  openModal('<h2>邀请供应商填报</h2><p class="muted">发起后供应商可在自己的工作台看到任务，提交的数据经你审核后自动计入范围三。</p><div class="modalForm">'+
+  openModal('<h2>邀请供应商填报</h2><div class="modalForm">'+
     '<label>供应商名称<input id="invName" placeholder="如：宁波安泰轴承"></label>'+
     '<label>供应品类<input id="invCategory" placeholder="如：轴承 / 外购件"></label>'+
     '<label>联系人<input id="invContact"></label><label>联系邮箱<input id="invEmail" type="email"></label>'+
@@ -540,7 +541,7 @@ renderStandardReport = function () {
       '<button class="btn primary" onclick="generateScope3Report()">'+(issues.length?"生成草稿快照":"生成正式快照")+'</button>',"组织碳排放 / 报告中心 / "+state.page)+
     '<div class="lcaMeta"><label>核算口径 <select onchange="changeStandard(this.value)">'+optionList(demo.standards,"code","name",backendState.standard)+'</select></label>'+
       (issues.length?'<button class="btn soft" onclick="go(\'组织碳排放\',\'核算分析\',\'异常数据\')">'+issues.length+' 项数据未完成，报告将标记为草稿</button>':'<span class="status ok">数据已全部审核</span>')+'</div>'+
-    '<div class="reportPreview"><div class="reportCover"><div class="coverLogo">Deloitte.</div><h2>江南流体装备 · 2026 年 7 月'+(scope3?'范围三专项报告':'温室气体排放报告')+'</h2>'+
+    '<div class="reportPreview"><div class="reportCover"><div class="coverLogo">Deloitte</div><h2>江南流体装备 · 2026 年 7 月'+(scope3?'范围三专项报告':'温室气体排放报告')+'</h2>'+
       '<p>'+textHtml(standardName(backendState.standard))+' · '+(issues.length?'草稿':'已核对')+'</p></div>'+
       '<dl class="reportFacts"><div><dt>报告主体</dt><dd>江南流体装备有限公司</dd></div><div><dt>核算期间</dt><dd>'+demoPeriod+'</dd></div>'+
       '<div><dt>组织边界</dt><dd>'+BOUNDARY_TEXT+'</dd></div><div><dt>'+(scope3?'范围三排放':'排放总量')+'</dt><dd><b>'+fmt(summary.total,2)+' tCO₂e</b></dd></div></dl>'+
@@ -553,7 +554,7 @@ renderStandardReport = function () {
     card("报告快照",rows.length?'<div class="tableWrap"><table><thead><tr><th>编号</th><th>口径</th><th>状态</th><th>排放(tCO₂e)</th><th>生成时间</th><th>操作</th></tr></thead><tbody>'+
       rows.map(row=>'<tr><td>R-'+String(row.id).padStart(3,"0")+'</td><td>'+textHtml(standardName(row.standard_code))+'</td><td>'+entryStatus(row.status==="已核对"?"通过":"草稿")+
         '</td><td>'+fmt(row.total_emission,4)+'</td><td>'+textHtml(String(row.created_at).slice(0,16).replace("T"," "))+'</td><td><button class="btn" onclick="downloadOrgReport('+row.id+')">下载报告</button></td></tr>').join("")+
-      '</tbody></table></div>':'<div class="todoEmpty">尚未生成快照。确认预览无误后点击右上角生成。</div>');
+      '</tbody></table></div>':'<div class="todoEmpty">暂无快照</div>');
 };
 function reportDocument(title,status,standardCode,detail,incomplete,created) {
   const summary=reportScopeRows(detail);
@@ -575,7 +576,7 @@ function reportDocument(title,status,standardCode,detail,incomplete,created) {
     tableRows(detail,[row=>"范围"+row.scope,row=>textHtml(scenarioText(row.source_name)),row=>fmt(row.activity_value,2)+" "+textHtml(row.activity_unit),row=>row.factor_value,row=>fmt(row.emission_tco2e,4),row=>textHtml(row.evidence||"—")])+'</table>'+
     (incomplete.length?'<h2>未纳入的任务</h2><table><tr><th>任务</th><th>名称</th><th>状态</th></tr>'+tableRows(incomplete,[row=>row.id,row=>textHtml(row.name),row=>row.status])+'</table>':'')+
     '<h2>方法说明</h2><p>排放量 = 活动数据 × 排放因子 × GWP。仅纳入审核通过的企业填报与供应商数据。</p>'+
-    '<p class="note">本报告由 Deloitte 碳排放管理系统演示环境生成，使用虚构企业与场景因子，不构成第三方核证结论。可使用浏览器“打印 → 存储为 PDF”导出。</p></body></html>';
+    '<p class="note">本报告由 Deloitte 碳排放管理系统生成，经第三方核查前不构成核证结论。</p></body></html>';
 }
 function downloadCurrentReport() {
   const scope3=state.page==="范围三专项报告";
@@ -613,8 +614,7 @@ renderBackendConfig = function () {
     return plainHead()+'<div class="taskTable tableWrap"><table><thead><tr><th>角色</th><th>成员</th><th>可见模块</th><th>可执行操作</th><th>数据范围</th><th>操作</th></tr></thead><tbody>'+
       ROLE_MATRIX.map(row=>'<tr><td><strong>'+row.role+'</strong></td><td>'+(row.members?row.members.length:supplyScope3Items.length)+' 人<small>'+
         textHtml((row.members||supplyScope3Items.map(item=>item.supplier)).join("、"))+'</small></td><td class="wrapCell">'+row.modules+'</td><td class="wrapCell">'+row.actions+'</td><td>'+row.scope+
-        '</td><td><button class="btn" onclick="enterRole(\''+row.role+'\')">以此角色预览</button></td></tr>').join("")+'</tbody></table></div>'+
-      '<p class="muted">当前原型通过右上角角色切换模拟权限；正式部署需接入统一登录与服务端权限校验。</p>';
+        '</td><td><button class="btn" onclick="enterRole(\''+row.role+'\')">切换到此角色</button></td></tr>').join("")+'</tbody></table></div>';
   }
   if(state.page==="组织权限") {
     const tasks=workflowTasks();
