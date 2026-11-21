@@ -424,7 +424,6 @@ purchase = supplierTask = supplierDash = supplierMgmt = supplyFactor = function 
   const own=currentRole==="供应商";
   const supplier=supplyScope3Items[supplierIdentity];
   return '<div class="head"><h1>'+(own?"我的数据收集任务":"供应商数据收集")+'</h1><div class="actions"><button class="btn" onclick="exportFirstTable()">导出任务</button></div></div>'+
-    (own?'<div class="taskContext">'+textHtml(supplier.supplier)+' · 数据期间 '+demoPeriod+'</div>':'')+
     '<div class="tableWrap taskTable"><table><thead><tr><th>供应商 / 数据对象</th><th>范围三任务</th><th>活动量</th><th>单位碳排(kgCO₂e)</th><th>状态</th><th>已批准排放(tCO₂e)</th><th>操作</th></tr></thead><tbody>'+
     supplierRowsVisible().map(({row,index})=>'<tr><td><strong>'+textHtml(row.supplier)+'</strong><small>'+textHtml(row.part)+'</small></td><td>'+row.task+
       '</td><td>'+row.qty+' '+row.unit+'</td><td>'+row.unitCarbon+'</td><td>'+entryStatus(taskEntry({locked:true,supplierIndex:index}).status)+
@@ -588,8 +587,7 @@ renderStandardReport=function () {
   const total=details.reduce((sum,row)=>sum+row.emission_tco2e,0);
   const rows=demo.reports.filter(row=>(row.type||"范围三专项报告")===state.page);
   return '<div class="head"><h1>'+state.page+'</h1><div class="actions"><button class="btn primary" onclick="generateScope3Report()">生成'+(issues.length?"草稿":"报告")+
-    '</button></div></div><div class="taskContext"><span>'+demoPeriod+'</span><span>'+formatEmission(total)+' tCO₂e</span><span>'+details.length+' 条已批准数据</span>'+
-    (issues.length?'<button class="btn soft" onclick="go(\'组织碳排放\',\'核算分析\',\'异常数据\')">'+issues.length+' 项未完成</button>':'')+'</div>'+
+    '</button></div></div>'+
     table("报告快照",["编号","报告类型","期间","状态","排放(tCO₂e)","生成时间","操作"],
       rows.map(row=>[row.id,row.type||"范围三专项报告",row.period,row.status||"草稿",formatEmission(row.total_emission),row.created_at,
         '<button class="btn" onclick="downloadOrgReport('+row.id+')">下载报告</button>']));

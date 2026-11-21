@@ -164,7 +164,6 @@ function archiveTaskPage(supplier) {
   const scale=YEAR_SCALE[reportYear];
   return pageHead(supplier?"供应商数据（"+reportYear+" 年度归档）":"填报任务（"+reportYear+" 年度归档）",'<button class="btn" onclick="exportFirstTable()">导出</button>',
       (supplier?"供应链碳排放 / 供应商协同任务":"组织碳排放 / 数据填报")+" / "+reportYear+" 年度")+
-    '<div class="taskContext"><span>共 '+visible.length+' 项</span><span>全部审核通过</span><span>关账日期 '+YEAR_CLOSED[reportYear]+'</span></div>'+
     '<div class="taskTable tableWrap"><table><thead><tr><th>任务</th><th>范围</th><th>组织 / 供应商</th><th>负责人</th><th>活动量</th><th>状态</th><th>审核人</th></tr></thead><tbody>'+
     (visible.length?visible.map((task,index)=>{
       const entry=taskEntry(task);

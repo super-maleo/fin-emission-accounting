@@ -309,13 +309,10 @@ orgWorkbench = function () {
   const scopeColors={"1":"#4D7F17","2":"#86BC25","3":"#008A7A"};
   return pageHead("组织碳看板",'<button class="btn" onclick="go(\'组织碳排放\',\'核算分析\',\'排放清单\')">排放清单</button>'+
       '<button class="btn primary" onclick="go(\'组织碳排放\',\'报告中心\',\'组织排放报告\')">生成报告</button>',"组织碳排放 / 组织碳看板")+
-    '<div class="taskContext"><span>江南流体装备</span><span>'+demoPeriod+'</span><span>'+textHtml(standardName(backendState.standard))+'</span>'+
-      (issues.length?'<button class="btn soft" onclick="go(\'组织碳排放\',\'核算分析\',\'异常数据\')">'+issues.length+' 项数据未审核，未计入</button>':'<span class="status ok">数据已全部审核</span>')+'</div>'+
     '<div class="statRow">'+
       statTile("已审核排放总量",fmt(total,1),"tCO₂e")+
       ["1","2","3"].map(scope=>statTile("范围"+["","一","二","三"][scope],fmt(totals[scope],1),"tCO₂e · 占 "+pct(totals[scope],total)+"%","showScopeDetail('"+scope+"')")).join("")+
     '</div>'+
-    '<div class="scopeStack" title="范围构成">'+["1","2","3"].map(scope=>'<i style="flex:'+(totals[scope]||0.0001)+';background:'+scopeColors[scope]+'" onclick="showScopeDetail(\''+scope+'\')"></i>').join("")+'</div>'+
     '<div class="homeGrid even"><div>'+
       card("排放来源 Top 6",meterRows(top.map(row=>({label:scenarioText(row.source_name),sub:row.scope==="3"?"范围3 · "+categoryName(row.category_code):row.scope==="1"?"范围1 · 直接排放":"范围2 · 外购能源间接排放",
         value:row.emission_tco2e,color:scopeColors[row.scope]||"var(--green)",action:"showOrgCategory('"+row.category_code+"')"}))))+
@@ -361,7 +358,6 @@ orgCalculation = function () {
   if(state.page!=="异常数据")return orgCalculationIssues();
   const tasks=workflowIssues();
   return pageHead("待处理数据",helpButton("待处理数据","列出尚未审核通过的企业与供应商任务，这些数据不计入排放清单和报告。")+'<button class="btn" onclick="exportFirstTable()">导出</button>',"组织碳排放 / 核算分析 / 待处理数据")+
-    '<div class="taskContext"><span>'+tasks.length+' 项未完成</span><span>待审核 '+tasks.filter(task=>taskEntry(task).status==="待审核").length+'</span><span>已退回 '+tasks.filter(task=>taskEntry(task).status==="退回").length+'</span></div>'+
     plainTaskTable(tasks,currentRole==="管理者");
 };
 
@@ -658,13 +654,13 @@ productData = function () {
   const model=activeLca();
   const materials=model.stages[0].lines;
   if(state.page==="BOM/物料清单") {
-    return lcaHeading("BOM/物料清单")+'<div class="taskContext"><span>'+textHtml(model.name)+'</span><span>'+textHtml(model.code)+'</span><span>批次产量 '+model.batchOutput+' '+textHtml(model.flowUnit)+'</span></div>'+
+    return lcaHeading("BOM/物料清单")+
       lineTable(["层级","物料","单台用量","批次用量","来源","凭证","操作"],materials.map((line,index)=>'<tr><td>1.'+(index+1)+'</td><td><strong>'+textHtml(line.name)+'</strong></td><td>'+
         fmt(line.quantity/model.batchOutput,3)+' '+textHtml(line.unit)+'</td><td>'+fmt(line.quantity,2)+' '+textHtml(line.unit)+'</td><td>'+textHtml(line.source)+'</td><td>'+textHtml(line.evidence)+
         '</td><td><button class="btn" onclick="activeLcaStage=0;editLcaLine('+index+')">编辑用量</button></td></tr>'));
   }
   if(state.page==="零部件碳排数据") {
-    return lcaHeading("零部件碳排数据")+'<div class="taskContext"><span>关键物料的单位碳排可直接采用供应商已批准数据，替代行业估算值</span></div>'+
+    return lcaHeading("零部件碳排数据")+
       lineTable(["物料","模型采用因子(kgCO₂e)","数据类型","对应供应商","供应商已批准因子","差异","操作"],materials.map((line,index)=>{
         const link=partSupplier(line);
         const approved=link?.approved;
@@ -678,7 +674,7 @@ productData = function () {
   }
   if(state.page==="额外活动因子库") {
     const rows=model.stages.slice(1).flatMap((stage,offset)=>stage.lines.map((line,index)=>({stage,stageIndex:offset+1,line,index})));
-    return lcaHeading("额外活动因子库")+'<div class="taskContext"><span>制造、运输、使用和回收阶段的能源与活动因子</span></div>'+
+    return lcaHeading("额外活动因子库")+
       lineTable(["阶段","活动","活动单位","因子(kgCO₂e/单位)","来源","代表年份","地域","操作"],rows.map(({stage,stageIndex,line,index})=>'<tr><td>'+stage.name+'</td><td><strong>'+textHtml(line.name)+
         '</strong></td><td>'+textHtml(line.unit)+'</td><td>'+line.factor+'</td><td>'+textHtml(line.source)+'</td><td>'+line.year+'</td><td>'+textHtml(line.region)+
         '</td><td><button class="btn" onclick="activeLcaStage='+stageIndex+';editLcaLine('+index+')">维护</button></td></tr>'));

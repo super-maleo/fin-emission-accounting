@@ -802,7 +802,7 @@ function openNarrative() {
 }
 function showNarrative(doc,saved) {
   window.__narrative=doc;
-  openModal('<h2>分析与结论'+(saved?' · 已插入报告':'')+'</h2><div class="narrativeMeta">生成于 '+textHtml(doc.generatedAt)+' · 基于 '+approvedDetail().length+' 条已审核数据、'+evidenceList().length+' 份凭证</div>'+
+  openModal('<h2>管理层分析'+(saved?' · 已插入报告':'')+'</h2><div class="narrativeMeta">生成于 '+textHtml(doc.generatedAt)+' · 基于 '+approvedDetail().length+' 条已审核数据、'+evidenceList().length+' 份凭证</div>'+
     '<div class="narrative" id="narrativeBody">'+doc.sections.map((section,index)=>'<section><h3>'+textHtml(section.title)+'</h3><div contenteditable="'+(currentRole==="管理者")+'" data-index="'+index+'">'+section.paras.map(text=>'<p>'+textHtml(text)+'</p>').join("")+'</div></section>').join("")+'</div>'+
     '<div class="modalActions"><button class="btn" onclick="regenNarrative()">重新生成</button>'+(currentRole==="管理者"?'<button class="btn primary" onclick="saveNarrative()">插入报告</button>':'<button class="btn primary" data-close-modal="1">关闭</button>')+'</div>');
 }

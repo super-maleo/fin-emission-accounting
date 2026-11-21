@@ -408,6 +408,20 @@ body.historyMode #yearSelect{border-color:#E9A23B;background:#FFF8EB;color:#8A53
 .checkList li.ok i{background:var(--green2)}.checkList li small{color:var(--sub)}
 .sumRow td{font-weight:700;background:#F8FAF5}
 table.compact{min-width:0}
+.baseTable th.baseCol,.baseTable td.baseCol{background:#F3F8EA;font-weight:600}
+tr.totalRow td{font-weight:700;background:#FAFBF8}
+.cellSub{display:block;color:#667085;font-size:12px}
+.policyList{margin:0;display:grid;gap:10px}.policyList div{display:grid;grid-template-columns:130px 1fr;gap:12px}.policyList dt{color:#667085}.policyList dd{margin:0}
+.inlineField{display:flex;align-items:center;gap:8px;font-size:13px;color:#475467}
+.subHead{margin:18px 0 8px;font-size:14px}
+.cutInput{width:76px!important;margin-right:4px}
+.allocTable td,.targetTable td{vertical-align:middle}
+td.nowrap{white-space:nowrap}td.nowrap .btn{margin-right:6px}
+.modalForm .wide{grid-column:1/-1}.modalForm.one{display:grid;grid-template-columns:1fr;gap:12px;margin:12px 0}
+.detailList{display:grid;gap:8px;margin:12px 0}.detailList div{display:grid;grid-template-columns:110px 1fr}.detailList dt{color:#667085}.detailList dd{margin:0}
+.rptBar{display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px}
+.rptLayout{margin-bottom:16px}
+.headSelect{max-width:260px}
 .msgBell{position:relative;border:0;background:none;color:#475467;cursor:pointer;padding:6px;border-radius:8px;display:grid;place-items:center}
 .msgBell:hover{background:var(--greenSoft);color:var(--green3)}
 .msgBell em{position:absolute;top:0;right:-2px;min-width:16px;height:16px;border-radius:8px;background:#D92D20;color:#fff;font-style:normal;font-size:10px;line-height:16px;padding:0 4px;text-align:center}
@@ -488,6 +502,7 @@ script = "\n".join([
     (ROOT / "year-goal-ets.js").read_text(),
     (ROOT / "evidence-ai.js").read_text(),
     (ROOT / "supply-help.js").read_text(),
+    (ROOT / "target-report.js").read_text(),
     """
 async function startDemo() {
   if (location.protocol.startsWith("http")) {
