@@ -1101,9 +1101,10 @@ body[data-top="首页"] #sidebarToggle{visibility:hidden}
 .statTile span{color:var(--sub);font-size:12px}
 .statTile b{font-size:26px;line-height:1.1;font-weight:700;color:#101828;overflow-wrap:anywhere}
 .statTile small{color:var(--sub);font-size:12px;overflow-wrap:anywhere}
-.homeGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+.homeGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:stretch}
 .homeGrid.even{grid-template-columns:repeat(2,minmax(0,1fr))}
-.homeGrid>div{display:grid;gap:16px;min-width:0}
+.homeGrid>div{display:flex;flex-direction:column;gap:16px;min-width:0}
+.homeGrid>div>:last-child{flex:1 1 auto}
 .panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
 .panelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .panelHead h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
@@ -1167,6 +1168,27 @@ body[data-top="首页"] #sidebarToggle{visibility:hidden}
 .emptyCell{text-align:center;color:var(--sub);padding:28px}
 .rowActions{white-space:nowrap}.rowActions .btn+.btn{margin-left:6px}
 .taskTable td small{display:block}
+.exportMenu{position:relative;display:inline-block}
+.exportMenu .menuPop{position:absolute;right:0;top:calc(100% + 4px);z-index:40;min-width:168px;background:#fff;border:1px solid #d9dee5;border-radius:6px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:4px}
+.exportMenu .menuPop[hidden]{display:none}
+.exportMenu .menuPop button{display:flex;justify-content:space-between;width:100%;border:0;background:none;padding:8px 10px;font:inherit;font-size:13px;text-align:left;cursor:pointer;border-radius:4px;color:#1f2933}
+.exportMenu .menuPop button:hover{background:#f1f5f2}
+.exportMenu .menuPop button small{color:#7b8794}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 4px 2px;font-size:13px;color:#52606d;flex-wrap:wrap}
+.pager>div{display:flex;gap:4px;align-items:center}
+.pager button{min-width:30px;height:28px;border:1px solid #d9dee5;background:#fff;border-radius:4px;cursor:pointer;font:inherit;font-size:13px;color:#1f2933}
+.pager button.active{background:#26890d;border-color:#26890d;color:#fff}
+.pager button:disabled{opacity:.4;cursor:default}
+.pager em{font-style:normal;padding:0 4px}
+.catTabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.catTabs button{border:1px solid #d9dee5;background:#fff;border-radius:16px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;color:#3e4c59}
+.catTabs button.active{background:#e8f3e3;border-color:#26890d;color:#1d6b0a;font-weight:600}
+.catTabs button em{font-style:normal;color:#7b8794;margin-left:4px;font-size:12px}
+.srcCell{max-width:260px;white-space:normal;font-size:12px;color:#52606d;line-height:1.45}
+.etsYearBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.etsYearBar .segTabs{margin-bottom:0}
+.feed + .pager{border-top:0}
+@media(min-width:901px){.statRow:has(>:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}.statRow:has(>:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}.statRow:has(>:nth-child(5):last-child){grid-template-columns:repeat(5,minmax(0,1fr))}.statRow:has(>:nth-child(6):last-child){grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:1100px){.homeGrid,.homeGrid.even{grid-template-columns:1fr}.supplierProgress>li{grid-template-columns:1fr}}
 @media(max-width:760px){
   .statRow{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1420,6 +1442,7 @@ td.nowrap{white-space:nowrap}td.nowrap .btn{margin-right:6px}
 .manualNav button{text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;cursor:pointer;font:inherit;color:#344054}.manualNav button.active{background:var(--greenLight);color:var(--green3);font-weight:600}
 .manualSteps{margin:0;padding-left:22px;display:grid;gap:10px;line-height:1.7}
 .homeGrid + .panel,.homeGrid + section{margin-top:0}
+.homeGrid{margin-bottom:16px}
 @media(max-width:900px){.evView,.manualGrid{grid-template-columns:1fr}.traceChain{grid-template-columns:repeat(2,minmax(0,1fr))}.msgPanel{width:min(380px,calc(100vw - 24px))}}
 .statRow.five{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1100px){.statRow.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -2457,7 +2480,7 @@ const demoSeed = {
       "factor_id": 14,
       "evidence": "产品使用假设.docx",
       "note": "售出产品使用",
-      "created_at": "2026-11-21T02:45:10"
+      "created_at": "2026-11-21T07:51:18"
     },
     {
       "id": 4,
@@ -2472,7 +2495,7 @@ const demoSeed = {
       "factor_id": 10,
       "evidence": "通勤问卷.xlsx",
       "note": "员工通勤",
-      "created_at": "2026-11-21T02:45:10"
+      "created_at": "2026-11-21T07:51:18"
     },
     {
       "id": 3,
@@ -2487,7 +2510,7 @@ const demoSeed = {
       "factor_id": 8,
       "evidence": "差旅报销.csv",
       "note": "商务旅行",
-      "created_at": "2026-11-21T02:45:10"
+      "created_at": "2026-11-21T07:51:18"
     },
     {
       "id": 2,
@@ -2502,7 +2525,7 @@ const demoSeed = {
       "factor_id": 5,
       "evidence": "物流对账单.pdf",
       "note": "上游运输",
-      "created_at": "2026-11-21T02:45:10"
+      "created_at": "2026-11-21T07:51:18"
     },
     {
       "id": 1,
@@ -2517,7 +2540,7 @@ const demoSeed = {
       "factor_id": 1,
       "evidence": "采购台账.xlsx",
       "note": "外购商品",
-      "created_at": "2026-11-21T02:45:10"
+      "created_at": "2026-11-21T07:51:18"
     }
   ],
   "reports": []
@@ -8629,7 +8652,7 @@ renderStandardReport = function () {
   return '<style>'+RPT_CSS+'</style>'+pageHead(state.page,
       '<select class="headSelect" onchange="changeStandard(this.value)">'+optionList(demo.standards,"code","name",backendState.standard)+'</select>'+
       (manager?'<button class="btn" onclick="openVerifyModal()">登记核查</button>'+(isHistoryYear()?'':'<button class="btn" onclick="openNarrative()">'+((demo.reportNarrative||{})[kind]?'编辑管理层分析':'生成管理层分析')+'</button>'):'')+
-      '<button class="btn" onclick="downloadCurrentReport()">下载</button>'+
+      exportMenu("exportReport")+
       (manager&&!isHistoryYear()?'<button class="btn primary" onclick="generateScope3Report()">'+(issues.length?"生成草稿版本":"生成正式版本")+'</button>':''),"组织碳排放 / 报告中心 / "+state.page)+
     '<div class="rptLayout">'+orgReportHtml(scope3,{})+'</div>'+
     card("报告版本",rows.length?'<div class="tableWrap"><table class="compact"><thead><tr><th>编号</th><th>口径</th><th>状态</th><th>排放（tCO₂e）</th><th>生成时间</th><th>操作</th></tr></thead><tbody>'+
@@ -8775,7 +8798,7 @@ report = function () {
   const model=activeLca();
   if(state.page==="数据质量分析报告")return productQualityReport(model);
   return '<style>'+RPT_CSS+'</style>'+lcaHeading("碳足迹评价报告")+
-    '<div class="rptBar"><button class="btn" onclick="exportLca()">下载清单（CSV）</button><button class="btn primary" onclick="downloadProductReport()">下载报告</button></div>'+
+    '<div class="rptBar"><button class="btn" onclick="exportLca()">下载清单（CSV）</button>'+exportMenu("exportReport")+'</div>'+
     productReportHtml(model,false);
 };
 
@@ -8786,6 +8809,863 @@ render = function () {
   renderBeforeTargets();
   if(!backendState.ready)return;
   if(state.top==="组织碳排放"&&state.group==="碳目标管理"&&state.page==="目标分解")document.getElementById("content").innerHTML=targetAllocPage();
+};
+
+// 公共排放因子库与兜底因子库。数据按来源、版本维护，并入因子智能匹配。
+
+const FUEL_PARAMS = [
+  // 名称, 低位发热量, 发热量单位, 单位热值含碳量 tC/TJ, 碳氧化率, 计量单位
+  ["无烟煤",20.304,"GJ/t",27.49,0.94,"t"],["烟煤",19.570,"GJ/t",26.18,0.93,"t"],["褐煤",14.080,"GJ/t",28.00,0.96,"t"],
+  ["洗精煤",26.344,"GJ/t",25.41,0.90,"t"],["其他洗煤",12.545,"GJ/t",25.41,0.90,"t"],["型煤",17.460,"GJ/t",33.60,0.90,"t"],
+  ["焦炭",28.435,"GJ/t",29.42,0.93,"t"],["石油焦",32.500,"GJ/t",27.50,0.98,"t"],["原油",41.816,"GJ/t",20.08,0.98,"t"],
+  ["燃料油",41.816,"GJ/t",21.10,0.98,"t"],["汽油",43.070,"GJ/t",18.90,0.98,"t"],["柴油",42.652,"GJ/t",20.20,0.98,"t"],
+  ["一般煤油",43.070,"GJ/t",19.60,0.98,"t"],["液化石油气",50.179,"GJ/t",17.20,0.98,"t"],["液化天然气",51.440,"GJ/t",15.30,0.98,"t"],
+  ["炼厂干气",45.998,"GJ/t",18.20,0.98,"t"],["天然气",389.31,"GJ/万Nm³",15.30,0.99,"万Nm³"],["焦炉煤气",179.81,"GJ/万Nm³",13.58,0.99,"万Nm³"],
+  ["高炉煤气",33.00,"GJ/万Nm³",70.80,0.99,"万Nm³"],["转炉煤气",84.00,"GJ/万Nm³",49.60,0.99,"万Nm³"],["其他煤气",52.27,"GJ/万Nm³",12.20,0.99,"万Nm³"]
+];
+const GWP_TABLE = [
+  // 气体, AR4, AR5, AR6, 常见用途
+  ["CH₄（化石源）",25,28,29.8,"燃烧、逸散"],["N₂O",298,265,273,"燃烧、工业过程"],["HFC-23",14800,12400,14600,"副产物"],["HFC-32（R32）",675,677,771,"空调制冷剂"],
+  ["HFC-125",3500,3170,3740,"混合制冷剂组分"],["HFC-134a（R134a）",1430,1300,1530,"冷水机组、汽车空调"],["HFC-143a",4470,4800,5810,"混合制冷剂组分"],
+  ["HFC-152a",124,138,164,"发泡剂"],["HFC-227ea",3220,3350,3600,"气体灭火"],["HFC-245fa",1030,858,962,"发泡剂"],
+  ["R410A",2088,1924,2256,"多联机、分体空调"],["R407C",1774,1624,1908,"空调制冷剂"],["R404A",3922,3943,4728,"冷库、冷链"],["R507A",3985,3985,4775,"低温冷冻"],
+  ["HCFC-22（R22）",1810,1760,1960,"存量空调"],["SF₆",22800,23500,25200,"高压开关柜"],["NF₃",17200,16100,17400,"电子刻蚀"],["CF₄（PFC-14）",7390,6630,7380,"铝电解、刻蚀"]
+];
+const LIB_ROWS = [
+  // 分类, 名称, 因子值(tCO₂e/单位), 单位, 范围, 地区, 年份, 来源, 关键词
+  ["电力","全国电网平均排放因子",0.0005703,"kWh","2","全国",2022,"生态环境部《关于发布2022年度全国电网平均排放因子的通知》","外购电力 电网 用电"],
+  ["电力","全国电网平均排放因子",0.000581,"kWh","2","全国",2021,"生态环境部 2022 年发布","外购电力 电网 用电"],
+  ["电力","全国电力平均二氧化碳排放因子",0.0005366,"kWh","2","全国",2022,"生态环境部、国家统计局《2022年电力二氧化碳排放因子》","电力 产品 用电 LCA"],
+  ["电力","全国电力平均二氧化碳排放因子",0.0005568,"kWh","2","全国",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","电力 用电"],
+  ["电力","全国电力平均二氧化碳排放因子（不含市场化非化石电量）",0.0005942,"kWh","2","全国",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","电力 市场法 剩余组合"],
+  ["电力","华北区域电力平均二氧化碳排放因子",0.000712,"kWh","2","华北",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","华北 电网 电力"],
+  ["电力","东北区域电力平均二氧化碳排放因子",0.0006012,"kWh","2","东北",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","东北 电网 电力"],
+  ["电力","华东区域电力平均二氧化碳排放因子",0.0005992,"kWh","2","华东",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","华东 浙江 江苏 上海 电网 电力"],
+  ["电力","华中区域电力平均二氧化碳排放因子",0.0005354,"kWh","2","华中",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","华中 电网 电力"],
+  ["电力","西北区域电力平均二氧化碳排放因子",0.0006671,"kWh","2","西北",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","西北 电网 电力"],
+  ["电力","南方区域电力平均二氧化碳排放因子",0.0004367,"kWh","2","南方",2021,"生态环境部、国家统计局《2021年电力二氧化碳排放因子》","南方 广东 电网 电力"],
+  ["电力","绿色电力（绿电交易电量）",0,"kWh","2","全国",2024,"GHG Protocol 范围二指南 · 市场法","绿电 绿证 可再生"],
+  ["电力","分布式光伏自发自用",0,"kWh","2","全国",2024,"GHG Protocol 范围二指南","光伏 自发自用"],
+  ["热力","外购热力缺省排放因子",0.11,"GJ","2","全国",2015,"《工业其他行业企业温室气体排放核算方法与报告指南（试行）》","热力 蒸汽 供热"],
+  ["热力","外购蒸汽（饱和蒸汽 1.0 MPa）",0.3076,"t","2","全国",2015,"按焓值 2.796 GJ/t × 0.11 tCO₂/GJ","蒸汽 外购蒸汽"],
+  ["热力","外购冷量（电制冷）",0.0000449,"MJ","2","全国",2022,"按 COP 3.5 × 全国电网因子折算","冷量 冷冻水"],
+  ["移动源","车用汽油",0.0021354,"L","1","全国",2015,"国家核算指南 · 密度 0.73 kg/L","汽油 公务车 车辆"],
+  ["移动源","车用柴油",0.0026006,"L","1","全国",2015,"国家核算指南 · 密度 0.84 kg/L","柴油 叉车 货车 发电机"],
+  ["移动源","车用液化天然气（LNG）",0.0027566,"kg","1","全国",2015,"国家核算指南缺省参数","LNG 重卡"],
+  ["移动源","车用压缩天然气（CNG）",0.0021622,"Nm³","1","全国",2015,"国家核算指南缺省参数","CNG 天然气汽车"],
+  ["移动源","航空煤油",3.1500,"t","1","全国",2015,"国家核算指南缺省参数","航煤 公务机"],
+  ["工业过程","石灰石（CaCO₃）分解",0.440,"t","1","全国",2015,"化学计量法 44/100","石灰石 碳酸钙 脱硫"],
+  ["工业过程","白云石分解",0.477,"t","1","全国",2015,"化学计量法","白云石"],
+  ["工业过程","纯碱（Na₂CO₃）使用",0.415,"t","1","全国",2015,"化学计量法 44/106","纯碱 碳酸钠"],
+  ["工业过程","焊接保护气 CO₂ 使用",1.000,"t","1","全国",2015,"直接排放","焊接 二氧化碳 保护气"],
+  ["工业过程","乙炔切割",3.385,"t","1","全国",2015,"化学计量法 88/26","乙炔 切割"],
+  ["工业过程","脱硫石灰石（湿法脱硫）",0.440,"t","1","全国",2022,"《企业温室气体排放核算与报告指南 发电设施》","脱硫 石灰石 电厂"],
+  ["原材料","粗钢（高炉-转炉长流程）",2.10,"t","3","全国",2023,"世界钢铁协会《2023 可持续发展指标》","钢 粗钢 钢材"],
+  ["原材料","粗钢（电炉短流程）",0.68,"t","3","全国",2023,"世界钢铁协会《2023 可持续发展指标》","电炉钢 短流程 再生钢"],
+  ["原材料","热轧板卷",2.25,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","热轧 钢板 钢材"],
+  ["原材料","冷轧板",2.40,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","冷轧 钢板"],
+  ["原材料","镀锌板",2.55,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","镀锌 钢板"],
+  ["原材料","不锈钢 304",4.80,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","不锈钢 304"],
+  ["原材料","球墨铸铁件",2.10,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","球铁 铸件"],
+  ["原材料","铸钢件",2.30,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","铸钢 铸件"],
+  ["原材料","再生铝",0.60,"t","3","全国",2022,"国际铝业协会","再生铝 铝"],
+  ["原材料","铝型材",17.20,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","铝型材 挤压"],
+  ["原材料","电解铜",3.80,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","铜 电解铜 阴极铜"],
+  ["原材料","黄铜棒",3.20,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","黄铜"],
+  ["原材料","锌锭",3.10,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","锌 镀锌"],
+  ["原材料","电解镍",13.0,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","镍"],
+  ["原材料","通用硅酸盐水泥 P.O 42.5",0.58,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","水泥"],
+  ["原材料","商品混凝土 C30",0.30,"m³","3","全国",2022,"中国产品全生命周期温室气体排放系数库","混凝土"],
+  ["原材料","平板玻璃",0.95,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","玻璃"],
+  ["原材料","高密度聚乙烯 HDPE",1.95,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","PE 聚乙烯 塑料"],
+  ["原材料","聚丙烯 PP",1.70,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","PP 聚丙烯 塑料"],
+  ["原材料","聚氯乙烯 PVC",2.10,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","PVC 塑料"],
+  ["原材料","尼龙 PA66",7.90,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","尼龙 PA66 工程塑料"],
+  ["原材料","聚碳酸酯 PC",4.30,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","PC 工程塑料"],
+  ["原材料","环氧树脂",6.00,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","环氧 绝缘 浸漆"],
+  ["原材料","合成橡胶（丁腈）",2.90,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","橡胶 密封圈 丁腈"],
+  ["原材料","白板纸",1.20,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","纸 包装"],
+  ["原材料","木托盘",0.31,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库（不含生物碳）","木托 托盘 包装"],
+  ["原材料","润滑油",1.20,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","润滑油 液压油"],
+  ["原材料","溶剂型工业涂料",3.50,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","油漆 涂料"],
+  ["原材料","水性工业涂料",2.40,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","水性漆 涂料"],
+  ["原材料","自来水",0.000168,"t","3","全国",2022,"中国城镇供水行业平均","自来水 用水"],
+  ["运输","公路货运（中型柴油货车）",0.000135,"t·km","3","全国",2022,"交通运输行业排放因子","公路运输 中型货车"],
+  ["运输","公路货运（轻型柴油货车）",0.00021,"t·km","3","全国",2022,"交通运输行业排放因子","公路运输 轻卡"],
+  ["运输","公路冷链运输",0.00012,"t·km","3","全国",2022,"交通运输行业排放因子","冷链 冷藏车"],
+  ["运输","铁路货运（电力牵引）",0.0000085,"t·km","3","全国",2022,"交通运输行业排放因子","铁路 电力机车"],
+  ["运输","沿海货运",0.0000088,"t·km","3","全国",2022,"交通运输行业排放因子","沿海 船舶 海运"],
+  ["运输","远洋集装箱运输",0.0000082,"t·km","3","全球",2022,"GLEC Framework v3","远洋 海运 集装箱 出口"],
+  ["运输","航空货运（国内）",0.00098,"t·km","3","全国",2022,"民航行业排放因子","航空 空运 货运"],
+  ["运输","管道运输",0.000005,"t·km","3","全国",2022,"交通运输行业排放因子","管道"],
+  ["差旅通勤","国内航空（经济舱）",0.000125,"人·km","3","全国",2022,"民航行业排放因子","航空 机票 差旅"],
+  ["差旅通勤","国际航空（经济舱）",0.000105,"人·km","3","全球",2023,"DEFRA 2023","国际航班 差旅"],
+  ["差旅通勤","高速铁路",0.000025,"人·km","3","全国",2022,"国铁集团能耗统计折算","高铁 动车 差旅"],
+  ["差旅通勤","普速列车",0.000035,"人·km","3","全国",2022,"国铁集团能耗统计折算","火车 列车"],
+  ["差旅通勤","长途客车",0.000038,"人·km","3","全国",2022,"交通运输行业排放因子","大巴 客车"],
+  ["差旅通勤","城市公交",0.00008,"人·km","3","全国",2022,"交通运输行业排放因子","公交 通勤"],
+  ["差旅通勤","城市轨道交通",0.000035,"人·km","3","全国",2022,"交通运输行业排放因子","地铁 轨道交通 通勤"],
+  ["差旅通勤","纯电动乘用车",0.000064,"人·km","3","全国",2022,"0.12 kWh/km × 全国电力平均因子","电动车 新能源车 通勤"],
+  ["差旅通勤","出租车 / 网约车",0.00017,"人·km","3","全国",2022,"交通运输行业排放因子","出租车 网约车"],
+  ["差旅通勤","酒店住宿",0.0213,"间·夜","3","全国",2023,"Cornell Hotel Sustainability Benchmarking 2023（中国）","酒店 住宿 差旅"],
+  ["废弃物","生活垃圾填埋",0.58,"t","3","全国",2019,"IPCC 2019 修订版","生活垃圾 填埋"],
+  ["废弃物","生活垃圾焚烧",0.41,"t","3","全国",2019,"IPCC 2019 修订版","焚烧 生活垃圾"],
+  ["废弃物","危险废物焚烧",1.10,"t","3","全国",2019,"IPCC 2019 修订版","危废 焚烧"],
+  ["废弃物","废金属回收（处理过程）",0.12,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","废金属 回收"],
+  ["废弃物","废纸回收",0.02,"t","3","全国",2022,"中国产品全生命周期温室气体排放系数库","废纸 回收"],
+  ["废弃物","有机废弃物堆肥",0.17,"t","3","全国",2019,"IPCC 2019 修订版","堆肥 餐厨"],
+  ["废弃物","工业废水处理",0.00045,"t","3","全国",2019,"IPCC 2019 修订版 · COD 法","废水 污水"],
+  ["废弃物","生活污水处理",0.00023,"t","3","全国",2019,"IPCC 2019 修订版","生活污水"]
+];
+const EEIO_ROWS = [
+  // 行业（国民经济行业分类）, 代码, tCO₂e/万元, 典型采购
+  ["农林牧渔业","A",1.10,"农副产品"],["煤炭开采和洗选业","06",1.60,"原煤"],["石油和天然气开采业","07",1.30,"原油"],["黑色金属矿采选业","08",1.20,"铁矿石"],
+  ["非金属矿采选业","10",1.40,"砂石"],["食品制造业","14",0.80,"食堂食材"],["纺织业","17",0.90,"劳保纺织品"],["纺织服装、服饰业","18",0.55,"工作服"],
+  ["皮革、毛皮及其制品","19",0.60,"劳保鞋"],["木材加工和木制品业","20",0.85,"木箱、木托"],["家具制造业","21",0.70,"办公家具"],["造纸和纸制品业","22",1.42,"纸箱、包装"],
+  ["印刷和记录媒介复制业","23",0.90,"印刷品、标签"],["文教、工美、体育用品","24",0.55,"办公用品"],["石油、煤炭及其他燃料加工业","25",2.40,"润滑油、燃料"],
+  ["化学原料和化学制品制造业","26",2.20,"涂料、化学品"],["医药制造业","27",0.60,"医疗物资"],["化学纤维制造业","28",1.60,"纤维材料"],["橡胶和塑料制品业","29",1.18,"密封件、塑料件"],
+  ["非金属矿物制品业","30",3.10,"耐火材料、玻璃"],["黑色金属冶炼和压延加工业","31",3.80,"钢材"],["有色金属冶炼和压延加工业","32",2.90,"铜材、铝材"],
+  ["金属制品业","33",1.05,"紧固件、机加工外协、轴承"],["通用设备制造业","34",0.62,"泵阀、压缩机、轴承"],["专用设备制造业","35",0.78,"专用设备"],
+  ["汽车制造业","36",0.62,"车辆、零部件"],["铁路、船舶、航空航天设备","37",0.68,"运输设备"],["电气机械和器材制造业","38",0.74,"电机、电缆、开关"],
+  ["计算机、通信和其他电子设备","39",0.45,"电子元器件、计算机"],["仪器仪表制造业","40",0.38,"仪表、传感器"],["废弃资源综合利用业","42",0.90,"再生料"],
+  ["金属制品、机械和设备修理业","43",0.50,"设备维修"],["电力、热力生产和供应业","44",6.80,"外购电力（支出法）"],["燃气生产和供应业","45",2.00,"燃气（支出法）"],
+  ["水的生产和供应业","46",0.60,"自来水"],["建筑业","E",0.95,"厂房改造、安装工程"],["批发和零售业","F",0.18,"商贸采购"],["交通运输、仓储和邮政业","G",1.05,"物流服务"],
+  ["住宿和餐饮业","H",0.35,"差旅住宿、餐饮"],["信息传输、软件和信息技术服务业","I",0.12,"软件、云服务"],["金融业","J",0.05,"金融服务"],["房地产业","K",0.15,"物业、租赁"],
+  ["租赁和商务服务业","L",0.21,"咨询、会展、外包"],["科学研究和技术服务业","M",0.25,"检测认证、研发外包"],["水利、环境和公共设施管理业","N",0.60,"环保服务"],
+  ["居民服务、修理和其他服务业","O",0.25,"保洁、维修"],["教育","P",0.15,"培训"],["卫生和社会工作","Q",0.22,"体检"],["文化、体育和娱乐业","R",0.20,"团建、宣传"]
+];
+const FACTOR_VERSION = {lib:"2026.10",updated:"2026-10-31",eeio:"CEADs 2018 投入产出表 · 2023 价格平减 · V3.2"};
+function fuelFactor(row){return +(row[1]*row[3]*row[4]*44/12/1000).toFixed(4);}
+let FACTOR_LIBRARY = null;
+function factorLibrary() {
+  if(FACTOR_LIBRARY)return FACTOR_LIBRARY;
+  const list=[];
+  let seq=0;const id=prefix=>prefix+"-"+String(++seq).padStart(3,"0");
+  FUEL_PARAMS.forEach(row=>list.push({id:id("FC"),category:"固定燃烧",name:row[0],value:fuelFactor(row),unit:row[5],scope:"1",region:"全国",year:2015,gas:"CO₂",
+    source:"《工业其他行业企业温室气体排放核算方法与报告指南（试行）》附录二",version:"2015",params:{ncv:row[1]+" "+row[2],cc:row[3]+" tC/TJ",of:(row[4]*100)+"%"},keys:row[0]+" 燃烧 锅炉 燃料"}));
+  GWP_TABLE.forEach(row=>[["AR4",row[1]],["AR5",row[2]],["AR6",row[3]]].forEach(([ar,gwp])=>list.push({id:id("GW"),category:"逸散 / GWP",name:row[0]+" 逸散（"+ar+"）",value:+(gwp/1000).toFixed(5),unit:"kg",scope:"1",region:"全球",
+    year:{AR4:2007,AR5:2014,AR6:2021}[ar],gas:row[0].split("（")[0],source:"IPCC "+ar+" GWP100 = "+gwp,version:ar,params:{gwp,use:row[4]},keys:row[0]+" 制冷剂 逸散 "+row[4]})));
+  LIB_ROWS.forEach(row=>list.push({id:id({"电力":"EL","热力":"HT","移动源":"MB","工业过程":"PR","原材料":"MT","运输":"TR","差旅通勤":"BT","废弃物":"WS"}[row[0]]),category:row[0],name:row[1],
+    value:row[0]==="原材料"&&row[3]==="t"?row[2]:row[2],unit:row[3],scope:row[4],region:row[5],year:row[6],gas:"CO₂e",source:row[7],version:String(row[6]),keys:row[1]+" "+row[8]}));
+  EEIO_ROWS.forEach(row=>list.push({id:id("IO"),category:"支出法（EEIO）",name:row[0],value:row[2],unit:"万元",scope:"3",region:"全国",year:2023,gas:"CO₂e",
+    source:FACTOR_VERSION.eeio,version:"V3.2",params:{code:row[1],use:row[3]},keys:row[0]+" 支出法 采购 "+row[3]}));
+  FACTOR_DB.forEach(row=>{if(!list.some(item=>item.name===row.name&&item.year===row.year&&Math.abs(item.value-row.value)<1e-9))
+    list.push({id:row.id,category:{"1":"固定燃烧","2":"电力","3":"原材料"}[row.scope]||"其他",name:row.name,value:row.value,unit:row.unit,scope:row.scope,region:row.region,year:row.year,gas:"CO₂e",source:row.source,version:String(row.year),keys:row.keys,core:true});});
+  list.forEach(row=>{if(row.category==="原材料"&&row.unit==="t"&&row.value>0.05)row.note="cradle-to-gate";});
+  FACTOR_LIBRARY=list;
+  // 并入智能匹配候选
+  list.filter(row=>!row.core).forEach(row=>{if(!FACTOR_DB.some(item=>item.id===row.id))FACTOR_DB.push({id:row.id,name:row.name,keys:row.keys,value:row.value,unit:row.unit,region:row.region,year:row.year,source:row.source,scope:row.scope});});
+  return list;
+}
+const FACTOR_CATS = ["固定燃烧","移动源","电力","热力","工业过程","逸散 / GWP","原材料","运输","差旅通勤","废弃物","支出法（EEIO）"];
+let libFilter = {cat:"",scope:"",region:"",q:""};
+function setLibFilter(key,value){libFilter[key]=value;render();}
+function factorValueText(value){return value===0?"0":Math.abs(value)>=1?(+value.toFixed(4)).toString():(+Number(value).toPrecision(4)).toString();}
+function publicFactorPage() {
+  const all=factorLibrary();
+  const list=all.filter(row=>(!libFilter.cat||row.category===libFilter.cat)&&(!libFilter.scope||row.scope===libFilter.scope)&&(!libFilter.region||row.region===libFilter.region)&&
+    (!libFilter.q||[row.id,row.name,row.source,row.keys].join(" ").toLowerCase().includes(libFilter.q.toLowerCase())));
+  const regions=[...new Set(all.map(row=>row.region))];
+  const count=cat=>all.filter(row=>row.category===cat).length;
+  return pageHead("公共因子库",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]]),"基础配置 / 因子库管理 / 公共因子库")+
+    '<div class="statRow five">'+statTile("因子总数",String(all.length),"条 · 版本 "+FACTOR_VERSION.lib)+statTile("范围一",String(all.filter(r=>r.scope==="1").length),"燃料、过程、逸散")+
+      statTile("范围二",String(all.filter(r=>r.scope==="2").length),"电力、热力")+statTile("范围三",String(all.filter(r=>r.scope==="3").length),"材料、运输、废弃物、支出法")+statTile("最近更新",FACTOR_VERSION.updated,"")+'</div>'+
+    '<div class="catTabs"><button class="'+(!libFilter.cat?'active':'')+'" onclick="setLibFilter(\'cat\',\'\')">全部 <em>'+all.length+'</em></button>'+FACTOR_CATS.map(cat=>'<button class="'+(libFilter.cat===cat?'active':'')+'" onclick="setLibFilter(\'cat\',\''+cat+'\')">'+cat+' <em>'+count(cat)+'</em></button>').join("")+'</div>'+
+    '<div class="taskToolbar"><label>范围<select onchange="setLibFilter(\'scope\',this.value)"><option value="">全部</option>'+["1","2","3"].map(s=>'<option value="'+s+'" '+(libFilter.scope===s?'selected':'')+'>范围'+["","一","二","三"][s]+'</option>').join("")+'</select></label>'+
+      '<label>地区<select onchange="setLibFilter(\'region\',this.value)"><option value="">全部</option>'+regions.map(r=>'<option '+(libFilter.region===r?'selected':'')+'>'+r+'</option>').join("")+'</select></label>'+
+      '<label class="taskSearch">查找<input id="libSearch" value="'+textHtml(libFilter.q)+'" placeholder="名称、编号、来源" onkeydown="if(event.key===\'Enter\')setLibFilter(\'q\',this.value)"></label><button class="btn" onclick="setLibFilter(\'q\',document.getElementById(\'libSearch\').value)">查询</button><span>'+list.length+' 条</span></div>'+
+    '<section class="panel"><div class="tableWrap"><table><thead><tr><th>编号</th><th>分类</th><th>名称</th><th>因子值</th><th>单位</th><th>范围</th><th>地区</th><th>年份</th><th>来源</th><th></th></tr></thead><tbody>'+
+      (list.length?list.map(row=>'<tr><td>'+row.id+'</td><td>'+textHtml(row.category)+'</td><td><strong>'+textHtml(row.name)+'</strong>'+(row.params?.use?'<small>'+textHtml(row.params.use)+'</small>':'')+'</td><td>'+factorValueText(row.value)+'</td><td>tCO₂e/'+textHtml(row.unit)+'</td><td>范围'+row.scope+'</td><td>'+textHtml(row.region)+'</td><td>'+row.year+'</td><td class="srcCell">'+textHtml(row.source)+'</td>'+
+        '<td><button class="btn" onclick="openLibFactor(\''+row.id+'\')">详情</button></td></tr>').join(""):'<tr><td colspan="10" class="emptyCell">没有符合条件的因子</td></tr>')+
+    '</tbody></table></div></section>';
+}
+function openLibFactor(id) {
+  const row=factorLibrary().find(item=>item.id===id);if(!row)return;
+  const used=workflowTasks().filter(task=>Math.abs(Number(task.factor)-row.value)<1e-9&&row.value>0);
+  const params=row.params&&row.params.ncv?'<div><dt>低位发热量</dt><dd>'+row.params.ncv+'</dd></div><div><dt>单位热值含碳量</dt><dd>'+row.params.cc+'</dd></div><div><dt>碳氧化率</dt><dd>'+row.params.of+'</dd></div>'+
+    '<div class="wide"><dt>计算式</dt><dd>EF = NCV × CC × OF × 44/12 = '+factorValueText(row.value)+' tCO₂/'+row.unit+'</dd></div>':row.params&&row.params.gwp?'<div><dt>GWP100</dt><dd>'+row.params.gwp+'</dd></div><div><dt>常见用途</dt><dd>'+textHtml(row.params.use)+'</dd></div>':
+    row.params&&row.params.code?'<div><dt>行业代码</dt><dd>'+row.params.code+'</dd></div><div><dt>典型采购</dt><dd>'+textHtml(row.params.use)+'</dd></div>':'';
+  openModal('<h2>'+textHtml(row.name)+'</h2><dl class="detailList">'+
+    '<div><dt>编号</dt><dd>'+row.id+'</dd></div><div><dt>分类</dt><dd>'+textHtml(row.category)+'</dd></div><div><dt>因子值</dt><dd><b>'+factorValueText(row.value)+'</b> tCO₂e/'+textHtml(row.unit)+'</dd></div>'+
+    '<div><dt>适用范围</dt><dd>范围'+["","一","二","三"][row.scope]+' · '+textHtml(row.region)+'</dd></div><div><dt>数据年份</dt><dd>'+row.year+'</dd></div><div><dt>版本</dt><dd>'+textHtml(row.version)+'</dd></div>'+
+    '<div><dt>来源</dt><dd>'+textHtml(row.source)+'</dd></div>'+params+
+    '<div><dt>在用排放源</dt><dd>'+(used.length?used.map(task=>textHtml(task.name)+'（'+task.id+'）').join("、"):'—')+'</dd></div></dl>'+
+    '<div class="modalActions"><button class="btn primary" data-close-modal="1">关闭</button></div>');
+}
+
+// ---------- 兜底因子库 ----------
+let fallbackTab = "eeio";
+function fallbackFactorPage() {
+  const lines=typeof procurementLines==="function"?procurementLines():[];
+  const usedBy=name=>lines.filter(line=>line.tier>1&&line.factorRef&&line.factorRef.name&&(line.factorRef.name.includes(name)||name.includes(line.factorRef.name.replace(/（支出法）/,""))));
+  const materials=factorLibrary().filter(row=>row.category==="原材料"||row.core&&row.scope==="3"&&row.unit!=="万元");
+  const eeio=factorLibrary().filter(row=>row.category==="支出法（EEIO）");
+  const tabs='<div class="catTabs"><button class="'+(fallbackTab==="eeio"?'active':'')+'" onclick="fallbackTab=\'eeio\';render()">支出法因子（按行业） <em>'+eeio.length+'</em></button>'+
+    '<button class="'+(fallbackTab==="avg"?'active':'')+'" onclick="fallbackTab=\'avg\';render()">行业平均因子（按物料） <em>'+materials.length+'</em></button>'+
+    '<button class="'+(fallbackTab==="rule"?'active':'')+'" onclick="fallbackTab=\'rule\';render()">适用规则</button></div>';
+  const body=fallbackTab==="eeio"?
+    '<section class="panel"><div class="tableWrap"><table><thead><tr><th>编号</th><th>行业</th><th>行业代码</th><th>因子（tCO₂e/万元）</th><th>典型采购</th><th>在用</th><th>来源</th></tr></thead><tbody>'+
+      eeio.map(row=>{const used=lines.filter(line=>line.tier===3&&line.factorRef&&(line.factorRef.value===row.value));return '<tr><td>'+row.id+'</td><td><strong>'+textHtml(row.name)+'</strong></td><td>'+row.params.code+'</td><td>'+row.value.toFixed(2)+'</td><td>'+textHtml(row.params.use)+'</td><td>'+(used.length?used.length+' 条采购':'—')+'</td><td class="srcCell">'+textHtml(row.source)+'</td></tr>';}).join("")+'</tbody></table></div></section>':
+    fallbackTab==="avg"?
+    '<section class="panel"><div class="tableWrap"><table><thead><tr><th>编号</th><th>物料</th><th>因子</th><th>单位</th><th>边界</th><th>年份</th><th>来源</th></tr></thead><tbody>'+
+      materials.map(row=>'<tr><td>'+row.id+'</td><td><strong>'+textHtml(row.name)+'</strong></td><td>'+factorValueText(row.value)+'</td><td>tCO₂e/'+textHtml(row.unit)+'</td><td>从摇篮到大门</td><td>'+row.year+'</td><td class="srcCell">'+textHtml(row.source)+'</td></tr>').join("")+'</tbody></table></div></section>':
+    '<section class="panel"><div class="tableWrap"><table><thead><tr><th>数据等级</th><th>条件</th><th>计算方法</th><th>因子来源</th><th>不确定性</th></tr></thead><tbody>'+
+      '<tr><td><span class="status ok">一级</span></td><td>供应商提交并经审核的产品碳足迹或工艺数据</td><td>采购量 × 供应商单位碳排</td><td>供应商协同任务</td><td>±5%</td></tr>'+
+      '<tr><td><span class="status warn">二级</span></td><td>有采购实物量，无供应商一手数据</td><td>采购量 × 行业平均因子</td><td>行业平均因子（按物料）</td><td>±20%</td></tr>'+
+      '<tr><td><span class="status bad">三级</span></td><td>仅有采购金额</td><td>采购金额（不含税，万元）× 支出法因子</td><td>支出法因子（按行业）</td><td>±50%</td></tr>'+
+    '</tbody></table></div></section>';
+  return pageHead("兜底因子库",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]]),"基础配置 / 因子库管理 / 兜底因子库")+
+    '<div class="statRow">'+statTile("支出法因子",String(eeio.length),"个行业 · "+FACTOR_VERSION.eeio.split(" · ")[0])+statTile("行业平均因子",String(materials.length),"种物料")+
+      statTile("在用兜底采购",String(lines.filter(line=>line.tier>1).length),"条采购台账")+statTile("兜底排放",fmt(lines.filter(line=>line.tier>1).reduce((sum,line)=>sum+(line.emission||0),0),0),"tCO₂e")+'</div>'+tabs+body;
+}
+
+MENUS["基础配置"]["因子库管理"]=["公共因子库","企业私域因子库","兜底因子库","供应链因子导入","因子智能匹配"];
+const renderBeforeFactorLib = render;
+render = function () {
+  renderBeforeFactorLib();
+  if(!backendState.ready)return;
+  const content=document.getElementById("content");
+  if(state.top==="基础配置"&&state.page==="公共因子库")content.innerHTML=publicFactorPage();
+  else if(state.top==="基础配置"&&state.page==="兜底因子库")content.innerHTML=fallbackFactorPage();
+};
+
+// 采购台账：间接采购与服务按支出法匹配行业因子
+factorLibrary();
+function ioId(industry){const row=FACTOR_LIBRARY.find(item=>item.category==="支出法（EEIO）"&&item.name===industry);return row?row.id:"EF-S01";}
+[
+  ["PO-10","台州中液阀门","闸阀、截止阀成品外购","C01",6420,"通用设备制造业"],
+  ["PO-11","温州永固紧固件","高强度螺栓、螺母","C01",1180,"金属制品业"],
+  ["PO-12","绍兴越隆不锈钢","304/316L 不锈钢板材","C01",3960,"黑色金属冶炼和压延加工业"],
+  ["PO-13","宁波金田铝业","铝合金型材","C01",1420,"有色金属冶炼和压延加工业"],
+  ["PO-14","上海正泰电气","低压开关柜及元器件","C01",2860,"电气机械和器材制造业"],
+  ["PO-15","远东电缆","动力电缆、控制电缆","C01",1740,"电气机械和器材制造业"],
+  ["PO-16","杭州和利时","DCS 控制模块","C01",960,"计算机、通信和其他电子设备"],
+  ["PO-17","重庆川仪","压力、流量仪表","C01",780,"仪器仪表制造业"],
+  ["PO-18","江苏兰陵涂料","防腐涂料、底漆","C01",640,"化学原料和化学制品制造业"],
+  ["PO-19","嘉兴润驰石化","润滑油、液压油","C01",420,"石油、煤炭及其他燃料加工业"],
+  ["PO-20","浙江瑞泰耐火","耐火砖、浇注料","C01",360,"非金属矿物制品业"],
+  ["PO-21","嘉兴禾源劳保","工作服、劳保鞋","C01",310,"纺织服装、服饰业"],
+  ["PO-22","嘉兴华印包装","标签、说明书印刷","C01",145,"印刷和记录媒介复制业"],
+  ["PO-23","嘉善木森包装","出口木箱","C01",520,"木材加工和木制品业"],
+  ["PO-24","晨光办公","办公用品","C01",86,"文教、工美、体育用品"],
+  ["PO-25","嘉兴绿城餐饮","员工食堂食材","C01",690,"食品制造业"],
+  ["PO-26","嘉兴水务集团","生产及生活用水","C01",215,"水的生产和供应业"],
+  ["PO-27","阿里云","云服务、软件订阅","C01",380,"信息传输、软件和信息技术服务业"],
+  ["PO-28","中国质量认证中心","产品检测认证","C01",260,"科学研究和技术服务业"],
+  ["PO-29","德勤咨询","管理咨询服务","C01",420,"租赁和商务服务业"],
+  ["PO-30","嘉兴保洁物业","厂区保洁、绿化","C01",180,"居民服务、修理和其他服务业"],
+  ["PO-31","嘉兴华东设备维修","设备大修外委","C01",740,"金属制品、机械和设备修理业"],
+  ["PO-32","嘉兴环科","危废处置、环保服务","C01",330,"水利、环境和公共设施管理业"],
+  ["PO-33","中建八局","新厂房钢结构工程","C02",8600,"建筑业"],
+  ["PO-34","沈阳机床","数控加工中心","C02",2350,"通用设备制造业"],
+  ["PO-35","大族激光","激光切割设备","C02",1180,"专用设备制造业"],
+  ["PO-36","上汽大通","厂区物流车辆","C02",310,"汽车制造业"],
+  ["PO-37","联想集团","服务器、计算机","C02",260,"计算机、通信和其他电子设备"],
+  ["PO-38","中外运物流","成品出口海运订舱","C04",1960,"交通运输、仓储和邮政业"],
+  ["PO-39","顺丰速运","备件快递","C04",230,"交通运输、仓储和邮政业"],
+  ["PO-40","嘉兴港务","港口装卸、仓储","C04",410,"交通运输、仓储和邮政业"]
+].forEach(([id,supplier,item,category,spend,industry])=>{if(!PROCUREMENT.some(row=>row.id===id))PROCUREMENT.push({id,supplier,item,category,spend,eeio:ioId(industry)});});
+
+// 企业私域因子库：实测与企业特定因子
+function privateFactorList() {
+  const list=[];let seq=0;const id=()=> "PF-"+String(++seq).padStart(3,"0");
+  const yr=CURRENT_YEAR,prev=yr-1,months=(ets().monthly[yr]||[]).filter(row=>row.status==="已存证");
+  const coalEf=row=>+(row.ncv*row.cc*0.98*44/12).toFixed(4);
+  const prevRows=ets().monthly[prev]||[];
+  const wavg=rows=>{const c=rows.reduce((s,r)=>s+r.coal,0);return c?+(rows.reduce((s,r)=>s+coalEf(r)*r.coal,0)/c).toFixed(4):0;};
+  list.push({id:id(),cat:"固定燃烧",name:"入炉烟煤（"+prev+" 年加权实测）",value:wavg(prevRows),unit:"tCO₂/t",site:"嘉兴热电分公司",basis:"GB/T 213 逐月检测 · 核查报告 "+(ets().cycles[prev]?.report?.verifyNo||""),valid:prev+" 年度",status:"已核查"});
+  months.slice().reverse().forEach(row=>list.push({id:id(),cat:"固定燃烧",name:"入炉烟煤（"+yr+" 年 "+row.month+" 月实测）",value:coalEf(row),unit:"tCO₂/t",site:"嘉兴热电分公司",
+    basis:"低位发热量 "+row.ncv+" GJ/t × 单位热值含碳量 "+row.cc+" tC/GJ × 氧化率 0.98 · "+row.evidence,valid:yr+"-"+String(row.month).padStart(2,"0"),status:"已存证"}));
+  const sums=etsSums(prevRows);
+  if(sums.supply){const share=sums.supply*3.6/(sums.supply*3.6+sums.heat);
+    list.push({id:id(),cat:"热电联产",name:"自产电力排放因子",value:+(sums.emission*share/sums.supply).toFixed(4),unit:"tCO₂/MWh",site:"嘉兴热电分公司",basis:"热电联产按热量法分摊（"+prev+" 年核查数据）",valid:prev+" 年度",status:"已核查"});
+    list.push({id:id(),cat:"热电联产",name:"自产蒸汽排放因子",value:+(sums.emission*(1-share)/sums.heat).toFixed(4),unit:"tCO₂/GJ",site:"嘉兴热电分公司 → 嘉兴生产基地",basis:"热电联产按热量法分摊（"+prev+" 年核查数据）",valid:prev+" 年度",status:"已核查"});}
+  [["固定燃烧","管道天然气（港区门站实测热值）",2.1184,"tCO₂/千Nm³","嘉兴生产基地","门站气质报告 38.93 GJ/千Nm³ × 0.01532 tC/GJ × 0.99",yr+" 年度","启用"],
+   ["固定燃烧","管道天然气（湖州门站实测热值）",2.1021,"tCO₂/千Nm³","湖州机加工基地","门站气质报告 38.62 GJ/千Nm³",yr+" 年度","启用"],
+   ["移动源","厂内叉车柴油（加油卡计量）",3.0959,"tCO₂/t","全部生产基地","密度 0.84 kg/L 实测",yr+" 年度","启用"],
+   ["电力","厂区分布式光伏（自发自用）",0,"tCO₂/MWh","嘉兴生产基地","4.2 MWp 屋顶光伏 · 关口表计量",yr+" 年度","启用"],
+   ["电力","绿电交易电量（浙江 2026 绿电合同）",0,"tCO₂/MWh","嘉兴生产基地","绿证 GEC-2026-ZJ-018842 · 12,000 MWh",yr+" 年度","启用"],
+   ["工业过程","焊接保护气 CO₂ 逸散",1,"tCO₂/t","嘉兴生产基地","采购量即排放量",yr+" 年度","启用"],
+   ["逸散","冷水机组 R134a 年泄漏率",0.06,"比例","全部生产基地","设备台账 + 补充量记录",yr+" 年度","启用"],
+   ["废弃物","铸造废砂外委再生",0.0128,"tCO₂e/t","嘉兴生产基地","再生单位 2025 年 EPD",yr+" 年度","启用"]
+  ].forEach(r=>list.push({id:id(),cat:r[0],name:r[1],value:r[2],unit:r[3],site:r[4],basis:r[5],valid:r[6],status:r[7]}));
+  const backend=(backendState.data?.factors||[]).filter(f=>f.source_type==="企业私域因子库");
+  backend.forEach(f=>list.push({id:"PF-B"+f.id,cat:"供应商导入",name:f.name,value:f.factor_value,unit:"tCO₂e/"+f.unit,site:"采购中心",basis:"供应链因子导入",valid:(f.year||yr)+" 年度",status:"启用"}));
+  return list;
+}
+let privFilter={cat:"",q:""};
+function privateFactorPage() {
+  const all=privateFactorList(),cats=[...new Set(all.map(r=>r.cat))];
+  const rows=all.filter(r=>(!privFilter.cat||r.cat===privFilter.cat)&&(!privFilter.q||[r.id,r.name,r.site,r.basis].join(" ").includes(privFilter.q)));
+  return pageHead("企业私域因子库",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]])+'<button class="btn primary" onclick="openFactorModal(\'企业私域因子库\')">新增因子</button>',"基础配置 / 因子库管理 / 企业私域因子库")+
+    '<div class="catTabs"><button class="'+(!privFilter.cat?'active':'')+'" onclick="privFilter.cat=\'\';render()">全部<em>'+all.length+'</em></button>'+cats.map(cat=>'<button class="'+(privFilter.cat===cat?'active':'')+'" onclick="privFilter.cat=\''+cat+'\';render()">'+cat+'<em>'+all.filter(r=>r.cat===cat).length+'</em></button>').join("")+'</div>'+
+    '<div class="taskToolbar"><label class="taskSearch">查找<input id="privQ" value="'+textHtml(privFilter.q)+'" placeholder="名称、设施、依据" onkeydown="if(event.key===\'Enter\'){privFilter.q=this.value;render();}"></label><button class="btn" onclick="privFilter.q=document.getElementById(\'privQ\').value;render()">查询</button><span>'+rows.length+' 条</span></div>'+
+    '<section class="panel"><div class="tableWrap"><table><thead><tr><th>编号</th><th>分类</th><th>因子名称</th><th>因子值</th><th>单位</th><th>适用设施</th><th>测定依据</th><th>有效期</th><th>状态</th></tr></thead><tbody>'+
+    (rows.length?rows.map(r=>'<tr><td>'+r.id+'</td><td>'+r.cat+'</td><td><strong>'+textHtml(r.name)+'</strong></td><td>'+r.value+'</td><td>'+textHtml(r.unit)+'</td><td>'+textHtml(r.site)+'</td><td class="srcCell">'+textHtml(r.basis)+'</td><td>'+r.valid+'</td><td><span class="status '+(r.status==="启用"?'ok':r.status==="已核查"?'ok':'warn')+'">'+r.status+'</span></td></tr>').join(""):'<tr><td colspan="9" class="emptyCell">没有符合条件的因子</td></tr>')+
+    '</tbody></table></div></section>';
+}
+const renderBeforePrivate = render;
+render = function () {
+  renderBeforePrivate();
+  if(backendState.ready&&state.top==="基础配置"&&state.page==="企业私域因子库")document.getElementById("content").innerHTML=privateFactorPage();
+};
+
+// 碳履约：2019 年起全部履约周期、分机组监测与配额、完整账户流水与委托记录、筛选。
+ETS_YEARS.unshift(2019,2020,2021,2022);
+Object.assign(ETS_PROFILE,{
+  2019:{coal:102400,elec:3480,supply:201200,heat:318600,be:0.9790,bh:0.1260},
+  2020:{coal:96800,elec:3420,supply:190500,heat:301900,be:0.9790,bh:0.1260},
+  2021:{coal:103100,elec:3390,supply:203400,heat:335800,be:0.8218,bh:0.1111},
+  2022:{coal:100500,elec:3370,supply:198800,heat:332900,be:0.8177,bh:0.1105}
+});
+const ETS_UNITS = [
+  {id:"1",name:"1 号机组",spec:"25 MW 抽凝式汽轮发电机组 · 130 t/h 循环流化床锅炉",commissioned:"2009-06"},
+  {id:"2",name:"2 号机组",spec:"25 MW 背压式汽轮发电机组 · 130 t/h 循环流化床锅炉",commissioned:"2011-11"}
+];
+const ETS_DEADLINE = {2019:"2021-12-31",2020:"2021-12-31",2021:"2023-12-31",2022:"2023-12-31"};
+function unitShare(unit,year,month,kind) {
+  const base=kind==="heat"?0.41:0.545;
+  const s1=base+0.025*Math.sin(month*0.9+year*0.7)+(kind==="heat"?0.01*Math.cos(month):0);
+  return unit==="1"?s1:1-s1;
+}
+function scaleMonths(months,year,unit) {
+  return months.map(row=>{const s=unitShare(unit,year,row.month,"power"),h=unitShare(unit,year,row.month,"heat");
+    const c=s*0.6+h*0.4;
+    return {...row,coal:Math.round(row.coal*c),supply:Math.round(row.supply*s),heat:Math.round(row.heat*h),elec:+(row.elec*s).toFixed(1)};});
+}
+
+const etsBuildBeforeScale = etsBuild;
+etsBuild = function () {
+  const data={v:3,monthly:{},cycles:{},ledger:[],orders:[],ccer:[],log:[],seq:0};
+  ETS_YEARS.forEach(year=>data.monthly[year]=etsMonthsBuild(year));
+  const add=(date,type,vintage,qty,ref,year)=>data.ledger.push({id:"",date,type,vintage,qty,ref,year});
+  const vintageBalance=vintage=>data.ledger.filter(row=>row.vintage===vintage).reduce((sum,row)=>sum+row.qty,0);
+  const balance=year=>data.ledger.filter(row=>row.vintage<=year).reduce((sum,row)=>sum+row.qty,0);
+  let orderSeq=0;
+  const order=(date,time,side,product,vintage,qty,price,year,extra={})=>{
+    const id="WT"+date.replace(/-/g,"")+String(++orderSeq).padStart(4,"0");
+    const status=extra.status||"已成交";
+    data.orders.push({id,at:date+" "+time,side,product,vintage,qty,price,filledPrice:extra.filledPrice??price,status,filledAt:status==="已成交"?date:"",channel:extra.channel||"挂牌协议",year,
+      counterparty:extra.counterparty||(product==="CEA"?"上海环境能源交易所":"北京绿色交易所"),project:extra.project,note:extra.note});
+    if(status==="已成交"&&product==="CEA")add(date,side,vintage,side==="买入"?qty:-qty,id,year);
+    return id;
+  };
+  const surrender=(year,qty,date,ref)=>{
+    let left=qty;
+    [...new Set(data.ledger.map(row=>row.vintage))].sort().forEach(vintage=>{
+      if(vintage>year||left<=0)return;
+      const take=Math.min(vintageBalance(vintage),left);
+      if(take>0){add(date,"清缴注销",vintage,-take,ref,year);left-=take;}
+    });
+  };
+  const tranche=(total,parts)=>{const out=[];let left=total;parts.forEach((p,i)=>{const q=i===parts.length-1?left:Math.round(total*p/100/100)*100;out.push(q);left-=q;});return out;};
+  const history=[
+    {year:2019,report:["2020-03-30","2020-06-18","HC-2020-ZJ-0127"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-08-11","2021-09-23","2021-11-17","2021-12-08"],prices:[46.8,43.1,44.6,51.2],channel:["挂牌协议","大宗协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2021-0168",project:"内蒙古乌兰察布察右中旗风电场项目",type:"存量 CCER · 并网风力发电",vintage:2015,qty:4200,acquiredAt:"2021-10-26",price:28.5}],surrender:"2021-12-20",cert:"QJ-2019-330400-0187"},
+    {year:2020,report:["2021-03-29","2021-06-25","HC-2021-ZJ-0163"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-10-14","2021-11-30","2021-12-15"],prices:[42.9,45.7,53.6],channel:["大宗协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2021-0203",project:"云南大理洱源光伏电站项目",type:"存量 CCER · 并网光伏发电",vintage:2016,qty:3100,acquiredAt:"2021-11-09",price:31.2},{id:"CCER-2021-0219",project:"湖北恩施清江水电站项目",type:"存量 CCER · 水力发电",vintage:2014,qty:1600,acquiredAt:"2021-11-22",price:26.8}],surrender:"2021-12-24",cert:"QJ-2020-330400-0187"},
+    {year:2021,report:["2022-03-30","2022-08-19","HC-2022-ZJ-0291"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-10-19","2023-11-08","2023-11-27"],prices:[78.6,72.4,70.1],channel:["挂牌协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2023-0544",project:"江西赣州农村户用沼气项目",type:"存量 CCER · 户用沼气",vintage:2015,qty:3800,acquiredAt:"2023-10-30",price:58.0}],surrender:"2023-12-14",cert:"QJ-2021-330400-0187"},
+    {year:2022,report:["2023-03-29","2023-08-25","HC-2023-ZJ-0318"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-11-14","2023-12-05"],prices:[71.3,69.8],channel:["大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2023-0587",project:"浙江丽水缙云抽水蓄能配套光伏项目",type:"存量 CCER · 并网光伏发电",vintage:2017,qty:2600,acquiredAt:"2023-11-21",price:61.5}],surrender:"2023-12-19",cert:"QJ-2022-330400-0187"}
+  ];
+  history.forEach(h=>{
+    const year=h.year,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
+    data.cycles[year]={year,deadline:ETS_DEADLINE[year],report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:h.report[0],verifiedAt:h.report[1],verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:h.report[2]},
+      alloc:{pre:{qty:pre,at:h.pre[0]},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:h.final[0],status:"已确认",confirmedAt:h.final[1]}},surrender:{status:"未清缴"}};
+    add(h.pre[0],"预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
+    add(h.final[1],"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
+    const ccer=h.ccer.reduce((s,c)=>s+c.qty,0);
+    h.ccer.forEach(c=>{data.ccer.push({...c,status:"已注销",usedFor:year});order(c.acquiredAt,"14:2"+(c.qty%7),"买入","CCER",c.vintage,c.qty,c.price,year,{project:c.project,channel:"协议转让"});});
+    const diff=balance(year)-(verified-ccer);
+    if(diff!==0) {
+      const qty=Math.abs(diff),parts=tranche(qty,h.trade.dates.map(()=>100/h.trade.dates.length));
+      parts.forEach((q,i)=>{if(q>0)order(h.trade.dates[i],String(9+i).padStart(2,"0")+":"+String(31+i*7).padStart(2,"0"),diff>0?"卖出":"买入","CEA",year,q,h.trade.prices[i],year,{channel:h.trade.channel[i]});});
+      order(h.trade.dates[0],"09:18",diff>0?"卖出":"买入","CEA",year,Math.round(qty/3/100)*100||100,+(h.trade.prices[0]+(diff>0?2.4:-2.6)).toFixed(2),year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
+    }
+    surrender(year,verified-ccer,h.surrender,h.cert);
+    Object.assign(data.cycles[year].surrender,{status:"已清缴",at:h.surrender,cea:verified-ccer,ccer,cert:h.cert});
+  });
+  // 2023–2024：与原履约记录一致，交易拆分为多笔成交
+  [2023,2024].forEach(year=>{
+    const months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
+    const ccer=year===2023?1850:0;
+    data.cycles[year]={year,deadline:(year+1)+"-12-31",
+      report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-ZJ-0"+(412+year-2023)},
+      alloc:{pre:{qty:pre,at:(year+1)+"-03-15"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:(year+1)+"-09-27",status:"已确认",confirmedAt:(year+1)+"-10-0"+(year-2021)}},surrender:{status:"未清缴"}};
+    add((year+1)+"-03-15","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
+    add((year+1)+"-10-0"+(year-2021),"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
+    if(ccer){data.ccer.push({id:"CCER-"+year+"-0412",project:"浙江安吉竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
+      order((year+1)+"-08-14","15:06","买入","CCER",2016,ccer,62.5,year,{project:"浙江安吉竹林经营碳汇项目",channel:"协议转让"});}
+    const short=verified-ccer-balance(year);
+    if(short>0) {
+      const qty=Math.ceil(short/100)*100,price=year===2023?78.4:96.2;
+      const dates=year===2023?["2024-10-22","2024-11-05","2024-11-13"]:["2025-09-16","2025-10-28","2025-11-14"];
+      const prices=year===2023?[96.8,92.1,price]:[88.5,91.7,price];
+      tranche(qty,[35,30,35]).forEach((q,i)=>order(dates[i],String(10+i)+":"+String(12+i*9).padStart(2,"0"),"买入","CEA",year,q,prices[i],year,{channel:i===1?"大宗协议":"挂牌协议"}));
+      order(dates[0],"09:41","买入","CEA",year,Math.round(qty/4/100)*100,+(prices[0]-3.2).toFixed(2),year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
+    }
+    else if(-short>1500) {
+      const qty=Math.floor((-short-600)/50)*50,half=Math.round(qty/2/50)*50;
+      order((year+1)+"-11-20","10:33","卖出","CEA",year,half,97.8,year);
+      order((year+1)+"-11-20","13:47","卖出","CEA",year,qty-half,97.8,year,{channel:"大宗协议"});
+    }
+    const date=(year+1)+"-12-1"+(year-2015),cert="QJ-"+year+"-330400-0187";
+    surrender(year,verified-ccer,date,cert);
+    Object.assign(data.cycles[year].surrender,{status:"已清缴",at:date,cea:verified-ccer,ccer,cert});
+  });
+  {
+    const year=2025,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
+    data.cycles[year]={year,deadline:"2026-12-31",
+      report:{status:"已核查",no:"ER-2025-330400-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-ZJ-0438"},
+      alloc:{pre:{qty:pre,at:"2026-03-16"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:"2026-11-12",status:"待确认",confirmBy:"2026-11-26"}},surrender:{status:"未清缴"}};
+    add("2026-03-16","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
+    order("2026-07-08","10:05","买入","CEA",2025,800,86.9,year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
+    order("2026-09-18","10:26","买入","CEA",2025,1500,93.4,year);
+    const c1=order("2026-08-21","14:12","买入","CCER",2024,1200,79.6,year,{project:"福建平潭海上风电项目",channel:"挂牌协议"});
+    const c2=order("2026-10-15","14:05","买入","CCER",2024,800,85.9,year,{project:"广西北海红树林营造项目",channel:"挂牌协议"});
+    data.ccer.push({id:"CCER-2026-1036",project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,qty:1200,acquiredAt:"2026-08-21",price:79.6,status:"可用",ref:c1});
+    data.ccer.push({id:"CCER-2026-1187",project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,qty:800,acquiredAt:"2026-10-15",price:85.9,status:"可用",ref:c2});
+  }
+  data.cycles[2026]={year:2026,deadline:"2027-12-31",report:{status:"监测中"},alloc:{},surrender:{status:"未清缴"}};
+  data.ledger.sort((a,b)=>a.date.localeCompare(b.date)||(a.qty<0)-(b.qty<0));
+  data.ledger.forEach(row=>row.id="LG"+String(++data.seq).padStart(5,"0"));
+  data.orders.sort((a,b)=>b.at.localeCompare(a.at));
+  // 操作日志：由业务记录生成
+  const log=[];
+  ETS_YEARS.forEach(year=>{
+    data.monthly[year].filter(row=>row.status==="已存证").forEach(row=>log.push({at:row.at+" 09:"+String(10+row.month*3).padStart(2,"0"),actor:"周建华",text:year+" 年 "+row.month+" 月监测数据存证"}));
+    const c=data.cycles[year];
+    if(c.report.submittedAt)log.push({at:c.report.submittedAt+" 16:05",actor:MANAGER_NAME,text:"提交 "+year+" 年度排放报告 "+c.report.no});
+    if(c.report.verifiedAt)log.push({at:c.report.verifiedAt+" 11:30",actor:ETS_VERIFIER,text:"出具 "+year+" 年度核查报告 "+c.report.verifyNo});
+    if(c.alloc.final?.confirmedAt)log.push({at:c.alloc.final.confirmedAt+" 10:20",actor:MANAGER_NAME,text:"确认 "+year+" 年度配额核定结果 "+fmt(c.alloc.final.qty,0)+" t"});
+    if(c.surrender.at)log.push({at:c.surrender.at+" 15:40",actor:MANAGER_NAME,text:year+" 年度配额清缴完成 · "+c.surrender.cert});
+  });
+  data.orders.forEach(o=>log.push({at:o.at,actor:MANAGER_NAME,text:(o.status==="已撤单"?"撤单 ":"")+o.side+" "+o.product+(o.project?" · "+o.project:"")+" "+fmt(o.qty,0)+" t @ "+o.price.toFixed(2)}));
+  log.push({at:"2026-11-12 16:20",actor:"系统",text:"收到 "+ETS_AUTHORITY+" 2025 年度配额核定结果"});
+  data.log=log.sort((a,b)=>b.at.localeCompare(a.at));
+  return data;
+};
+ets = function () {
+  if(demo.ets?.v!==3){demo.ets=etsBuild();persistDemo();}
+  return demo.ets;
+};
+
+// ---------- 年度切换 ----------
+etsTabs = function () {
+  const sel=etsSel();
+  const recent=ETS_YEARS.filter(year=>year>=2023),older=ETS_YEARS.filter(year=>year<2023);
+  return '<div class="etsYearBar"><div class="segTabs">'+recent.map(year=>{const status=etsStatus(year);
+      return '<button class="'+(year===sel?'active':'')+'" onclick="setEtsYear('+year+')">'+year+' 年度 <em>'+status.label+'</em></button>';}).join("")+'</div>'+
+    '<label class="inlineField">更早年度 <select onchange="if(this.value)setEtsYear(this.value)"><option value="">选择</option>'+older.map(year=>'<option value="'+year+'" '+(year===sel?'selected':'')+'>'+year+' 年度 · '+etsStatus(year).label+'</option>').join("")+'</select></label></div>';
+};
+
+// ---------- 通用筛选 ----------
+const ETS_F = {};
+function etsF(key){return ETS_F[key]||(ETS_F[key]={});}
+function setEtsF(key,field,value){etsF(key)[field]=value;render();}
+function etsFilterBar(key,fields,count) {
+  const f=etsF(key);
+  return '<div class="taskToolbar">'+fields.map(field=>field.type==="search"?
+    '<label class="taskSearch">查找<input id="etsQ-'+key+'" value="'+textHtml(f[field.key]||"")+'" placeholder="'+field.placeholder+'" onkeydown="if(event.key===\'Enter\')setEtsF(\''+key+'\',\''+field.key+'\',this.value)"></label><button class="btn" onclick="setEtsF(\''+key+'\',\''+field.key+'\',document.getElementById(\'etsQ-'+key+'\').value)">查询</button>':
+    '<label>'+field.label+'<select onchange="setEtsF(\''+key+'\',\''+field.key+'\',this.value)"><option value="">全部</option>'+field.options.map(option=>'<option '+(String(f[field.key]||"")===String(option)?'selected':'')+'>'+option+'</option>').join("")+'</select></label>').join("")+
+    '<span>'+count+' 条</span></div>';
+}
+function replaceCard(html,title,newHtml) {
+  const marker='<section class="panel"><div class="panelHead"><h3>'+title+'</h3>';
+  const start=html.indexOf(marker);
+  if(start<0)return html+newHtml;
+  const end=html.indexOf("</section>",start)+"</section>".length;
+  return html.slice(0,start)+newHtml+html.slice(end);
+}
+
+// ---------- 工作台：操作记录与待办等高 ----------
+const etsWorkbenchBeforeScale = etsWorkbench;
+etsWorkbench = function () {
+  const html=etsWorkbenchBeforeScale();
+  const log=ets().log.slice(0,6);
+  return replaceCard(html,"操作记录",card("操作记录",'<ul class="feed">'+log.map(row=>'<li><time>'+textHtml(row.at)+'</time><span>'+textHtml(row.actor)+'</span>'+textHtml(row.text)+'</li>').join("")+'</ul>',
+    '<button class="linkBtn" onclick="showEtsLog()">全部 '+ets().log.length+' 条 ›</button>'));
+};
+function showEtsLog() {
+  openModal('<h2>操作记录</h2><div class="tableWrap"><table class="compact"><thead><tr><th>时间</th><th>操作人</th><th>事项</th></tr></thead><tbody>'+
+    ets().log.map(row=>'<tr><td>'+textHtml(row.at)+'</td><td>'+textHtml(row.actor)+'</td><td>'+textHtml(row.text)+'</td></tr>').join("")+'</tbody></table></div>'+
+    '<div class="modalActions"><button class="btn primary" data-close-modal="1">关闭</button></div>');
+  setTimeout(applyModalPager,0);
+}
+function applyModalPager() {
+  const table=document.querySelector("#modalContent table");if(!table)return;
+  const rows=[...table.tBodies[0].rows],size=15;let page=1;const pages=Math.ceil(rows.length/size);
+  if(pages<2)return;
+  const bar=document.createElement("div");bar.className="pager";
+  const draw=()=>{rows.forEach((row,i)=>row.hidden=!(i>=(page-1)*size&&i<page*size));
+    bar.innerHTML='<span>共 '+rows.length+' 条</span><div><button type="button" '+(page===1?'disabled':'')+' data-p="'+(page-1)+'">‹</button><em>'+page+' / '+pages+'</em><button type="button" '+(page===pages?'disabled':'')+' data-p="'+(page+1)+'">›</button></div>';};
+  bar.addEventListener("click",event=>{const p=Number(event.target.dataset?.p);if(p){page=p;draw();}});
+  draw();table.closest(".tableWrap").after(bar);
+}
+
+// ---------- 排放监测：分机组 ----------
+let etsUnitSel = "";
+function setEtsUnit(value){etsUnitSel=value;render();}
+const etsMonitorPageBeforeScale = etsMonitorPage;
+etsMonitorPage = function () {
+  const year=etsSel(),data=ets();
+  const bar='<div class="taskToolbar"><label>机组<select onchange="setEtsUnit(this.value)"><option value="">全厂</option>'+ETS_UNITS.map(unit=>'<option value="'+unit.id+'" '+(etsUnitSel===unit.id?'selected':'')+'>'+unit.name+'</option>').join("")+'</select></label>'+
+    '<span>'+(etsUnitSel?textHtml(ETS_UNITS.find(u=>u.id===etsUnitSel).spec):ETS_UNITS.map(u=>u.name).join("、"))+'</span></div>';
+  let html;
+  if(etsUnitSel) {
+    const orig=data.monthly[year];
+    data.monthly[year]=scaleMonths(orig,year,etsUnitSel);
+    try{html=etsMonitorPageBeforeScale();}finally{data.monthly[year]=orig;}
+    html=html.replace(/onclick="openEtsMonth\([^"]*\)"/g,'disabled');
+  } else html=etsMonitorPageBeforeScale();
+  const unitTable=card("分机组汇总",'<div class="tableWrap"><table class="compact"><thead><tr><th>机组</th><th>入炉煤量 (t)</th><th>供电量 (MWh)</th><th>供热量 (GJ)</th><th>排放量 (tCO₂)</th><th>供电排放强度 (tCO₂/MWh)</th></tr></thead><tbody>'+
+    ETS_UNITS.map(unit=>{const sums=etsSums(scaleMonths(data.monthly[year],year,unit.id));return '<tr><td>'+unit.name+'</td><td>'+fmt(sums.coal,0)+'</td><td>'+fmt(sums.supply,0)+'</td><td>'+fmt(sums.heat,0)+'</td><td>'+fmt(sums.emission,0)+'</td><td>'+(sums.supply?(sums.coalEmission*0.82/sums.supply).toFixed(4):'—')+'</td></tr>';}).join("")+'</tbody></table></div>');
+  return html.replace('<section class="panel"><div class="panelHead"><h3>月度数据</h3>',bar+'<section class="panel"><div class="panelHead"><h3>月度数据'+(etsUnitSel?' · '+ETS_UNITS.find(u=>u.id===etsUnitSel).name:'')+'</h3>')
+    .replace('<div class="homeGrid even"><div>'+card("年度排放报告","").slice(0,40),'$&')+unitTable;
+};
+
+// ---------- 配额管理：分机组核定与流水筛选 ----------
+const etsAllocPageBeforeScale = etsAllocPage;
+etsAllocPage = function () {
+  const year=etsSel(),p=ETS_PROFILE[year],data=ets();
+  let html=etsAllocPageBeforeScale();
+  const units=card(year+" 年度分机组配额",'<div class="tableWrap"><table class="compact"><thead><tr><th>机组</th><th>供电量 (MWh)</th><th>供电基准值</th><th>供电配额 (t)</th><th>供热量 (GJ)</th><th>供热基准值</th><th>供热配额 (t)</th><th>小计 (t)</th></tr></thead><tbody>'+
+    ETS_UNITS.map(unit=>{const sums=etsSums(scaleMonths(data.monthly[year],year,unit.id));const power=Math.round(sums.supply*p.be),heat=Math.round(sums.heat*p.bh);
+      return '<tr><td>'+unit.name+'</td><td>'+fmt(sums.supply,0)+'</td><td>'+p.be+'</td><td>'+fmt(power,0)+'</td><td>'+fmt(sums.heat,0)+'</td><td>'+p.bh+'</td><td>'+fmt(heat,0)+'</td><td>'+fmt(power+heat,0)+'</td></tr>';}).join("")+'</tbody></table></div>');
+  const f=etsF("ledger");
+  let balance=0;
+  const all=data.ledger.map(row=>{balance+=row.qty;return {...row,balance};}).reverse();
+  const rows=all.filter(row=>(!f.vintage||String(row.vintage)===f.vintage)&&(!f.type||row.type===f.type)&&(!f.q||[row.id,row.ref,row.date].join(" ").includes(f.q)));
+  const ledger='<section class="panel"><div class="panelHead"><h3>配额账户流水</h3><span class="muted small">'+ETS_ENTITY.account+'</span></div>'+
+    etsFilterBar("ledger",[{key:"vintage",label:"配额年度",options:[...new Set(data.ledger.map(r=>r.vintage))].sort()},{key:"type",label:"业务类型",options:[...new Set(data.ledger.map(r=>r.type))]},{key:"q",type:"search",placeholder:"流水号、单据、日期"}],rows.length)+
+    '<div class="tableWrap"><table><thead><tr><th>流水号</th><th>日期</th><th>业务类型</th><th>配额年度</th><th>变动 (t)</th><th>账户余额 (t)</th><th>关联单据</th></tr></thead><tbody>'+
+    (rows.length?rows.map(row=>'<tr><td>'+row.id+'</td><td>'+row.date+'</td><td>'+row.type+'</td><td>'+row.vintage+'</td><td class="'+(row.qty>=0?'okText':'badText')+'">'+(row.qty>=0?'+':'')+fmt(row.qty,0)+'</td><td>'+fmt(row.balance,0)+'</td><td>'+textHtml(row.ref)+'</td></tr>').join(""):'<tr><td colspan="7" class="emptyCell">没有符合条件的流水</td></tr>')+
+    '</tbody></table></div></section>';
+  html=replaceCard(html,"配额账户流水",ledger);
+  return html.replace('<section class="panel"><div class="panelHead"><h3>配额账户流水</h3>',units+'<section class="panel"><div class="panelHead"><h3>配额账户流水</h3>');
+};
+
+// ---------- 交易委托：筛选 ----------
+const etsTradePageBeforeScale = etsTradePage;
+etsTradePage = function () {
+  const html=etsTradePageBeforeScale();
+  const f=etsF("orders"),orders=ets().orders;
+  const rows=orders.filter(row=>(!f.year||row.at.startsWith(f.year))&&(!f.product||row.product===f.product)&&(!f.side||row.side===f.side)&&(!f.status||row.status===f.status)&&(!f.q||[row.id,row.project||"",row.counterparty||""].join(" ").includes(f.q)));
+  const filled=rows.filter(row=>row.status==="已成交");
+  const amount=filled.reduce((sum,row)=>sum+(row.side==="买入"?1:-1)*row.qty*row.filledPrice,0);
+  const table='<section class="panel"><div class="panelHead"><h3>委托记录</h3><span class="muted small">成交 '+filled.length+' 笔 · 净'+(amount>=0?'支出':'收入')+' '+fmt(Math.abs(amount)/10000,1)+' 万元</span></div>'+
+    etsFilterBar("orders",[{key:"year",label:"委托年份",options:[...new Set(orders.map(r=>r.at.slice(0,4)))].sort().reverse()},{key:"product",label:"品种",options:["CEA","CCER"]},{key:"side",label:"方向",options:["买入","卖出"]},
+      {key:"status",label:"状态",options:[...new Set(orders.map(r=>r.status))]},{key:"q",type:"search",placeholder:"委托号、项目、交易场所"}],rows.length)+
+    '<div class="tableWrap"><table><thead><tr><th>委托号</th><th>委托时间</th><th>方向</th><th>品种</th><th>年度</th><th>数量</th><th>委托价</th><th>成交价</th><th>金额 (元)</th><th>方式</th><th>交易场所</th><th>状态</th><th></th></tr></thead><tbody>'+
+    (rows.length?rows.map(row=>'<tr><td>'+row.id+'</td><td>'+row.at+'</td><td class="'+(row.side==="买入"?'badText':'okText')+'">'+row.side+'</td><td>'+row.product+(row.project?'<small>'+textHtml(row.project)+'</small>':'')+'</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td><td>'+row.price.toFixed(2)+'</td><td>'+(row.status==="已成交"?row.filledPrice.toFixed(2):'—')+'</td><td>'+
+      (row.status==="已成交"?fmt(row.qty*row.filledPrice,0):'—')+'</td><td>'+row.channel+'</td><td>'+textHtml(row.counterparty||"上海环境能源交易所")+'</td><td><span class="status '+({"已成交":"ok","已报":"warn"}[row.status]||"gray")+'">'+row.status+'</span>'+(row.note?'<small>'+textHtml(row.note)+'</small>':'')+'</td><td>'+
+      (row.status==="已报"&&etsEditable()?'<button class="linkBtn" onclick="cancelEtsOrder(\''+row.id+'\')">撤单</button>':'')+'</td></tr>').join(""):'<tr><td colspan="13" class="emptyCell">没有符合条件的委托</td></tr>')+
+    '</tbody></table></div></section>';
+  return replaceCard(html,"委托记录",table);
+};
+
+// ---------- CCER：筛选 ----------
+const etsCcerPageBeforeScale = etsCcerPage;
+etsCcerPage = function () {
+  const html=etsCcerPageBeforeScale();
+  const f=etsF("ccer"),list=ets().ccer;
+  const rows=list.filter(row=>(!f.status||row.status===f.status)&&(!f.used||String(row.usedFor||"")===f.used)&&(!f.q||[row.id,row.project,row.type].join(" ").includes(f.q)));
+  const table='<section class="panel"><div class="panelHead"><h3>CCER 持仓</h3><span class="muted small">累计取得 '+fmt(list.reduce((s,r)=>s+r.qty,0),0)+' tCO₂e · 已注销 '+fmt(list.filter(r=>r.status==="已注销").reduce((s,r)=>s+r.qty,0),0)+'</span></div>'+
+    etsFilterBar("ccer",[{key:"status",label:"状态",options:[...new Set(list.map(r=>r.status))]},{key:"used",label:"抵销年度",options:[...new Set(list.filter(r=>r.usedFor).map(r=>String(r.usedFor)))].sort()},{key:"q",type:"search",placeholder:"登记编号、项目"}],rows.length)+
+    '<div class="tableWrap"><table><thead><tr><th>登记编号</th><th>项目</th><th>方法学类型</th><th>减排量年份</th><th>数量 (tCO₂e)</th><th>取得日期</th><th>成本 (元/t)</th><th>状态</th><th>用于</th><th></th></tr></thead><tbody>'+
+    (rows.length?rows.map(row=>'<tr><td>'+row.id+'</td><td>'+textHtml(row.project)+'</td><td>'+row.type+'</td><td>'+row.vintage+'</td><td>'+fmt(row.qty,0)+'</td><td>'+row.acquiredAt+'</td><td>'+row.price.toFixed(2)+'</td><td><span class="status '+({"可用":"ok","已锁定":"warn"}[row.status]||"gray")+'">'+row.status+'</span></td><td>'+(row.usedFor?row.usedFor+' 年度':'—')+'</td><td>'+
+      (row.status==="已锁定"&&etsEditable()&&!etsCalc(row.usedFor).settled?'<button class="linkBtn" onclick="releaseCcer(\''+row.id+'\')">撤回</button>':'')+'</td></tr>').join(""):'<tr><td colspan="10" class="emptyCell">没有符合条件的持仓</td></tr>')+
+    '</tbody></table></div></section>';
+  return replaceCard(html,"CCER 持仓",table);
+};
+
+// 导出：Word（.docx）、Excel（.xlsx）、CSV、PDF；长表格分页。最后加载。
+
+// ---------- ZIP（存储模式） ----------
+const CRC_TABLE = (()=>{const table=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;table[n]=c>>>0;}return table;})();
+function crc32(bytes){let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=CRC_TABLE[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipFiles(files) {
+  const enc=new TextEncoder();
+  const parts=[],central=[];let offset=0;
+  const u16=v=>[v&255,(v>>8)&255],u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];
+  const now=new Date(),dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1),dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+  files.forEach(file=>{
+    const name=enc.encode(file.name),data=typeof file.data==="string"?enc.encode(file.data):file.data,crc=crc32(data);
+    const header=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(dosTime),...u16(dosDate),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0)]);
+    parts.push(header,name,data);
+    central.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(dosTime),...u16(dosDate),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]),name);
+    offset+=header.length+name.length+data.length;
+  });
+  const size=central.reduce((sum,part)=>sum+part.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(size),...u32(offset),0,0]);
+  return new Blob([...parts,...central,end],{type:"application/zip"});
+}
+function saveBlob(blob,name){const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),2000);}
+const xmlEsc=text=>String(text??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");
+function cellText(node){return (node.innerText??node.textContent??"").replace(/\s*\n\s*/g," ").trim();}
+function numericValue(text) {
+  const clean=String(text).replace(/,/g,"").trim();
+  return /^[+\-−]?\d+(\.\d+)?$/.test(clean)?Number(clean.replace("−","-")):null;
+}
+function safeName(text){return String(text).replace(/[\\/:*?"<>|]/g,"_").slice(0,80);}
+
+// ---------- Excel ----------
+function colName(index){let name="";index++;while(index>0){const m=(index-1)%26;name=String.fromCharCode(65+m)+name;index=Math.floor((index-1)/26);}return name;}
+function xlsxBlob(sheets) {
+  const used=new Set();
+  sheets=sheets.map((sheet,index)=>{let name=String(sheet.name||"Sheet"+(index+1)).replace(/[\\\/\?\*\[\]:]/g," ").slice(0,28)||"Sheet";let base=name,n=2;while(used.has(name))name=base.slice(0,25)+" "+(n++);used.add(name);return {...sheet,name};});
+  const sheetXml=sheet=>{
+    const widths=[];
+    sheet.rows.forEach(row=>row.forEach((value,c)=>{const len=String(value??"").length;widths[c]=Math.min(60,Math.max(widths[c]||8,len*1.6+2));}));
+    const rows=sheet.rows.map((row,r)=>'<row r="'+(r+1)+'">'+row.map((value,c)=>{
+      const ref=colName(c)+(r+1),style=(sheet.headers||[]).includes(r)?' s="1"':(sheet.titles||[]).includes(r)?' s="2"':'';
+      const num=typeof value==="number"?value:numericValue(value);
+      if(value===""||value===null||value===undefined)return '';
+      return num!==null&&!(sheet.titles||[]).includes(r)?'<c r="'+ref+'"'+style+'><v>'+num+'</v></c>':'<c r="'+ref+'" t="inlineStr"'+style+'><is><t xml:space="preserve">'+xmlEsc(value)+'</t></is></c>';
+    }).join("")+'</row>').join("");
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"/></sheetViews>'+
+      (widths.length?'<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w.toFixed(1)+'" customWidth="1"/>').join("")+'</cols>':'')+'<sheetData>'+rows+'</sheetData></worksheet>';
+  };
+  const files=[
+    {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>'},
+    {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:"xl/workbook.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+      sheets.map((s,i)=>'<sheet name="'+xmlEsc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+'</sheets></workbook>'},
+    {name:"xl/_rels/workbook.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+
+      '<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:"xl/styles.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="10"/><name val="Microsoft YaHei"/></font><font><b/><sz val="10"/><name val="Microsoft YaHei"/></font><font><b/><sz val="13"/><color rgb="FF26890D"/><name val="Microsoft YaHei"/></font></fonts>'+
+      '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF3F8EA"/><bgColor indexed="64"/></patternFill></fill></fills>'+
+      '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFD0D5DD"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+      '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>'}
+  ];
+  sheets.forEach((sheet,i)=>files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:sheetXml(sheet)}));
+  const blob=zipFiles(files);
+  return new Blob([blob],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+function tableRows(table) {
+  return [...table.querySelectorAll("tr")].map(tr=>[...tr.children].map(cellText));
+}
+
+// ---------- 报告结构提取 ----------
+function reportStructure(doc) {
+  const out={title:cellText(doc.querySelector(".rptCover h1")||{textContent:""}).replace(/(草稿|已核对|未核查|已核查)$/,"").trim(),
+    titleLines:[...((doc.querySelector(".rptCover h1")||{}).childNodes||[])].filter(n=>n.nodeType===3).map(n=>n.textContent.trim()).filter(Boolean),
+    tag:cellText(doc.querySelector(".rptTag")||{textContent:""}),meta:[...doc.querySelectorAll(".rptMeta>div")].map(div=>[cellText(div.querySelector("span")),cellText(div).replace(cellText(div.querySelector("span")),"").trim()]),sections:[]};
+  doc.querySelectorAll(".rptSec").forEach(sec=>{
+    const blocks=[];
+    const walk=node=>{
+      [...node.children].forEach(el=>{
+        const tag=el.tagName.toLowerCase();
+        if(tag==="h2")return;
+        if(tag==="h3"||tag==="h4")blocks.push({type:"h3",text:cellText(el)});
+        else if(tag==="p")blocks.push({type:"p",text:cellText(el)});
+        else if(tag==="ul"||tag==="ol")el.querySelectorAll("li").forEach(li=>blocks.push({type:"li",text:cellText(li)}));
+        else if(tag==="table")blocks.push({type:"table",rows:tableRows(el)});
+        else if(el.classList.contains("rptKpis"))blocks.push({type:"table",rows:[["指标","数值","单位"],...[...el.children].map(div=>[cellText(div.querySelector("span")),cellText(div.querySelector("b")),cellText(div.querySelector("small"))])]});
+        else if(el.classList.contains("sig"))blocks.push({type:"p",text:[...el.children].map(cellText).join("    ")});
+        else if(tag==="svg"||el.classList.contains("rptLegend"))return;
+        else walk(el);
+      });
+    };
+    walk(sec);
+    out.sections.push({title:cellText(sec.querySelector("h2")).replace(/^(\d+)/,"$1 "),blocks});
+  });
+  return out;
+}
+
+// ---------- Word ----------
+function docxBlob(structure) {
+  const run=(text,opts={})=>'<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Microsoft YaHei"/>'+(opts.bold?'<w:b/>':'')+(opts.color?'<w:color w:val="'+opts.color+'"/>':'')+(opts.size?'<w:sz w:val="'+opts.size+'"/><w:szCs w:val="'+opts.size+'"/>':'')+'</w:rPr><w:t xml:space="preserve">'+xmlEsc(text)+'</w:t></w:r>';
+  const para=(text,style,opts={})=>'<w:p><w:pPr>'+(style?'<w:pStyle w:val="'+style+'"/>':'')+(opts.align?'<w:jc w:val="'+opts.align+'"/>':'')+(opts.bullet?'<w:ind w:left="360" w:hanging="240"/>':'')+'</w:pPr>'+run((opts.bullet?"• ":"")+text,opts)+'</w:p>';
+  const table=rows=>{
+    const cols=Math.max(...rows.map(row=>row.length));
+    const width=9000,colW=Math.floor(width/cols);
+    return '<w:tbl><w:tblPr><w:tblW w:w="'+width+'" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="D0D5DD"/><w:bottom w:val="single" w:sz="4" w:color="D0D5DD"/><w:insideH w:val="single" w:sz="4" w:color="E5E7EB"/></w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr>'+
+      '<w:tblGrid>'+Array.from({length:cols},()=>'<w:gridCol w:w="'+colW+'"/>').join("")+'</w:tblGrid>'+
+      rows.map((row,r)=>'<w:tr>'+(r===0?'<w:trPr><w:tblHeader/></w:trPr>':'')+Array.from({length:cols},(_,c)=>'<w:tc><w:tcPr><w:tcW w:w="'+colW+'" w:type="dxa"/>'+(r===0?'<w:shd w:val="clear" w:color="auto" w:fill="F3F8EA"/>':'')+'</w:tcPr><w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr>'+run(row[c]??"",{bold:r===0,size:18})+'</w:p></w:tc>').join("")+'</w:tr>').join("")+'</w:tbl>'+para("");
+  };
+  let body=para("Deloitte.","Title",{bold:true,color:"26890D",size:44});
+  (structure.titleLines.length?structure.titleLines:[structure.title]).forEach(line=>body+=para(line,"Title",{bold:true,size:36}));
+  if(structure.tag)body+=para(structure.tag,"",{color:"A66A00"});
+  if(structure.meta.length)body+=table([["项目","内容"],...structure.meta]);
+  structure.sections.forEach(sec=>{
+    body+=para(sec.title,"Heading1",{bold:true,size:30,color:"1F2937"});
+    sec.blocks.forEach(block=>{
+      if(block.type==="h3")body+=para(block.text,"Heading2",{bold:true,size:24});
+      else if(block.type==="p")body+=para(block.text);
+      else if(block.type==="li")body+=para(block.text,"",{bullet:true});
+      else if(block.type==="table"&&block.rows.length)body+=table(block.rows);
+    });
+  });
+  const documentXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1300" w:right="1300" w:bottom="1300" w:left="1300" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Microsoft YaHei"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US" w:eastAsia="zh-CN"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'+
+    '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="80"/></w:pPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="360" w:after="120"/><w:pBdr><w:bottom w:val="single" w:sz="12" w:space="4" w:color="86BC25"/></w:pBdr><w:outlineLvl w:val="0"/></w:pPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr></w:style></w:styles>';
+  const blob=zipFiles([
+    {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>'},
+    {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>'},
+    {name:"word/_rels/document.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:"docProps/core.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+xmlEsc(structure.title)+'</dc:title><dc:creator>江南流体装备集团</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+new Date().toISOString().slice(0,19)+'Z</dcterms:created></cp:coreProperties>'},
+    {name:"word/document.xml",data:documentXml},
+    {name:"word/styles.xml",data:styles}
+  ]);
+  return new Blob([blob],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+}
+
+// ---------- 报告导出 ----------
+function reportElement(){return document.querySelector("#content .rptDoc");}
+function reportFileName() {
+  const s=reportStructure(reportElement());
+  return safeName((s.titleLines.join(" ")||s.title||"报告")+"-"+new Date().toISOString().slice(0,10));
+}
+function csvText(rows){return "﻿"+rows.map(row=>row.map(value=>{const text=String(value??"");return /[",\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text;}).join(",")).join("\r\n");}
+async function exportReport(format) {
+  closeExportMenus();
+  const doc=reportElement();
+  if(!doc){showToast("当前页面没有报告");return;}
+  const s=reportStructure(doc),name=reportFileName();
+  if(format==="docx"){saveBlob(docxBlob(s),name+".docx");showToast("已导出 Word");return;}
+  if(format==="xlsx") {
+    const sheets=[{name:"封面",rows:[[s.titleLines.join(" ")||s.title],[],["项目","内容"],...s.meta],titles:[0],headers:[2]}];
+    s.sections.forEach(sec=>{
+      const rows=[[sec.title]],headers=[],titles=[0];
+      sec.blocks.forEach(block=>{
+        if(block.type==="table"){rows.push([]);headers.push(rows.length);rows.push(...block.rows);}
+        else if(block.type==="h3"){rows.push([]);titles.push(rows.length);rows.push([block.text]);}
+        else rows.push([block.text]);
+      });
+      sheets.push({name:sec.title,rows,headers,titles});
+    });
+    saveBlob(xlsxBlob(sheets),name+".xlsx");showToast("已导出 Excel");return;
+  }
+  if(format==="csv") {
+    const rows=[[s.titleLines.join(" ")||s.title],...s.meta,[]];
+    s.sections.forEach(sec=>{rows.push([sec.title]);sec.blocks.forEach(block=>{if(block.type==="table")rows.push(...block.rows);else rows.push([block.text]);});rows.push([]);});
+    saveBlob(new Blob([csvText(rows)],{type:"text/csv;charset=utf-8"}),name+".csv");showToast("已导出 CSV");return;
+  }
+  if(format==="pdf")return exportPdf(doc,name);
+}
+async function exportPdf(doc,name) {
+  showToast("正在生成 PDF…");
+  await loadScriptOnce(VENDOR+"html2canvas.min.js");
+  await loadScriptOnce(VENDOR+"jspdf.umd.min.js");
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:"mm",format:"a4",compress:true});
+  const pageW=210,pageH=297,margin=12,usableW=pageW-margin*2,usableH=pageH-margin*2;
+  const clone=doc.cloneNode(true);
+  const host=document.createElement("div");
+  host.style.cssText="position:fixed;left:-10000px;top:0;width:820px;background:#fff;z-index:-1";
+  clone.style.maxWidth="820px";clone.style.border="0";clone.style.padding="0 8px";
+  clone.querySelectorAll(".rptToc").forEach(el=>el.remove());
+  host.appendChild(clone);document.body.appendChild(host);
+  const blocks=[];
+  const cover=document.createElement("div");
+  [...clone.children].filter(el=>!el.classList.contains("rptSec")).forEach(el=>cover.appendChild(el));
+  clone.prepend(cover);
+  blocks.push(cover);
+  clone.querySelectorAll(".rptSec").forEach(sec=>{
+    const parts=[...sec.children];
+    let chunk=document.createElement("div");
+    parts.forEach(el=>{
+      if(el.tagName==="TABLE"&&el.rows.length>28) {
+        const head=el.tHead?el.tHead.outerHTML:"";
+        const bodyRows=[...el.tBodies[0].rows];
+        for(let i=0;i<bodyRows.length;i+=28){
+          const t=document.createElement("table");t.className=el.className;t.innerHTML=head+"<tbody>"+bodyRows.slice(i,i+28).map(r=>r.outerHTML).join("")+"</tbody>";
+          chunk.appendChild(t);sec.appendChild(chunk);blocks.push(chunk);chunk=document.createElement("div");
+        }
+        el.remove();
+      } else chunk.appendChild(el);
+    });
+    if(chunk.children.length){sec.appendChild(chunk);blocks.push(chunk);}
+  });
+  let y=margin,page=1;
+  try {
+    for(const block of blocks) {
+      const canvas=await html2canvas(block,{scale:2,backgroundColor:"#ffffff",logging:false,useCORS:true});
+      const h=canvas.height*usableW/canvas.width;
+      if(y+h>pageH-margin&&y>margin){pdf.addPage();page++;y=margin;}
+      if(h<=usableH){pdf.addImage(canvas.toDataURL("image/jpeg",0.92),"JPEG",margin,y,usableW,h);y+=h+2;continue;}
+      const sliceH=Math.floor(canvas.width*usableH/usableW);
+      for(let top=0;top<canvas.height;top+=sliceH){
+        const part=document.createElement("canvas");part.width=canvas.width;part.height=Math.min(sliceH,canvas.height-top);
+        part.getContext("2d").drawImage(canvas,0,top,canvas.width,part.height,0,0,canvas.width,part.height);
+        const ph=part.height*usableW/part.width;
+        if(y+ph>pageH-margin&&y>margin){pdf.addPage();page++;y=margin;}
+        pdf.addImage(part.toDataURL("image/jpeg",0.92),"JPEG",margin,y,usableW,ph);y+=ph+2;
+      }
+    }
+    const total=pdf.getNumberOfPages();
+    for(let i=1;i<=total;i++){pdf.setPage(i);pdf.setFontSize(8);pdf.setTextColor(150);pdf.text(i+" / "+total,pageW/2,pageH-5,{align:"center"});}
+    pdf.save(name+".pdf");showToast("已导出 PDF（"+total+" 页）");
+  } finally {host.remove();}
+}
+function exportMenu(handler,formats=[["docx","Word"],["xlsx","Excel"],["csv","CSV"],["pdf","PDF"]],label="导出") {
+  return '<div class="exportMenu"><button class="btn" type="button" onclick="toggleExportMenu(event,this)">'+label+' ▾</button><div class="menuPop" hidden>'+
+    formats.map(([key,text])=>'<button type="button" onclick="'+handler+'(\''+key+'\')"><b>'+text+'</b><small>.'+key+'</small></button>').join("")+'</div></div>';
+}
+function toggleExportMenu(event,button){event.stopPropagation();const pop=button.nextElementSibling;const open=pop.hidden;closeExportMenus();pop.hidden=!open;}
+function closeExportMenus(){document.querySelectorAll(".exportMenu .menuPop").forEach(pop=>pop.hidden=true);}
+document.addEventListener("click",event=>{if(!event.target.closest(".exportMenu"))closeExportMenus();});
+
+// 页面表格导出（Excel / CSV）
+function pageTables() {
+  return [...document.querySelectorAll("#content table")].filter(table=>!table.closest(".rptDoc")&&table.rows.length>1);
+}
+function exportPageTables(format) {
+  closeExportMenus();
+  const tables=pageTables();
+  if(!tables.length){showToast("当前页面没有可导出的表格");return;}
+  const title=(document.querySelector("#content .head h1")||{textContent:"导出"}).textContent.trim();
+  const name=safeName(title+"-"+new Date().toISOString().slice(0,10));
+  const sheets=tables.map((table,index)=>{
+    const panel=table.closest(".panel,.card");
+    const caption=panel?.querySelector(".panelHead h3,h3")?.textContent.trim()||title+(tables.length>1?" "+(index+1):"");
+    return {name:caption,rows:tableRows(table).map(row=>row.filter((_,i)=>!table.rows[0].children[i]||table.rows[0].children[i].textContent.trim()!==""||row[i]!=="")),headers:[0]};
+  });
+  if(format==="xlsx"){saveBlob(xlsxBlob(sheets),name+".xlsx");showToast("已导出 Excel");}
+  else {const rows=[];sheets.forEach(sheet=>{if(sheets.length>1)rows.push([sheet.name]);rows.push(...sheet.rows,[]);});saveBlob(new Blob([csvText(rows)],{type:"text/csv;charset=utf-8"}),name+".csv");showToast("已导出 CSV");}
+}
+exportFirstTable = function () {exportPageTables("xlsx");};
+
+// ---------- 长表格分页 ----------
+const PAGER_STATE = {};
+const PAGE_SIZE = 20;
+function pagerKey(table,index){const panel=table.closest(".panel,.card");return state.top+"|"+state.group+"|"+state.page+"|"+(panel?.querySelector("h3")?.textContent||"")+"|"+index;}
+function applyPagers() {
+  document.querySelectorAll("#content .pager").forEach(el=>el.remove());
+  [...document.querySelectorAll("#content table")].forEach((table,index)=>{
+    if(table.closest(".rptDoc")||table.dataset.nopage!==undefined||!table.tBodies[0])return;
+    const rows=[...table.tBodies[0].rows].filter(row=>!row.classList.contains("sumRow")&&!row.classList.contains("totalRow"));
+    const size=Number(table.dataset.pageSize)||PAGE_SIZE;
+    if(rows.length<=size)return;
+    const key=pagerKey(table,index)+"|"+rows.length;
+    const pages=Math.ceil(rows.length/size);
+    let page=Math.min(PAGER_STATE[key]||1,pages);
+    const show=()=>{rows.forEach((row,i)=>row.hidden=!(i>=(page-1)*size&&i<page*size));};
+    show();
+    const bar=document.createElement("div");bar.className="pager";
+    const draw=()=>{
+      const nums=[];for(let p=1;p<=pages;p++)if(p===1||p===pages||Math.abs(p-page)<=2)nums.push(p);else if(nums.at(-1)!=="…")nums.push("…");
+      bar.innerHTML='<span>共 '+rows.length+' 条 · 第 '+((page-1)*size+1)+'–'+Math.min(page*size,rows.length)+' 条</span><div>'+
+        '<button type="button" '+(page===1?'disabled':'')+' data-p="'+(page-1)+'">‹</button>'+nums.map(p=>p==="…"?'<em>…</em>':'<button type="button" class="'+(p===page?'active':'')+'" data-p="'+p+'">'+p+'</button>').join("")+
+        '<button type="button" '+(page===pages?'disabled':'')+' data-p="'+(page+1)+'">›</button></div>';
+    };
+    bar.addEventListener("click",event=>{const p=Number(event.target.dataset?.p);if(!p)return;page=p;PAGER_STATE[key]=p;show();draw();});
+    draw();
+    (table.closest(".tableWrap")||table).after(bar);
+  });
+}
+const renderBeforePager = render;
+render = function () {
+  renderBeforePager();
+  try{applyPagers();}catch(error){console.error(error);}
 };
 
 

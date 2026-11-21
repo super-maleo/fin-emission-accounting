@@ -145,9 +145,10 @@ body[data-top="首页"] #sidebarToggle{visibility:hidden}
 .statTile span{color:var(--sub);font-size:12px}
 .statTile b{font-size:26px;line-height:1.1;font-weight:700;color:#101828;overflow-wrap:anywhere}
 .statTile small{color:var(--sub);font-size:12px;overflow-wrap:anywhere}
-.homeGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+.homeGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:stretch}
 .homeGrid.even{grid-template-columns:repeat(2,minmax(0,1fr))}
-.homeGrid>div{display:grid;gap:16px;min-width:0}
+.homeGrid>div{display:flex;flex-direction:column;gap:16px;min-width:0}
+.homeGrid>div>:last-child{flex:1 1 auto}
 .panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
 .panelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .panelHead h3{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
@@ -211,6 +212,27 @@ body[data-top="首页"] #sidebarToggle{visibility:hidden}
 .emptyCell{text-align:center;color:var(--sub);padding:28px}
 .rowActions{white-space:nowrap}.rowActions .btn+.btn{margin-left:6px}
 .taskTable td small{display:block}
+.exportMenu{position:relative;display:inline-block}
+.exportMenu .menuPop{position:absolute;right:0;top:calc(100% + 4px);z-index:40;min-width:168px;background:#fff;border:1px solid #d9dee5;border-radius:6px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:4px}
+.exportMenu .menuPop[hidden]{display:none}
+.exportMenu .menuPop button{display:flex;justify-content:space-between;width:100%;border:0;background:none;padding:8px 10px;font:inherit;font-size:13px;text-align:left;cursor:pointer;border-radius:4px;color:#1f2933}
+.exportMenu .menuPop button:hover{background:#f1f5f2}
+.exportMenu .menuPop button small{color:#7b8794}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 4px 2px;font-size:13px;color:#52606d;flex-wrap:wrap}
+.pager>div{display:flex;gap:4px;align-items:center}
+.pager button{min-width:30px;height:28px;border:1px solid #d9dee5;background:#fff;border-radius:4px;cursor:pointer;font:inherit;font-size:13px;color:#1f2933}
+.pager button.active{background:#26890d;border-color:#26890d;color:#fff}
+.pager button:disabled{opacity:.4;cursor:default}
+.pager em{font-style:normal;padding:0 4px}
+.catTabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.catTabs button{border:1px solid #d9dee5;background:#fff;border-radius:16px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;color:#3e4c59}
+.catTabs button.active{background:#e8f3e3;border-color:#26890d;color:#1d6b0a;font-weight:600}
+.catTabs button em{font-style:normal;color:#7b8794;margin-left:4px;font-size:12px}
+.srcCell{max-width:260px;white-space:normal;font-size:12px;color:#52606d;line-height:1.45}
+.etsYearBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.etsYearBar .segTabs{margin-bottom:0}
+.feed + .pager{border-top:0}
+@media(min-width:901px){.statRow:has(>:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}.statRow:has(>:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}.statRow:has(>:nth-child(5):last-child){grid-template-columns:repeat(5,minmax(0,1fr))}.statRow:has(>:nth-child(6):last-child){grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:1100px){.homeGrid,.homeGrid.even{grid-template-columns:1fr}.supplierProgress>li{grid-template-columns:1fr}}
 @media(max-width:760px){
   .statRow{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -464,6 +486,7 @@ td.nowrap{white-space:nowrap}td.nowrap .btn{margin-right:6px}
 .manualNav button{text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;cursor:pointer;font:inherit;color:#344054}.manualNav button.active{background:var(--greenLight);color:var(--green3);font-weight:600}
 .manualSteps{margin:0;padding-left:22px;display:grid;gap:10px;line-height:1.7}
 .homeGrid + .panel,.homeGrid + section{margin-top:0}
+.homeGrid{margin-bottom:16px}
 @media(max-width:900px){.evView,.manualGrid{grid-template-columns:1fr}.traceChain{grid-template-columns:repeat(2,minmax(0,1fr))}.msgPanel{width:min(380px,calc(100vw - 24px))}}
 .statRow.five{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1100px){.statRow.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -503,6 +526,9 @@ script = "\n".join([
     (ROOT / "evidence-ai.js").read_text(),
     (ROOT / "supply-help.js").read_text(),
     (ROOT / "target-report.js").read_text(),
+    (ROOT / "factor-lib.js").read_text(),
+    (ROOT / "ets-scale.js").read_text(),
+    (ROOT / "export-kit.js").read_text(),
     """
 async function startDemo() {
   if (location.protocol.startsWith("http")) {

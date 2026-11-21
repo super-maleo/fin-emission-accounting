@@ -541,7 +541,7 @@ renderStandardReport = function () {
   return '<style>'+RPT_CSS+'</style>'+pageHead(state.page,
       '<select class="headSelect" onchange="changeStandard(this.value)">'+optionList(demo.standards,"code","name",backendState.standard)+'</select>'+
       (manager?'<button class="btn" onclick="openVerifyModal()">登记核查</button>'+(isHistoryYear()?'':'<button class="btn" onclick="openNarrative()">'+((demo.reportNarrative||{})[kind]?'编辑管理层分析':'生成管理层分析')+'</button>'):'')+
-      '<button class="btn" onclick="downloadCurrentReport()">下载</button>'+
+      exportMenu("exportReport")+
       (manager&&!isHistoryYear()?'<button class="btn primary" onclick="generateScope3Report()">'+(issues.length?"生成草稿版本":"生成正式版本")+'</button>':''),"组织碳排放 / 报告中心 / "+state.page)+
     '<div class="rptLayout">'+orgReportHtml(scope3,{})+'</div>'+
     card("报告版本",rows.length?'<div class="tableWrap"><table class="compact"><thead><tr><th>编号</th><th>口径</th><th>状态</th><th>排放（tCO₂e）</th><th>生成时间</th><th>操作</th></tr></thead><tbody>'+
@@ -687,7 +687,7 @@ report = function () {
   const model=activeLca();
   if(state.page==="数据质量分析报告")return productQualityReport(model);
   return '<style>'+RPT_CSS+'</style>'+lcaHeading("碳足迹评价报告")+
-    '<div class="rptBar"><button class="btn" onclick="exportLca()">下载清单（CSV）</button><button class="btn primary" onclick="downloadProductReport()">下载报告</button></div>'+
+    '<div class="rptBar"><button class="btn" onclick="exportLca()">下载清单（CSV）</button>'+exportMenu("exportReport")+'</div>'+
     productReportHtml(model,false);
 };
 
