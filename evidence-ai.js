@@ -41,7 +41,7 @@ function fileSizeText(bytes){return bytes>1048576?(bytes/1048576).toFixed(1)+" M
 function evDb() {
   if(window.__evDb)return window.__evDb;
   window.__evDb=new Promise((resolve,reject)=>{
-    const request=indexedDB.open("carbon-evidence",1);
+    const request=indexedDB.open("carbon-evidence-petro",1);
     request.onupgradeneeded=()=>request.result.createObjectStore("files");
     request.onsuccess=()=>resolve(request.result);
     request.onerror=()=>reject(request.error);
@@ -64,19 +64,22 @@ openModal = function (html) {
 
 // ---------- 单据类型 ----------
 const DOC_TYPES = [
-  {match:"天然气",type:"燃气结算单",issuer:"嘉兴港华燃气有限公司",qtyLabel:"用气量",unit:"Nm³",price:3.85,account:"JX-GH-208173"},
-  {match:"柴油",type:"加油卡消费明细",issuer:"中国石化销售股份有限公司浙江湖州石油分公司",qtyLabel:"加油量",unit:"L",price:7.62,account:"1000 3301 8826 4410"},
-  {match:"R134a",type:"制冷剂充注记录",issuer:"杭州冷联机电设备维保有限公司",qtyLabel:"充注量",unit:"kg",price:68,account:"WB-2026-0315"},
-  {match:CHP_COAL,type:"入厂煤计量汇总单",issuer:"嘉兴热电分公司燃料管理部",qtyLabel:"入厂煤量",unit:"t",price:905,account:"RD-FUEL-01"},
-  {match:CHP_ELEC,type:"电费结算单",issuer:"国网浙江省电力有限公司嘉兴供电公司",qtyLabel:"本期电量",unit:"kWh",price:0.66,account:"3304 0218 7702"},
-  {match:"外购电力",type:"电费结算单",issuer:"国网浙江省电力有限公司嘉兴供电公司",qtyLabel:"本期电量",unit:"kWh",price:0.68,account:"3304 0218 6631"},
-  {match:"蒸汽",type:"蒸汽结算单",issuer:"湖州南太湖热电有限公司",qtyLabel:"用汽热量",unit:"GJ",price:98,account:"HZ-ST-0457"},
-  {match:"绿电",type:"绿色电力交易结算单",issuer:"浙江电力交易中心有限公司",qtyLabel:"结算电量",unit:"kWh",price:0.47,account:"ZJPX-GEC-1093"},
-  {match:"钢材",type:"采购入库汇总表",issuer:"江南流体装备集团物资采购部",qtyLabel:"入库量",unit:"t",price:4300,account:"ERP-MM-STEEL"},
-  {match:"公路运输",type:"运输周转量汇总表",issuer:"江南流体装备集团物流管理部",qtyLabel:"货物周转量",unit:"t·km",price:0.42,account:"TMS-2026"},
-  {match:"高铁",type:"差旅平台对账单",issuer:"携程商旅",qtyLabel:"结算金额",unit:"元",price:1,account:"CT-JNFE-2026"},
-  {match:"通勤",type:"员工通勤调查汇总表",issuer:"江南流体装备集团人力资源部",qtyLabel:"通勤里程",unit:"人·km",price:0,account:"HR-COMMUTE-2026"},
-  {match:"产品使用",type:"产品销售与能效测算表",issuer:"江南流体装备集团营销中心",qtyLabel:"生命周期用电量",unit:"kWh",price:0,account:"CRM-SALES-2026"}
+  {match:CHP_COAL,type:"入厂煤计量汇总单",issuer:"滨海石化热电厂燃料管理部",qtyLabel:"入厂煤量",unit:"t",price:905,account:"BHP-FUEL-01"},
+  {match:CHP_ELEC,type:"电费结算单",issuer:"国网辽宁省电力有限公司大连供电公司",qtyLabel:"本期电量",unit:"kWh",price:0.58,account:"2102 0218 7702"},
+  {match:"炼厂干气",type:"燃料气计量月报",issuer:"生产运行处（燃料气管网）",qtyLabel:"燃料气耗量",unit:"t",price:0,account:"FG-NET"},
+  {match:"甲烷氢",type:"燃料气计量月报",issuer:"乙烯装置",qtyLabel:"燃料气耗量",unit:"t",price:0,account:"MH-NET"},
+  {match:"天然气",type:"天然气贸易交接结算单",issuer:"北辰天然气销售公司",qtyLabel:"交接气量",unit:"万Nm³",price:24500,account:"NG-TRADE"},
+  {match:"燃料油",type:"罐区收发台账",issuer:"储运部",qtyLabel:"发出量",unit:"t",price:4200,account:"TANK-FO"},
+  {match:"柴油",type:"加油卡消费明细",issuer:"北辰石油销售加油卡中心",qtyLabel:"加油量",unit:"t",price:8600,account:"FUEL-CARD"},
+  {match:"火炬",type:"火炬气流量月报",issuer:"火炬系统（超声波流量计）",qtyLabel:"火炬气量",unit:"万Nm³",price:0,account:"FL-METER"},
+  {match:"烧焦",type:"装置烧焦量月报",issuer:"生产技术处",qtyLabel:"烧焦量",unit:"",price:0,account:"COKE-BURN"},
+  {match:"制氢",type:"制氢原料计量月报",issuer:"制氢装置",qtyLabel:"原料投入量",unit:"t",price:0,account:"H2-FEED"},
+  {match:"CO₂ 回收",type:"CO₂ 外输 / 注入计量单",issuer:"CO₂ 捕集与注入站",qtyLabel:"回收气量",unit:"万Nm³",price:0,account:"CO2-METER"},
+  {match:"酸性气体",type:"处理厂进出口气量月报",issuer:"天然气处理厂",qtyLabel:"原料气处理量",unit:"万Nm³",price:0,account:"AG-METER"},
+  {match:"放空",type:"放空作业票汇总",issuer:"生产运行科",qtyLabel:"放空气量",unit:"万Nm³",price:0,account:"VENT-LOG"},
+  {match:"外购电力",type:"电费结算单",issuer:"国家电网省级电力公司",qtyLabel:"本期电量",unit:"kWh",price:0.62,account:"ELE-BILL"},
+  {match:"蒸汽",type:"蒸汽结算单",issuer:"园区热电公司",qtyLabel:"用汽热量",unit:"GJ",price:98,account:"ST-BILL"},
+  {match:"光伏",type:"光伏发电量计量单",issuer:"分布式光伏运维中心",qtyLabel:"发电量",unit:"kWh",price:0,account:"PV-METER"}
 ];
 function docTypeFor(name){return DOC_TYPES.find(row=>String(name).includes(row.match));}
 
@@ -97,13 +100,13 @@ function seedEvidence() {
   workflowTasks().filter(task=>!task.locked).forEach((task,index)=>{
     const entry=taskEntry(task);
     if(!entry.evidence||entry.activity==="")return;
-    const doc=docTypeFor(task.name)||{type:"业务台账",issuer:task.org,qtyLabel:"数量",unit:task.unit,price:0,account:task.id};
+    const found=docTypeFor(task.name);const doc=found?{...found,unit:found.unit||task.unit}:{type:"业务台账",issuer:task.org,qtyLabel:"数量",unit:task.unit,price:0,account:task.id};
     const activity=Number(entry.activity);
-    const billed=task.id==="T-S2-02"?57200:activity;
+    const billed=task.id==="T-S2-06"?3640000:activity;
     const qty=convertUnit(billed,task.unit,doc.unit)??billed;
     add({no:entry.evidence,name:task.name+"-"+String(entry.evidence).replace(/\.\w+$/,"")+".pdf",type:doc.type,taskId:task.id,source:"组织填报",org:task.org,period:"2026-01 至 2026-10",
       uploader:task.owner,uploadedAt:dates[index%dates.length]+" "+String(9+index%8).padStart(2,"0")+":"+String(10+index*7%50).padStart(2,"0"),
-      fields:{issuer:doc.issuer,account:doc.account,holder:"江南流体装备集团"+(task.org||""),period:"2026年01月01日 至 2026年10月31日",quantity:qty,unit:doc.unit,qtyLabel:doc.qtyLabel,
+      fields:{issuer:doc.issuer,account:doc.account,holder:"北辰石油集团"+(task.org||""),period:"2026年01月01日 至 2026年10月31日",quantity:qty,unit:doc.unit,qtyLabel:doc.qtyLabel,
         amount:doc.price?Math.round(qty*doc.price*100)/100:null,docNo:entry.evidence},
       verified:entry.status==="通过",verifiedBy:entry.status==="通过"?MANAGER_NAME:"",status:"已关联",origin:"seed"});
   });
@@ -112,15 +115,15 @@ function seedEvidence() {
     const transport=row.unit==="t·km";
     add({no:row.evidence,name:row.supplier+"-"+(transport?"运输周转量汇总":"产品碳足迹声明")+".pdf",type:transport?"运输周转量汇总表":"产品碳足迹声明",taskId:"SUP-"+row.id,source:"供应商",org:row.supplier,period:"2026-01 至 2026-10",
       uploader:supplierProfile(row.supplier).contact||row.supplier,uploadedAt:dates[(index+3)%dates.length]+" 15:"+String(20+index*9).padStart(2,"0"),
-      fields:{issuer:row.supplier,holder:"江南流体装备集团",period:"2026年01月01日 至 2026年10月31日",quantity:row.qty,unit:row.unit,qtyLabel:transport?"货物周转量":"供货量",
+      fields:{issuer:row.supplier,holder:"北辰石油集团",period:"2026年01月01日 至 2026年10月31日",quantity:row.qty,unit:row.unit,qtyLabel:transport?"货物周转量":"供货量",
         carbon:row.unitCarbon,carbonUnit:"kgCO₂e/"+row.unit,docNo:row.evidence,product:row.part},
       verified:row.status==="已收集",verifiedBy:row.status==="已收集"?MANAGER_NAME:"",status:"已关联",origin:"seed"});
   });
   if(typeof ets==="function") {
     ets().monthly[CURRENT_YEAR].filter(month=>month.status==="已存证").forEach(month=>{
-      add({no:month.evidence,name:"入厂煤计量与化验单-"+CURRENT_YEAR+"-"+String(month.month).padStart(2,"0")+".pdf",type:"入厂煤计量与化验单",taskId:"ETS-"+CURRENT_YEAR+"-"+month.month,source:"碳履约",org:"嘉兴热电分公司",
-        period:CURRENT_YEAR+"-"+String(month.month).padStart(2,"0"),uploader:"周建华",uploadedAt:month.at+" 09:30",
-        fields:{issuer:"嘉兴热电分公司燃料管理部",holder:"江南流体装备集团嘉兴热电分公司",period:CURRENT_YEAR+"年"+String(month.month).padStart(2,"0")+"月",quantity:month.coal,unit:"t",qtyLabel:"入炉煤量",
+      add({no:month.evidence,name:"入厂煤计量与化验单-"+CURRENT_YEAR+"-"+String(month.month).padStart(2,"0")+".pdf",type:"入厂煤计量与化验单",taskId:"ETS-"+CURRENT_YEAR+"-"+month.month,source:"碳履约",org:"滨海石化热电厂",
+        period:CURRENT_YEAR+"-"+String(month.month).padStart(2,"0"),uploader:"赵海峰",uploadedAt:month.at+" 09:30",
+        fields:{issuer:"滨海石化热电厂燃料管理部",holder:"北辰石油集团滨海石化热电厂",period:CURRENT_YEAR+"年"+String(month.month).padStart(2,"0")+"月",quantity:month.coal,unit:"t",qtyLabel:"入炉煤量",
           ncv:month.ncv,docNo:month.evidence},verified:true,verifiedBy:"华东电力试验研究院",status:"已关联",origin:"seed"});
     });
   }
@@ -315,7 +318,7 @@ function suggestTaskFor(fields) {
     if(typeDoc&&doc&&doc.type===typeDoc.type)score+=0.45;
     if(fields.issuer&&doc&&doc.issuer.slice(0,4)===fields.issuer.slice(0,4))score+=0.2;
     if(fields.unit&&convertUnit(1,fields.unit,task.unit)!==null)score+=0.2;
-    const shortOrg=String(task.org||"").replace(/江南流体装备集团?/,"");
+    const shortOrg=String(task.org||"").replace(/北辰石油集团?/,"");
     if(fields.holder&&shortOrg&&fields.holder.includes(shortOrg))score+=0.15;
     return {task,score};
   }).filter(row=>row.score>=0.35).sort((a,b)=>b.score-a.score);
@@ -351,7 +354,7 @@ function extractionTable(ev,task) {
     checks.push(converted===null?['bad','单位 '+f.unit+' 无法换算为 '+task.unit]:['ok','换算为 '+fmt(converted,2)+' '+task.unit+(f.unit!==task.unit?'（'+f.unit+' → '+task.unit+'）':'')]);
   }
   if(task&&f.holder) {
-    const shortOrg=String(task.org||"").replace(/江南流体装备集团?/,"");
+    const shortOrg=String(task.org||"").replace(/北辰石油集团?/,"");
     checks.push(shortOrg&&f.holder.includes(shortOrg)?['ok','户名与填报组织一致']:['warn','户名「'+f.holder+'」与填报组织「'+task.org+'」不一致']);
   }
   if(f.period)checks.push(String(f.period).includes(String(reportYear))?['ok','期间在 '+reportYear+' 年度内']:['warn','期间不在 '+reportYear+' 年度']);
@@ -521,7 +524,7 @@ const FACTOR_DB = [
   {id:"EF-F04",name:"汽油燃烧（体积口径）",keys:"汽油 公务车 车辆",value:0.0021354,unit:"L",region:"全国",year:2015,source:"国家核算指南 · 密度 0.73 kg/L",scope:"1"},
   {id:"EF-F05",name:"液化石油气燃烧",keys:"液化石油气 LPG 食堂",value:3.1013,unit:"t",region:"全国",year:2015,source:"国家核算指南缺省参数",scope:"1"},
   {id:"EF-F06",name:"烟煤（缺省参数）",keys:"燃煤 烟煤 原煤 锅炉 热电",value:1.9003,unit:"t",region:"全国",year:2022,source:"发电设施核算指南缺省值",scope:"1"},
-  {id:"EF-F07",name:"烟煤（实测低位发热量 21.18 GJ/t）",keys:"燃煤 烟煤 热电联产 入炉煤 实测",value:2.0047,unit:"t",region:"浙江",year:2025,source:"企业实测 · 发电设施核算指南",scope:"1"},
+  {id:"EF-F07",name:"烟煤（实测低位发热量 21.18 GJ/t）",keys:"燃煤 烟煤 热电联产 入炉煤 实测",value:2.0047,unit:"t",region:"辽宁",year:2025,source:"企业实测 · 发电设施核算指南",scope:"1"},
   {id:"EF-R01",name:"HFC-134a 逸散（GWP AR6）",keys:"R134a 制冷剂 空调 冷水机组 HFC-134a",value:1.53,unit:"kg",region:"全球",year:2021,source:"IPCC AR6 GWP100 = 1530",scope:"1"},
   {id:"EF-R02",name:"HFC-134a 逸散（GWP AR5）",keys:"R134a 制冷剂 空调 HFC-134a",value:1.3,unit:"kg",region:"全球",year:2014,source:"IPCC AR5 GWP100 = 1300",scope:"1"},
   {id:"EF-R03",name:"HFC-134a 逸散（GWP AR4）",keys:"R134a 制冷剂 HFC-134a",value:1.43,unit:"kg",region:"全球",year:2007,source:"IPCC AR4 GWP100 = 1430",scope:"1"},
@@ -533,6 +536,10 @@ const FACTOR_DB = [
   {id:"EF-M05",name:"原铝",keys:"铝 铝锭 铝型材",value:0.0165,unit:"kg",region:"全国",year:2022,source:"中国产品全生命周期温室气体排放系数库",scope:"3"},
   {id:"EF-M06",name:"ABS 树脂",keys:"ABS 塑料 注塑",value:3.1,unit:"t",region:"全国",year:2022,source:"中国产品全生命周期温室气体排放系数库",scope:"3"},
   {id:"EF-M07",name:"瓦楞纸箱",keys:"纸箱 包装 瓦楞",value:0.0011,unit:"kg",region:"全国",year:2022,source:"中国产品全生命周期温室气体排放系数库",scope:"3"},
+  {id:"EF-P01",name:"无缝钢管 / 油套管",keys:"钢管 油套管 无缝钢管 管材",value:2.05,unit:"t",region:"全国",year:2022,source:"中国产品全生命周期温室气体排放系数库",scope:"3"},
+  {id:"EF-P02",name:"炼油催化剂（FCC）",keys:"催化剂 FCC 分子筛",value:4.6,unit:"t",region:"全国",year:2022,source:"行业平均（ecoinvent 3.9 本地化）",scope:"3"},
+  {id:"EF-P03",name:"聚丙烯酰胺",keys:"聚丙烯酰胺 驱油剂 PAM 化学剂",value:3.1,unit:"t",region:"全国",year:2022,source:"中国产品全生命周期温室气体排放系数库",scope:"3"},
+  {id:"EF-T05",name:"原油油轮运输（VLCC）",keys:"油轮 海运 VLCC 原油运输",value:0.0000052,unit:"t·km",region:"全球",year:2023,source:"IMO 第四次温室气体研究 · VLCC 平均",scope:"3"},
   {id:"EF-T01",name:"公路货运（重型柴油货车）",keys:"公路运输 货物运输 货车 物流",value:0.000087,unit:"t·km",region:"全国",year:2022,source:"交通运输行业排放因子",scope:"3"},
   {id:"EF-T02",name:"铁路货运",keys:"铁路运输 货物运输",value:0.0000185,unit:"t·km",region:"全国",year:2022,source:"交通运输行业排放因子",scope:"3"},
   {id:"EF-T03",name:"内河水运",keys:"水运 船舶 货物运输",value:0.000012,unit:"t·km",region:"全国",year:2022,source:"交通运输行业排放因子",scope:"3"},
@@ -565,7 +572,7 @@ function dice(a,b) {
 }
 function matchFactors(task,limit=5) {
   const query=task.name+" "+(task.factorLabel||"")+" "+(task.scope==="3"?categoryName(task.category):"");
-  const region=/嘉兴|湖州|杭州|浙江/.test(task.org||"")?"浙江":"";
+  const region=/滨海|大连/.test(task.org||"")?"辽宁":"";
   return FACTOR_DB.map(row=>{
     const nameSim=Math.max(dice(task.name,row.name),dice(query,row.name+" "+row.keys));
     const keyHit=row.keys.split(" ").some(key=>key.length>1&&query.includes(key))?1:0;
@@ -732,18 +739,23 @@ function measureList(data) {
   const total=rows=>rows.reduce((sum,row)=>sum+row.emission_tco2e,0);
   const list=[];
   const coal=total(find(/燃煤/));
-  if(coal)list.push({name:"热电机组掺烧农林生物质 10%",cut:coal*0.1,basis:"燃煤排放 "+fmt(coal,0)+" tCO₂e × 10%",cost:"中",scope:"1"});
-  if(coal)list.push({name:"汽轮机通流改造，供电煤耗降低 8 g/kWh",cut:coal*0.026,basis:"按供电煤耗 305 g/kWh 测算节煤 2.6%",cost:"高",scope:"1"});
-  const gas=total(find(/天然气/));
-  if(gas)list.push({name:"燃气锅炉烟气余热回收",cut:gas*0.08,basis:"天然气排放 "+fmt(gas,0)+" tCO₂e × 8%",cost:"低",scope:"1"});
+  if(coal)list.push({name:"自备电厂煤改气（2×350MW 改燃气-蒸汽联合循环）",cut:coal*0.55,basis:"燃煤排放 "+fmt(coal,0)+" tCO₂e × 55%",cost:"高",scope:"1"});
+  const furnace=total(find(/炼厂干气|加热炉|燃料油/));
+  if(furnace)list.push({name:"加热炉空气预热及余热回收改造",cut:furnace*0.06,basis:"加热炉燃料排放 "+fmt(furnace,0)+" tCO₂e × 6%",cost:"中",scope:"1"});
+  const flare=total(find(/火炬/));
+  if(flare)list.push({name:"火炬气回收系统扩能，正常工况零火炬",cut:flare*0.6,basis:"火炬排放 "+fmt(flare,0)+" tCO₂e × 60%",cost:"中",scope:"1"});
+  const vent=total(find(/逃逸|井口|放空|集气站|联合站|接转站|阀室|压气站|储气库/));
+  if(vent)list.push({name:"LDAR 全覆盖及套管气、放空气回收",cut:vent*0.45,basis:"甲烷逸散及放空 "+fmt(vent,0)+" tCO₂e × 45%",cost:"低",scope:"1"});
+  const h2=total(find(/制氢/));
+  if(h2)list.push({name:"制氢装置高浓度 CO₂ 捕集，管输至油田驱油埋存",cut:h2*0.5,basis:"制氢排放 "+fmt(h2,0)+" tCO₂e × 捕集率 50%",cost:"高",scope:"1"});
+  const fcc=total(find(/催化裂化/));
+  if(fcc)list.push({name:"催化裂化烟气 CO₂ 捕集示范",cut:fcc*0.1,basis:"烧焦排放 "+fmt(fcc,0)+" tCO₂e × 10%",cost:"高",scope:"1"});
   const power=total(find(/外购电力/));
-  if(power)list.push({name:"绿电交易覆盖 30% 外购电力",cut:power*0.3,basis:"外购电力排放 "+fmt(power,0)+" tCO₂e × 30%",cost:"中",scope:"2"});
-  const use=total(find(/产品使用/));
-  if(use)list.push({name:"主力泵型配套 IE5 电机、能效提升 3%",cut:use*0.03,basis:"产品使用阶段 "+fmt(use,0)+" tCO₂e × 3%",cost:"中",scope:"3"});
-  const road=find(/公路运输/);
-  if(road.length){const tkm=road.reduce((sum,row)=>sum+row.activity_value,0);list.push({name:"大宗原材料 20% 公转铁",cut:tkm*0.2*(0.000087-0.0000185),basis:fmt(tkm*0.2,0)+" t·km × (0.087−0.0185) kg/t·km",cost:"低",scope:"3"});}
-  const steel=total(find(/钢材|铸件/));
-  if(steel)list.push({name:"铸件与钢材采购 15% 切换为短流程低碳钢",cut:steel*0.15*0.6,basis:"相关排放 "+fmt(steel,0)+" tCO₂e × 15% × 60% 降幅",cost:"中",scope:"3"});
+  if(power)list.push({name:"风光发电及绿电交易覆盖 30% 外购电力",cut:power*0.3,basis:"外购电力排放 "+fmt(power,0)+" tCO₂e × 30%",cost:"中",scope:"2"});
+  const sold=total(find(/售出|燃烧使用/));
+  if(sold)list.push({name:"提高天然气及新能源销售占比 5 个百分点",cut:sold*0.02,basis:"售出产品燃烧 "+fmt(sold,0)+" tCO₂e × 2%",cost:"高",scope:"3"});
+  const ship=find(/海运|VLCC/);
+  if(ship.length)list.push({name:"VLCC 船队经济航速及 LNG 双燃料替换",cut:total(ship)*0.12,basis:"原油海运排放 "+fmt(total(ship),0)+" tCO₂e × 12%",cost:"中",scope:"3"});
   return list.sort((a,b)=>b.cut-a.cut);
 }
 function generateNarrative(kind) {

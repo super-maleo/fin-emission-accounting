@@ -7,49 +7,57 @@ function lcaLine(name, quantity, unit, factor, source, evidence) {
 }
 function makePumpModel() {
   return {
-    id:"LCA-P150-2026", name:"P150 循环水泵", code:"P150-IE3", version:"1.0",
-    owner:"产品环境合规组", standard:"ISO 14067:2018", boundary:"从摇篮到坟墓",
-    functionalUnit:"1 台循环水泵在额定工况下提供 10 年循环输水服务",
-    referenceFlow:1, flowUnit:"台", batchOutput:100, lifetime:10, annualHours:2000,
-    power:1.5, geography:"中国华东", period:"2026-01 至 2026-10",
-    allocation:"物理量分配", cutoff:"质量和能源单项低于 1%，累计不超过 5%；危险物质保留",
-    exclusions:"厂房及生产设备建造。回收收益单列，不抵减本模型总排放。",
+    id:"LCA-GSL92-2026", name:"92# 车用汽油（国VI B）", code:"GSL92-VIB", version:"1.0",
+    owner:"炼化和新材料板块 · 产品碳足迹组", standard:"ISO 14067:2018", boundary:"从摇篮到坟墓",
+    functionalUnit:"1 t 出厂车用汽油（国VI B）及其完全燃烧使用",
+    referenceFlow:1, flowUnit:"t", batchOutput:1000, lifetime:1, annualHours:0,
+    power:0, geography:"中国东北", period:"2026-01 至 2026-10",
+    allocation:"能量分配（热值）", cutoff:"质量和能源单项低于 1%，累计不超过 5%",
+    exclusions:"炼厂建设及设备制造、员工通勤。",
     status:"草稿", stages:[
       {name:lifecycleStages[0], enabled:true, lines:[
-        lcaLine("铸铁泵体及叶轮",1650,"kg",1.82,"材料供应商工艺估算","BOM-P150-2026-R3"),
-        lcaLine("电工钢及结构钢",620,"kg",2.15,"采购材料清单估算","MAT-2026-10-062"),
-        lcaLine("铜绕组",210,"kg",4.1,"供应商材料声明","SUP-CU-2026-041"),
-        lcaLine("瓦楞纸箱及木托",180,"kg",.68,"包装材料清单估算","PKG-P150-R2")]},
+        lcaLine("自产原油开采（松原、鄂南油田，42%）",454,"t",152,"油田组织盘查分摊（吨油排放）","UP-CRUDE-2026"),
+        lcaLine("进口原油开采及处理（58%）",627,"t",128,"行业平均（OPGEE 2023 中东轻质原油）","IMP-CRUDE-2026"),
+        lcaLine("进口原油 VLCC 海运",5624000,"t·km",0.0042,"海联油运供应商声明","SHIP-VLCC-202610"),
+        lcaLine("国产原油管道输送",318000,"t·km",0.0091,"管道企业能耗分摊","PL-CRUDE-2026")]},
       {name:lifecycleStages[1],enabled:true,lines:[
-        lcaLine("机加工与装配用电",1850,"kWh",.5366,"企业电表及演示电力因子","ELE-202610-M03"),
-        lcaLine("试机用电",240,"kWh",.5366,"试验台电表","TEST-P150-1026"),
-        lcaLine("冷却液补充",16,"kg",2.4,"生产领料记录估算","MES-202610-C08")]},
+        lcaLine("炼厂干气燃烧（按能量分配）",58,"t",2892,"燃料气计量 + 组分分析","FG-BH-2026-10"),
+        lcaLine("催化裂化烧焦（分配至汽油组分）",22.4,"t",3342,"烧焦量月报","FCC-BH-2026-10"),
+        lcaLine("制氢装置（加氢精制氢耗）",3.6,"t",9480,"氢平衡月报 × 制氢装置排放强度","H2-BH-2026-10"),
+        lcaLine("外购电力（装置能耗分摊）",58000,"kWh",0.5703,"能源管理系统","ELE-BH-2026-10"),
+        lcaLine("热电厂蒸汽（装置能耗分摊）",820,"GJ",146,"自产蒸汽排放因子（热量法）","STM-BH-2026"),
+        lcaLine("MTBE 调和组分（外购）",48,"t",1210,"供应商声明","SUP-MTBE-2026")]},
       {name:lifecycleStages[2],enabled:true,lines:[
-        lcaLine("原材料进厂公路运输",1064,"t·km",.092,"采购重量 × 加权距离 400 km","LOG-IN-202610"),
-        lcaLine("成品配送公路运输",1862,"t·km",.092,"发货重量 × 平均距离 700 km","LOG-OUT-202610")]},
+        lcaLine("成品油管道及铁路至油库",620000,"t·km",0.0185,"物流台账 × 平均运距 620 km","LOG-OUT-202610"),
+        lcaLine("油库至加油站二次配送",95000,"t·km",0.078,"承运商配送台账","LOG-DIST-202610"),
+        lcaLine("加油站用电（按销量分摊）",18500,"kWh",0.5703,"销售企业电费","ELE-MK-2026")]},
       {name:lifecycleStages[3],enabled:true,lines:[
-        lcaLine("运行用电（100台 × 1.5kW × 2000h × 10年）",3000000,"kWh",.5366,"额定输入功率及使用情景","USE-P150-SCN01"),
-        lcaLine("维护更换密封件",40,"kg",3.2,"10 年维护方案估算","MAINT-P150-10Y")]},
-      {name:lifecycleStages[4],enabled:true,lines:[
-        lcaLine("金属回收处理",2480,"kg",.12,"金属回收情景，回收收益未抵扣","EOL-P150-SCN01"),
-        lcaLine("包装回收及混合废物处置",180,"kg",.24,"废物处置情景估算","EOL-PKG-SCN01")]}
+        lcaLine("汽油完全燃烧（NCV 43.07 GJ/t × CC 18.9 tC/TJ × OF 98%）",1000,"t",2925,"化学计量计算","USE-GSL92")]},
+      {name:lifecycleStages[4],enabled:true,lines:[]}
     ], history:[]
   };
 }
 
 function prepareDomainData() {
   if (!demo.lcaModels) {
-    const pump = makePumpModel();
-    const motor = structuredClone(pump);
-    Object.assign(motor,{id:"LCA-M15-2026",name:"IE3 1.5kW 三相异步电动机",code:"YE3-90L-4",
-      boundary:"从摇篮到大门",functionalUnit:"1 台出厂电动机",batchOutput:100});
-    motor.stages.slice(2).forEach(stage=>stage.enabled=false);
-    motor.stages[0].lines = [
-      lcaLine("电工钢",620,"kg",2.15,"采购材料清单估算","BOM-YE3-2026"),
-      lcaLine("铜绕组",210,"kg",4.1,"供应商材料声明","SUP-CU-2026-041"),
-      lcaLine("铸铁外壳",520,"kg",1.82,"供应商材料声明","SUP-FE-2026-028")
+    const fuel = makePumpModel();
+    const resin = structuredClone(fuel);
+    Object.assign(resin,{id:"LCA-HDPE-2026",name:"高密度聚乙烯树脂 HDPE 5000S",code:"HDPE-5000S",
+      boundary:"从摇篮到大门",functionalUnit:"1 t 出厂 HDPE 树脂",batchOutput:1000,allocation:"质量分配"});
+    resin.stages.slice(2).forEach(stage=>stage.enabled=false);
+    resin.stages[0].lines = [
+      lcaLine("乙烯（滨海石化乙烯装置，按质量分配）",985,"t",1180,"乙烯装置盘查分摊","ETH-BH-2026"),
+      lcaLine("1-丁烯共聚单体",28,"t",1450,"行业平均","MAT-C4-2026"),
+      lcaLine("聚合催化剂及助剂",1.2,"t",5200,"华东催化剂有限公司声明","SUP-PE-CAT-2026")
     ];
-    demo.lcaModels = [pump,motor];
+    resin.stages[1].lines = [
+      lcaLine("聚合及造粒用电",412000,"kWh",0.5703,"装置电表","ELE-PE-2026"),
+      lcaLine("蒸汽",620,"GJ",146,"自产蒸汽排放因子","STM-PE-2026"),
+      lcaLine("包装膜袋",4.2,"t",2600,"采购台账","PKG-PE-2026")
+    ];
+    resin.stages[2].lines = [lcaLine("铁路发运至客户",850000,"t·km",0.0185,"销售发运台账","LOG-PE-2026",)];
+    resin.stages[2].lines.forEach(line=>line.outbound=true);
+    demo.lcaModels = [fuel,resin];
   }
   activeLcaId ||= demo.lcaModels[0].id;
 }
@@ -83,9 +91,9 @@ function lcaHeading(title) {
     '<button class="btn primary" onclick="editLcaModel(true)">新增 LCA 模型</button></div></div>';
 }
 function newLcaModel() {
-  return {id:"LCA-"+Date.now(),name:"",code:"",version:"1.0",owner:"产品环境合规组",
-    standard:"ISO 14067:2018",boundary:"从摇篮到坟墓",functionalUnit:"",referenceFlow:1,flowUnit:"台",
-    batchOutput:1,lifetime:10,annualHours:2000,power:1.5,geography:"中国华东",period:"2026-01 至 2026-10",
+  return {id:"LCA-"+Date.now(),name:"",code:"",version:"1.0",owner:"产品碳足迹组",
+    standard:"ISO 14067:2018",boundary:"从摇篮到大门",functionalUnit:"",referenceFlow:1,flowUnit:"t",
+    batchOutput:1000,lifetime:1,annualHours:0,power:0,geography:"中国东北",period:"2026-01 至 2026-10",
     allocation:"物理量分配",cutoff:"",exclusions:"",status:"草稿",
     stages:lifecycleStages.map(name=>({name,enabled:true,lines:[]})),history:[]};
 }
@@ -96,13 +104,12 @@ function editLcaModel(create=false) {
     ["name","模型名称","text"],["code","产品编码","text"],["functionalUnit","功能单位","text"],
     ["referenceFlow","参考流数量","number"],["flowUnit","参考流单位","text"],["batchOutput","清单对应批次产量","number"],
     ["owner","责任人 / 部门","text"],["period","数据采集期间","text"],["geography","地域范围","text"],
-    ["lifetime","使用寿命（年）","number"],["annualHours","年运行时间（h）","number"],["power","输入功率（kW）","number"],
-    ["cutoff","截断准则","text"],["exclusions","排除项与回收规则","text"]
+        ["cutoff","截断准则","text"],["exclusions","排除项与回收规则","text"]
   ];
   openModal('<h2>'+(create?'新增 LCA 模型':'模型设置')+'</h2><div class="modalForm">'+
     fields.map(([key,label,type])=>'<label>'+label+'<input data-lca-model="'+key+'" type="'+type+'" '+(type==="number"?'min="0" step="any"':'')+' value="'+textHtml(lcaDraft[key])+'"></label>').join("")+
     '<label>系统边界<select id="lcaBoundary"><option>从摇篮到坟墓</option><option>从摇篮到大门</option></select></label>'+
-    '<label>分配方法<select id="lcaAllocation"><option>物理量分配</option><option>经济价值分配</option><option>无需分配</option></select></label>'+
+    '<label>分配方法<select id="lcaAllocation"><option>能量分配（热值）</option><option>质量分配</option><option>经济价值分配</option><option>无需分配</option></select></label>'+
     '<label>评价方法<select id="lcaStandard"><option>ISO 14067:2018</option><option>ISO 14040 / ISO 14044</option></select></label>'+
     '</div><div class="lcaBoundaryStages"><b>生命周期阶段</b>'+lifecycleStages.map((name,index)=>
     '<label><input type="checkbox" data-lca-stage="'+index+'" '+(lcaDraft.stages[index].enabled?'checked':'')+'> '+name+'</label>').join("")+
@@ -229,7 +236,7 @@ productDash = function () {
     kpis([["总碳足迹",formatEmission(total),"kgCO₂e / "+model.referenceFlow+" "+model.flowUnit],
       ["功能单位",model.referenceFlow+" "+model.flowUnit,model.name],
       ["清单活动",model.stages.filter(stage=>stage.enabled).reduce((sum,stage)=>sum+stage.lines.length,0),"条活动数据"],
-      ["系统边界",model.boundary,"使用寿命 "+model.lifetime+" 年"]])+
+      ["系统边界",model.boundary,model.allocation]])+
     '<div class="card"><div class="lcaStageHead"><h3>生命周期阶段贡献</h3><button class="btn" onclick="showLcaHistory()">核算历史</button></div>'+
     totals.map((stage,index)=>'<button class="lcaContribution" onclick="showLcaStageDetail('+index+')"><span>'+stage.name+'</span>'+
       '<span class="lcaTrack"><i style="width:'+stage.total/max*100+'%;background:'+["#86bc25","#008a7a","#2c6aa0","#d59326","#8b729c"][index]+'"></i></span>'+

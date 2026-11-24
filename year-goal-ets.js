@@ -5,35 +5,22 @@
 const REPORT_YEARS = [2023,2024,2025,2026];
 const CURRENT_YEAR = 2026;
 const YEAR_SCALE = {2023:{"1":1.12,"2":1.30,"3":0.86},2024:{"1":1.07,"2":1.18,"3":0.93},2025:{"1":1.03,"2":1.08,"3":0.98}};
-const YEAR_REVENUE = {2023:6200,2024:6650,2025:7020,2026:7450};
+const YEAR_REVENUE = {2019:2516810,2020:1933836,2021:2614349,2022:3239167,2023:3011012,2024:2937981,2025:2861200,2026:2905400};
 // 热电分公司：燃煤热电联产和厂用电下网，同时是组织盘查的排放源和全国碳市场履约的核算对象
 const CHP_COAL = "燃煤热电联产";
 const CHP_ELEC = "厂用电下网";
 const CHP_PARAMS = {ncv:21.18,cc:0.02634,of:0.98};
 const CHP_COAL_FACTOR = CHP_PARAMS.ncv*CHP_PARAMS.cc*CHP_PARAMS.of*44/12;
 const YEAR_CLOSED = {2023:"2024-03-29",2024:"2025-03-28",2025:"2026-03-31"};
-// ---------- 演示企业规模：按大型泵阀装备制造集团（含自备热电）设定 ----------
-directTasks.push(
-  {id:"T-S1-04",org:"嘉兴热电分公司",name:CHP_COAL,unit:"t"},
-  {id:"T-S2-04",org:"嘉兴热电分公司",name:CHP_ELEC,unit:"kWh"}
-);
+// ---------- 演示企业规模：按综合性油气集团设定 ----------
 const workflowTasksBeforeScale = workflowTasks;
 workflowTasks = function () {
-  return workflowTasksBeforeScale().map(task=>task.id==="T-S1-04"?{...task,owner:"周建华",factor:etsCoalFactor(),factorLabel:"烟煤 · 发电设施核算指南（月度实测加权）"}:
-    task.id==="T-S2-04"?{...task,owner:"周建华",factor:0.0005703,factorLabel:"全国电网平均排放因子"}:task);
+  return workflowTasksBeforeScale().map(task=>task.id==="T-S1-04"?{...task,owner:"赵海峰",factor:etsCoalFactor(),factorLabel:"烟煤 · 发电设施核算指南（月度实测加权）"}:
+    task.id==="T-S2-04"?{...task,owner:"赵海峰",factor:0.0005703,factorLabel:"全国电网平均排放因子"}:task);
 };
-const SCALE_ENTRIES = {
-  "T-S1-01":{activity:1186000,evidence:"GAS-JX-2026-Q3-021"},
-  "T-S1-02":{activity:86000,evidence:"FUEL-HZ-2026-Q3-008"},
-  "T-S1-03":{activity:85,evidence:"HVAC-2026-CHECK",note:"空调与冷水机组维保补充 R134a 85 kg"},
-  "T-S1-04":{activity:99200,evidence:"MRV-RD-2026-10",status:"通过",note:"1–10 月入厂煤计量 + 11–12 月计划量"},
-  "T-S2-01":{activity:21600000,evidence:"ELE-JX-2026-001"},
-  "T-S2-02":{activity:58000,evidence:"STM-HZ-2026-004"},
-  "T-S2-03":{activity:6500000,evidence:"GEC-2026-019"},
-  "T-S2-04":{activity:3150000,evidence:"ELE-RD-2026-10",status:"通过"}
-};
-const SCALE_RECORDS = {1:58000,2:46000000,3:3600000,4:28500000,5:27000000000};
-const SCALE_SUPPLIERS = {"SC-001":8600000,"SC-002":2100000,"SC-003":9800000,"SC-004":6400000};
+const SCALE_ENTRIES = {};
+const SCALE_RECORDS = {};
+const SCALE_SUPPLIERS = {};
 function prepareScale() {
   if(demo.scaleVersion===3)return;
   Object.entries(SCALE_ENTRIES).forEach(([id,value])=>{
@@ -61,7 +48,7 @@ prepareWorkflow = function () {
 
 let reportYear = CURRENT_YEAR;
 try {
-  const savedYear=Number(localStorage.getItem("carbon-demo-year"));
+  const savedYear=Number(localStorage.getItem("carbon-petro-year"));
   if(REPORT_YEARS.includes(savedYear))reportYear=savedYear;
 } catch {}
 
@@ -132,7 +119,7 @@ if(typeof showOrgCategory==="function") {
 function setReportYear(value) {
   reportYear=Number(value);
   etsYear=isHistoryYear()?reportYear:null;
-  try {localStorage.setItem("carbon-demo-year",String(reportYear));} catch {}
+  try {localStorage.setItem("carbon-petro-year",String(reportYear));} catch {}
   render();
   showToast(isHistoryYear()?"已切换到 "+reportYear+" 年度归档数据（只读）":"已回到 "+CURRENT_YEAR+" 年度当前盘查");
 }
@@ -196,8 +183,8 @@ homeLayout = function (greet,slides,widget,links) {
 
 // ---------- 减排目标 ----------
 const DEFAULT_TARGETS = {baseYear:2023,items:[
-  {id:"TG-01",name:"范围一+二 排放强度下降",scope:"12",type:"intensity",reduction:35,targetYear:2030,basis:"tCO₂e / 百万元营收。主要路径：热电机组掺烧生物质与煤改气、余热回收、扩大绿电采购"},
-  {id:"TG-02",name:"范围三 排放强度下降",scope:"3",type:"intensity",reduction:25,targetYear:2030,basis:"tCO₂e / 百万元营收。产品使用阶段占范围三 90% 以上，依靠 IE4/IE5 高效电机和变频水泵降低用电"}
+  {id:"TG-01",name:"范围一+二 排放强度下降",scope:"12",type:"intensity",reduction:25,targetYear:2030,basis:"tCO₂e / 百万元营收。主要路径：炼化节能改造、自备电厂煤改气、油田伴生气回收、CCUS 规模化、扩大绿电替代"},
+  {id:"TG-02",name:"范围三 排放强度下降",scope:"3",type:"intensity",reduction:25,targetYear:2030,basis:"tCO₂e / 百万元营收。售出产品燃烧占范围三 80% 以上，路径：提高天然气及新能源销售占比、生物燃料和可持续航空燃料调和"}
 ]};
 function targets() {
   demo.targets ||= structuredClone(DEFAULT_TARGETS);
@@ -329,25 +316,25 @@ function removeTarget(id) {
 }
 
 // ---------- 碳履约（全国碳市场） ----------
-const ETS_ENTITY = {name:"江南流体装备集团嘉兴热电分公司",account:"CEA-330400-01873",unit:"2×25 MW 燃煤热电联产机组",industry:"发电（热电联产）",region:"浙江省嘉兴市"};
+const ETS_ENTITY = {name:"北辰石油集团滨海石化热电厂",account:"CEA-210200-01873",unit:"2×350 MW 超临界燃煤热电联产机组",industry:"发电（热电联产）",region:"辽宁省大连市"};
 const ETS_YEARS = [2023,2024,2025,2026];
 const ETS_GRID_FACTOR = 0.5703;
 const ETS_CCER_CAP = 0.05;
 const ETS_MONTH_WEIGHT = [1.12,1.05,0.98,0.9,0.86,0.92,1.0,1.02,0.94,0.96,1.07,1.18];
 const ETS_PROFILE = {
-  2023:{coal:99800,elec:3350,supply:197800,heat:330500,be:0.7960,bh:0.1260},
-  2024:{coal:97900,elec:3280,supply:194600,heat:325100,be:0.7930,bh:0.1258},
-  2025:{coal:101600,elec:3210,supply:199300,heat:341200,be:0.7856,bh:0.1252},
-  2026:{coal:99200,elec:3150,supply:196900,heat:336000,be:0.7800,bh:0.1250}
+  2023:{coal:1662000,elec:27230,supply:2913200,heat:7475900,be:0.7979,bh:0.1260},
+  2024:{coal:1630300,elec:26660,supply:2866100,heat:7353800,be:0.7966,bh:0.1258},
+  2025:{coal:1691900,elec:26090,supply:2935300,heat:7717900,be:0.7953,bh:0.1252},
+  2026:{coal:1652000,elec:25600,supply:2899900,heat:7600300,be:0.7940,bh:0.1250}
 };
-const ETS_VERIFIER = "浙江省环科碳核查技术服务中心";
-const ETS_AUTHORITY = "浙江省生态环境厅";
+const ETS_VERIFIER = "辽宁省环科碳核查技术服务中心";
+const ETS_AUTHORITY = "辽宁省生态环境厅";
 const CCER_PRICE = 78.6;
 const CCER_LISTINGS = [
   {project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,price:79.2},
   {project:"甘肃玉门光热发电项目",type:"并网光热发电",vintage:2024,price:77.8},
   {project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,price:86.5},
-  {project:"浙江安吉造林碳汇项目",type:"造林碳汇",vintage:2024,price:82.0}
+  {project:"辽宁本溪造林碳汇项目",type:"造林碳汇",vintage:2024,price:82.0}
 ];
 const MONTH_NAMES = ["1 月","2 月","3 月","4 月","5 月","6 月","7 月","8 月","9 月","10 月","11 月","12 月"];
 let etsYear = null;
@@ -377,7 +364,7 @@ function etsMonthsBuild(year) {
     if(year===CURRENT_YEAR&&month===10){status="待存证";at="";}
     if(year===CURRENT_YEAR&&month>10){status="未到期";at="";}
     return {month,coal:value,ncv:+(21.18+0.21*Math.sin(month*1.3+year)).toFixed(2),cc:+(0.02634+0.00006*Math.cos(month*0.8+year)).toFixed(5),
-      supply:supply[index],heat:heat[index],elec:elec[index],status,at,evidence:status==="未到期"?"":"MRV-RD-"+year+String(month).padStart(2,"0")};
+      supply:supply[index],heat:heat[index],elec:elec[index],status,at,evidence:status==="未到期"?"":"MRV-BH-"+year+String(month).padStart(2,"0")};
   });
 }
 function etsMonthEmission(row) {
@@ -418,17 +405,17 @@ function etsBuild() {
     const pre=Math.round(alloc.qty*0.7);
     const ccer=year===2023?1850:0;
     data.cycles[year]={year,deadline:(year+1)+"-12-31",
-      report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-ZJ-0"+(412+year-2023)},
+      report:{status:"已核查",no:"ER-"+year+"-210200-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-LN-0"+(412+year-2023)},
       alloc:{pre:{qty:pre,at:(year+1)+"-03-15"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:(year+1)+"-09-27",status:"已确认",confirmedAt:(year+1)+"-10-0"+(year-2021)}},
       surrender:{status:"未清缴"}};
     add((year+1)+"-03-15","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
     add((year+1)+"-10-0"+(year-2021),"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
-    if(ccer)data.ccer.push({id:"CCER-"+year+"-0412",project:"浙江安吉竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
+    if(ccer)data.ccer.push({id:"CCER-"+year+"-0412",project:"辽宁本溪竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
     const short=verified-ccer-balance(year);
     if(short>0){const qty=Math.ceil(short/100)*100,price=year===2023?78.4:96.2,id=order((year+1)+"-11-1"+(year-2020),"买入","CEA",year,qty,price,year);add((year+1)+"-11-1"+(year-2020),"买入",year,qty,id,year);}
     else if(-short>1500){const qty=Math.floor((-short-600)/50)*50,price=97.8,id=order((year+1)+"-11-20","卖出","CEA",year,qty,price,year);add((year+1)+"-11-20","卖出",year,-qty,id,year);}
     const date=(year+1)+"-12-1"+(year-2015);
-    const cert="QJ-"+year+"-330400-0187";
+    const cert="QJ-"+year+"-210200-0187";
     surrender(year,verified-ccer,date,cert);
     Object.assign(data.cycles[year].surrender,{status:"已清缴",at:date,cea:verified-ccer,ccer,cert});
   });
@@ -436,7 +423,7 @@ function etsBuild() {
     const year=2025,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months);
     const pre=Math.round(alloc.qty*0.7);
     data.cycles[year]={year,deadline:"2026-12-31",
-      report:{status:"已核查",no:"ER-2025-330400-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-ZJ-0438"},
+      report:{status:"已核查",no:"ER-2025-210200-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-LN-0438"},
       alloc:{pre:{qty:pre,at:"2026-03-16"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:"2026-11-12",status:"待确认",confirmBy:"2026-11-26"}},
       surrender:{status:"未清缴"}};
     add("2026-03-16","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
@@ -452,7 +439,7 @@ function etsBuild() {
   data.orders.sort((a,b)=>b.at.localeCompare(a.at));
   data.log=[
     {at:"2026-11-12 16:20",actor:"系统",text:"收到 "+ETS_AUTHORITY+" 2025 年度配额核定结果"},
-    {at:"2026-11-08 09:42",actor:"周建华",text:"2026 年 9 月监测数据存证"},
+    {at:"2026-11-08 09:42",actor:"赵海峰",text:"2026 年 9 月监测数据存证"},
     {at:"2026-10-15 14:05",actor:MANAGER_NAME,text:"买入 CCER 800 tCO₂e · 广西北海红树林营造项目"},
     {at:"2026-09-18 10:26",actor:MANAGER_NAME,text:"买入 CEA 2025 1,500 t"},
     {at:"2026-06-26 11:30",actor:ETS_VERIFIER,text:"出具 2025 年度核查报告"}
@@ -634,8 +621,8 @@ async function saveEtsMonth(year,month,attest) {
   if(cycle.report.status==="监测中"&&ets().monthly[year].every(item=>item.status==="已存证"))cycle.report.status="待提交";
   if(year===CURRENT_YEAR) {
     const sums=etsSums(ets().monthly[year]);
-    demo.taskEntries["T-S1-04"]={...demo.taskEntries["T-S1-04"],activity:Math.round(sums.coal),evidence:"MRV-RD-"+year+String(month).padStart(2,"0")};
-    demo.taskEntries["T-S2-04"]={...demo.taskEntries["T-S2-04"],activity:Math.round(sums.elec*1000),evidence:"MRV-RD-"+year+String(month).padStart(2,"0")};
+    demo.taskEntries["T-S1-04"]={...demo.taskEntries["T-S1-04"],activity:Math.round(sums.coal),evidence:"MRV-BH-"+year+String(month).padStart(2,"0")};
+    demo.taskEntries["T-S2-04"]={...demo.taskEntries["T-S2-04"],activity:Math.round(sums.elec*1000),evidence:"MRV-BH-"+year+String(month).padStart(2,"0")};
     persistDemo();
     await loadBackendData();
   }
@@ -651,14 +638,14 @@ function openEtsReport(year) {
 function submitEtsReport(year) {
   etsYear=year;
   const cycle=etsCycle(year),sums=etsSums(ets().monthly[year]);
-  Object.assign(cycle.report,{status:"已提交",no:"ER-"+year+"-330400-0187",submittedAt:todayText(),reportedQty:Math.round(sums.emission)});
+  Object.assign(cycle.report,{status:"已提交",no:"ER-"+year+"-210200-0187",submittedAt:todayText(),reportedQty:Math.round(sums.emission)});
   etsLog("提交 "+year+" 年度排放报告 "+fmt(sums.emission,0)+" tCO₂");
   persistDemo();closeModal();render();showToast("排放报告已提交");
 }
 function openEtsVerify(year) {
   const cycle=etsCycle(year);
   openModal('<h2>登记 '+year+' 年度核查结论</h2><div class="modalForm">'+
-    '<label>核查机构<input id="vOrg" value="'+ETS_VERIFIER+'"></label><label>核查报告编号<input id="vNo" value="HC-'+(year+1)+'-ZJ-"></label>'+
+    '<label>核查机构<input id="vOrg" value="'+ETS_VERIFIER+'"></label><label>核查报告编号<input id="vNo" value="HC-'+(year+1)+'-LN-"></label>'+
     '<label>核查日期<input id="vDate" type="date" value="'+todayText()+'"></label><label>核查排放量 (tCO₂)<input id="vQty" type="number" min="0" value="'+(cycle.report.reportedQty||0)+'"></label></div>'+
     '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveEtsVerify('+year+')">保存</button></div>');
 }
@@ -765,7 +752,7 @@ function openEtsOrder(side,product="CEA",qty) {
     '<label>数量 ('+(product==="CEA"?"t":"tCO₂e")+')<input id="oQty" type="number" min="100" step="100" value="'+Math.ceil(defaultQty/100)*100+'"></label>'+
     '<label>委托价 (元)<input id="oPrice" type="number" min="1" step="0.01" value="'+price.toFixed(2)+'"></label>'+
     '<label>交易方式<select id="oChannel"><option>挂牌协议</option><option>大宗协议</option></select></label>'+
-    '<label>资金账户<input value="浙商银行嘉兴分行 · 碳交易结算户" disabled></label></div>'+
+    '<label>资金账户<input value="兴业银行大连分行 · 碳交易结算户" disabled></label></div>'+
     '<div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="saveEtsOrder(\''+side+'\',\''+product+'\')">提交委托</button></div>');
 }
 function saveEtsOrder(side,product) {
@@ -900,7 +887,7 @@ function submitEtsSurrender(year) {
   const calc=etsCalc(year),cycle=calc.cycle,data=ets();
   const {plan,short}=etsSurrenderPlan(year);
   if(short>0||!calc.verifiedDone||cycle.alloc.final?.status!=="已确认"){showToast("清缴条件未满足");return;}
-  const cert="QJ-"+year+"-330400-0187";
+  const cert="QJ-"+year+"-210200-0187";
   plan.forEach(row=>data.ledger.push({id:"LG"+String(++data.seq).padStart(5,"0"),date:todayText(),type:"清缴注销",vintage:row.vintage,qty:-row.take,ref:cert,year}));
   data.ccer.forEach(row=>{if(row.usedFor===year&&row.status==="已锁定")row.status="已注销";});
   Object.assign(cycle.surrender,{status:"已清缴",at:todayText(),cea:calc.need,ccer:calc.ccer,cert});

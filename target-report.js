@@ -1,25 +1,23 @@
 // 目标管理（基准年、目标分解）与报告中心（组织温室气体报告、范围三报告、ISO 14067 碳足迹报告）。最后加载。
 
 // ---------- 组织单元与责任部门 ----------
-const ORG_UNITS = [
-  {unit:"嘉兴热电分公司",type:"分公司",site:"浙江省嘉兴市",business:"2×25 MW 燃煤热电联产，对外供热供电",scopes:"范围一、二",owner:"周建华"},
-  {unit:"嘉兴装配工厂",type:"生产基地",site:"浙江省嘉兴市",business:"水泵、电机总装与试验",scopes:"范围一、二",owner:"陈晓宁"},
-  {unit:"湖州机加工基地",type:"生产基地",site:"浙江省湖州市",business:"泵体、泵轴机加工",scopes:"范围一、二",owner:"许文涛"},
-  {unit:"杭州总部",type:"总部",site:"浙江省杭州市",business:"研发、销售与管理",scopes:"范围一、二、三",owner:"沈嘉禾"}
-];
-const UNIT_REVENUE_SHARE = {"嘉兴热电分公司":0.09,"嘉兴装配工厂":0.52,"湖州机加工基地":0.18,"杭州总部":0.21};
-const UNIT_ALIAS = {"总部办公区":"杭州总部","公司层面（价值链）":"杭州总部"};
+const ORG_UNITS = PETRO_ENTITIES.map(item=>({unit:item.org,type:(PETRO_SEGMENTS.find(seg=>seg.id===item.seg)||{}).name||"二级单位",
+  site:item.region,business:item.capacity,scopes:item.org==="集团总部"?"范围一、二、三":"范围一、二",owner:item.owner}));
+const UNIT_REVENUE_SHARE = {"滨海石化分公司":0.052,"滨海石化热电厂":0.003,"陇原石化分公司":0.026,"天山石化分公司":0.025,"其他炼化企业":0.244,
+  "松原油田分公司":0.034,"鄂南油气田分公司":0.042,"塔河油田分公司":0.019,"其他油气田企业":0.071,"西部管道分公司":0.012,"其他管道企业":0.008,
+  "华北销售分公司":0.046,"其他销售企业":0.358,"北辰钻探工程公司":0.031,"集团总部":0.029};
+const UNIT_ALIAS = {"集团总部":"集团总部","公司层面（价值链）":"集团总部"};
 const S3_DEPTS = {
-  "产品研发中心":{codes:["C10","C11","C12"],owner:"刘振宇"},
-  "采购中心":{codes:["C01","C02"],owner:"王立群"},
-  "物流部":{codes:["C04","C09"],owner:"赵敏"},
-  "行政人事部":{codes:["C06","C07","C08"],owner:"孙佳"},
-  "财务与战略部":{codes:["C03","C05","C13","C14","C15"],owner:"何晴"}
+  "销售分公司":{codes:["C10","C11","C12","C14"],owner:"李静"},
+  "物资采购中心":{codes:["C01","C02","C03"],owner:"王立群"},
+  "储运与物流部":{codes:["C04","C09"],owner:"赵敏"},
+  "人力资源部":{codes:["C06","C07","C08"],owner:"孙佳"},
+  "规划计划部":{codes:["C05","C13","C15"],owner:"何晴"}
 };
-function deptOf(code){return Object.keys(S3_DEPTS).find(name=>S3_DEPTS[name].codes.includes(code))||"财务与战略部";}
+function deptOf(code){return Object.keys(S3_DEPTS).find(name=>S3_DEPTS[name].codes.includes(code))||"规划计划部";}
 function unitOfRow(row,target) {
   if(target&&target.scope==="3")return deptOf(row.category_code);
-  if(String(row.scope)==="3")return "杭州总部";
+  if(String(row.scope)==="3")return "集团总部";
   const name=orgUnitName(row.org);
   return UNIT_ALIAS[name]||name;
 }
@@ -35,7 +33,7 @@ function unitPendingTasks(target,unit) {
   return workflowTasks().filter(task=>{
     if(target.scope==="12"&&task.scope==="3")return false;
     if(target.scope==="3"&&task.scope!=="3")return false;
-    const owner=task.scope==="3"?(target.scope==="3"?deptOf(task.category||((task.id.match(/C\d\d/)||[])[0])||"C01"):"杭州总部"):(UNIT_ALIAS[task.org]||task.org);
+    const owner=task.scope==="3"?(target.scope==="3"?deptOf(task.category||((task.id.match(/C\d\d/)||[])[0])||"C01"):"集团总部"):(UNIT_ALIAS[task.org]||task.org);
     return owner===unit&&!["通过","不适用"].includes(taskEntry(task).status);
   });
 }
@@ -52,12 +50,12 @@ function targetsV2() {
       if(item.id==="TG-02"){item.interim??={year:2027,reduction:12};item.framework??="科学碳目标（SBTi）范围三 2/3 覆盖要求";item.issued??="2025-12-18";}
     });
     config.recalcLog??=[
-      {date:"2024-06-30",type:"结构变化",desc:"2024-01 收购湖州机加工基地，按全年追溯纳入 2023 基准年",impact:3.8,decision:"已重算",by:MANAGER_NAME},
+      {date:"2024-06-30",type:"结构变化",desc:"2024-01 收购陇原石化分公司，按全年追溯纳入 2023 基准年",impact:3.8,decision:"已重算",by:MANAGER_NAME},
       {date:"2025-04-18",type:"排放因子变更",desc:"全国电网平均排放因子更新为 0.5703 tCO₂/MWh，2023 年范围二重新计算",impact:-0.1,decision:"未达阈值，不重算",by:MANAGER_NAME},
-      {date:"2026-03-12",type:"数据错误更正",desc:"2023 年嘉兴装配工厂天然气抄表重复 1 个月，更正 −96,400 Nm³",impact:-0.1,decision:"未达阈值，不重算",by:MANAGER_NAME}
+      {date:"2026-03-12",type:"数据错误更正",desc:"2023 年滨海石化分公司天然气抄表重复 1 个月，更正 −96,400 Nm³",impact:-0.1,decision:"未达阈值，不重算",by:MANAGER_NAME}
     ];
     config.alloc??={
-      "TG-01":{method:"custom",units:{"嘉兴热电分公司":38,"嘉兴装配工厂":30,"湖州机加工基地":25,"杭州总部":20},issued:"2026-01-15",version:1},
+      "TG-01":{method:"custom",units:{"滨海石化热电厂":38,"滨海石化分公司":30,"陇原石化分公司":25,"集团总部":20},issued:"2026-01-15",version:1},
       "TG-02":{method:"custom",units:{"产品研发中心":26,"采购中心":24,"物流部":30,"行政人事部":15,"财务与战略部":10},issued:"2026-01-15",version:1}
     };
     persistDemo();
@@ -328,12 +326,12 @@ const GAS_SPLIT = [
   [/燃煤|天然气|柴油|汽油|燃料/,{CO2:0.9955,CH4:0.0010,N2O:0.0035}],
   [/制冷剂/,{HFCs:1}]
 ];
-const S3_RELEVANCE = {C01:"主要原材料与外协件",C02:"生产设备与工装购置",C03:"外购燃料与电力的上游排放",C04:"原材料与外协件入厂运输",C05:"生产废弃物委外处置",C06:"员工差旅",C07:"员工通勤",
-  C08:"租赁仓库",C09:"成品配送",C10:"部分泵组由客户集成加工",C11:"售出水泵与电机的运行用电",C12:"售出产品报废处置",C13:"出租试验设备",C14:"区域特许经销门店",C15:"参股企业"};
+const S3_RELEVANCE = {C01:"外购原油、凝析油、天然气及化工原料",C02:"钻机、压缩机、炼化装置等资本货物",C03:"外购燃料与电力的上游排放",C04:"进口原油海运、原料管输及铁路运输",C05:"含油污泥、废催化剂委外处置",C06:"员工差旅",C07:"员工通勤",
+  C08:"租赁油库及储罐",C09:"成品油及化工品二次配送",C10:"化工中间品下游加工",C11:"售出成品油、天然气及液化气燃烧",C12:"售出塑料制品废弃处置",C13:"出租加油站及储运设施",C14:"特许加盟加油站",C15:"参股炼厂及海外权益项目"};
 const UNCERTAINTY = {"一级":0.05,"二级":0.2,"三级":0.5};
-const RPT_VERIFY_DEFAULT = {2023:{org:"浙江中衡碳核查服务有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2024-04-26",result:"无保留意见",no:"ZH-GHG-2024-0418"},
-  2024:{org:"浙江中衡碳核查服务有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2025-04-22",result:"无保留意见",no:"ZH-GHG-2025-0392"},
-  2025:{org:"浙江中衡碳核查服务有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2026-04-17",result:"保留意见：范围三类别 1 支出法数据占比偏高",no:"ZH-GHG-2026-0375"}};
+const RPT_VERIFY_DEFAULT = {2023:{org:"中衡联合碳核查（北京）有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2024-04-26",result:"无保留意见",no:"ZH-GHG-2024-0418"},
+  2024:{org:"中衡联合碳核查（北京）有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2025-04-22",result:"无保留意见",no:"ZH-GHG-2025-0392"},
+  2025:{org:"中衡联合碳核查（北京）有限公司",std:"ISO 14064-3:2019",level:"合理保证（范围一、二）；有限保证（范围三）",date:"2026-04-17",result:"保留意见：范围三类别 1 支出法数据占比偏高",no:"ZH-GHG-2026-0375"}};
 function verificationOf(year){demo.verification||={};return demo.verification[year]||RPT_VERIFY_DEFAULT[year]||null;}
 function p1(part,total){if(!total)return "0";const v=part/total*100;return v>0&&v<0.1?"<0.1":v.toFixed(1);}
 const sumE = rows=>rows.reduce((sum,row)=>sum+row.emission_tco2e,0);
@@ -349,8 +347,8 @@ function factorSource(row) {
   const task=workflowTasks().find(item=>item.name===row.source_name||scenarioText(item.name)===name);
   return task&&task.factorLabel&&task.factorLabel!==task.name?task.factorLabel:(SOURCE_FACTOR_REF[name]||"企业因子库");
 }
-const SOURCE_FACTOR_REF = {"产品使用电力":"全国电网平均排放因子（生态环境部 2022 年度）","钢材采购":"中国钢铁行业平均（世界钢协 2023）","货物公路运输":"重型柴油货车（交通运输行业因子）",
-  "员工私家车通勤":"小型汽油乘用车（交通运输行业因子）","国内高铁差旅":"支出法因子（环境扩展投入产出模型）"};
+const SOURCE_FACTOR_REF = {"售出汽油燃烧":"《石油化工企业温室气体排放核算方法与报告指南》缺省值","售出柴油燃烧":"《石油化工企业温室气体排放核算方法与报告指南》缺省值",
+  "售出天然气燃烧":"《中国石油天然气生产企业温室气体排放核算方法与报告指南》缺省值","外购原油":"OPGEE 2023 原油上游排放强度","进口原油海运":"IMO 第四次温室气体研究（VLCC）"};
 function svgTrend(series,unit) {
   const years=series.map(item=>item.year);
   const max=Math.max(...series.map(item=>item.values.reduce((a,b)=>a+b,0)))*1.1||1;
@@ -401,7 +399,7 @@ function orgReportData(scope3) {
 function orgReportHtml(scope3,meta) {
   const d=orgReportData(scope3);
   const {year,config,detail,prev,base,by,total}=d;
-  const company="江南流体装备集团有限公司";
+  const company="北辰石油天然气集团有限公司";
   const title=year+" 年度"+(scope3?"范围三温室气体排放报告":"温室气体排放报告");
   const status=meta.status||(d.issues.length?"草稿":"已核对");
   const verify=verificationOf(year);
@@ -528,7 +526,7 @@ function orgReportHtml(scope3,meta) {
 
   return '<article class="rptDoc"><div class="rptCover"><div class="rptLogo">Deloitte<i>.</i></div><h1>'+textHtml(company)+'<br>'+title+'<span class="rptTag '+(status==="已核对"?'ok':'')+'">'+textHtml(status)+'</span></h1>'+
     '<div class="rptMeta"><div><span>报告期</span>'+year+' 年 1 月 1 日 – 12 月 31 日</div><div><span>核算标准</span>'+textHtml(standardName(meta.standard||backendState.standard))+'</div><div><span>报告编号</span>'+textHtml(meta.no||("GHG-"+year+(scope3?"-S3":"")+"-预览"))+'</div>'+
-      '<div><span>编制单位</span>可持续发展部</div><div><span>生成时间</span>'+textHtml(meta.created||new Date().toLocaleString("zh-CN",{hour12:false}))+'</div><div><span>核查</span>'+(verify?textHtml(verify.result):"未核查")+'</div></div></div>'+
+      '<div><span>编制单位</span>质量健康安全环保部</div><div><span>生成时间</span>'+textHtml(meta.created||new Date().toLocaleString("zh-CN",{hour12:false}))+'</div><div><span>核查</span>'+(verify?textHtml(verify.result):"未核查")+'</div></div></div>'+
     rptToc(sections.map(([n,t])=>[n,t]))+sections.map(([n,t,b])=>rSection(n,t,b)).join("")+'</article>';
 }
 renderStandardReport = function () {
@@ -573,13 +571,13 @@ function saveVerify() {
 }
 downloadCurrentReport = function () {
   const scope3=state.page==="范围三专项报告";
-  const title="江南流体装备 "+reportYear+" 年度"+(scope3?"范围三温室气体排放报告":"温室气体排放报告");
+  const title="北辰石油 "+reportYear+" 年度"+(scope3?"范围三温室气体排放报告":"温室气体排放报告");
   downloadLcaFile(reportDocument(title,workflowIssues().length&&!isHistoryYear()?"草稿":"已核对",backendState.standard,[],[],new Date().toLocaleString("zh-CN",{hour12:false})),title+".html","text/html");
 };
 downloadOrgReport = function (id) {
   const report=demo.reports.find(row=>row.id===id);
   const type=report.type||"范围三专项报告";
-  const title="江南流体装备 "+reportYear+" 年度"+(type==="范围三专项报告"?"范围三温室气体排放报告":"温室气体排放报告");
+  const title="北辰石油 "+reportYear+" 年度"+(type==="范围三专项报告"?"范围三温室气体排放报告":"温室气体排放报告");
   downloadLcaFile(wrapDoc(title,orgReportHtml(type==="范围三专项报告",{forDocument:true,status:report.status||"草稿",standard:report.standard_code,created:String(report.created_at).slice(0,19).replace("T"," "),no:"R-"+String(report.id).padStart(3,"0")})),
     "R-"+String(report.id).padStart(3,"0")+"-"+title+".html","text/html");
 };
@@ -590,7 +588,7 @@ function lineQuality(line) {
   const src=String(line.source||"");
   const kind=/供应商/.test(src)?"供应商声明":line.quality==="情景估算"||/情景|方案/.test(src)?"情景估算":/电表|记录|计量|领料|试验/.test(src)?"企业实测":"行业平均";
   const ti=Number(line.year)>=2025?1:Number(line.year)>=2022?2:3;
-  const ge=/华东|浙江|中国/.test(String(line.region||"")+src)?(/华东|浙江/.test(src)?1:2):3;
+  const ge=/东北|辽宁|中国/.test(String(line.region||"")+src)?(/东北|辽宁|企业|盘查|实测/.test(src)?1:2):3;
   const te=kind==="企业实测"||kind==="供应商声明"?1:2;
   const p=LINE_DQ[kind].p;
   return {kind,ti,ge,te,p,dqr:(ti+ge+te+p)/4,u:LINE_DQ[kind].u};
@@ -619,9 +617,9 @@ function productReportHtml(model,forDocument) {
   const unc=total?Math.sqrt(lines.reduce((sum,item)=>sum+Math.pow(item.emission*item.q.u,2),0))/total*100:0;
 
   push("总则",rTable(["项目","内容"],[["研究目的","量化 "+textHtml(model.name)+"（型号 "+textHtml(model.code)+"）的产品碳足迹，识别减排热点"],["预期用途","客户供应链碳数据披露、产品碳标识申请、内部生态设计"],
-    ["目标受众","下游客户、认证机构、企业内部"],["比较性声明","不用于向公众披露的比较性声明"],["依据标准","ISO 14067:2018；ISO 14040:2006；ISO 14044:2006"],["委托与编制","江南流体装备集团 · "+textHtml(model.owner||"产品环境合规组")]],"kv"));
+    ["目标受众","下游客户、认证机构、企业内部"],["比较性声明","不用于向公众披露的比较性声明"],["依据标准","ISO 14067:2018；ISO 14040:2006；ISO 14044:2006"],["委托与编制","北辰石油集团 · "+textHtml(model.owner||"产品环境合规组")]],"kv"));
   push("研究范围",rTable(["项目","内容"],[["功能单位",textHtml(model.functionalUnit)],["参考流",model.referenceFlow+" "+fu],["系统边界",textHtml(model.boundary)],
-    ["时间边界",textHtml(model.period)+"；使用阶段 "+model.lifetime+" 年"],["地理边界",textHtml(model.geography||"中国")],["截断准则",textHtml(model.cutoff||"—")],
+    ["时间边界",textHtml(model.period)+""],["地理边界",textHtml(model.geography||"中国")],["截断准则",textHtml(model.cutoff||"—")],
     ["分配程序",textHtml(model.allocation||"物理量分配")+"；多产品共线能耗按工时分配"],["排除项",textHtml(model.exclusions||"—")]],"kv")+
     '<h3>生命周期阶段</h3>'+rTable(["阶段","是否纳入","主要过程"],model.stages.map(stage=>[stage.name,stage.enabled?"纳入":"不纳入",stage.enabled?stage.lines.map(line=>textHtml(line.name)).join("、"):"超出 "+textHtml(model.boundary)+" 边界"])));
   push("生命周期清单分析",'<p>批次产量 '+model.batchOutput+' '+fu+'，清单数据按批次采集后折算至参考流。</p>'+
@@ -633,7 +631,7 @@ function productReportHtml(model,forDocument) {
       ["直接土地利用变化（dLUC）",k(0),"不涉及"],["航空运输排放",k(0),"不涉及"],["产品中生物碳储存",k(bioStore),"单独报告，不计入 CFP（包装纸木材料）"]]));
   const sens=[];
   if(kwh)sens.push(["电网排放因子 ±10%","±"+k(kwh*0.1),"±"+p1(kwh*0.1,total)+"%"]);
-  if(use)sens.push(["使用寿命 8 年 / 12 年",k(total-use*0.2)+" / "+k(total+use*0.2),"−"+p1(use*0.2,total)+"% / +"+p1(use*0.2,total)+"%"]);
+  if(use)sens.push(["燃烧氧化率 ±2%",k(total-use*0.02)+" / "+k(total+use*0.02),"−"+p1(use*0.02,total)+"% / +"+p1(use*0.02,total)+"%"]);
   if(use)sens.push(["年运行小时 1,600 h / 2,400 h",k(total-use*0.2)+" / "+k(total+use*0.2),"±"+p1(use*0.2,total)+"%"]);
   if(tkm)sens.push(["运输距离 ±50%","±"+k(tkm*0.5),"±"+p1(tkm*0.5,total)+"%"]);
   const hot=lines.slice().sort((a,b)=>b.emission-a.emission).slice(0,5);
@@ -641,14 +639,17 @@ function productReportHtml(model,forDocument) {
     '<h3>敏感性分析</h3>'+(sens.length?rTable(["参数","CFP（kgCO₂e）","变化"],sens):'<p>—</p>')+
     '<h3>数据质量评价</h3>'+rTable(["过程","技术代表性","地理代表性","时间代表性","精确度","DQR","评级"],lines.map(item=>[textHtml(item.line.name),item.q.te,item.q.ge,item.q.ti,item.q.p,item.q.dqr.toFixed(2),dqrLabel(item.q.dqr)]))+
     '<p>按排放量加权 DQR '+dqr.toFixed(2)+'（'+dqrLabel(dqr)+'）；合成不确定性 ±'+unc.toFixed(1)+'%（95% 置信区间），CFP 区间 '+k(total*(1-unc/100))+' – '+k(total*(1+unc/100))+' kgCO₂e。</p>'+
-    '<h3>局限性</h3><ul><li>使用阶段按额定功率和设计工况测算，实际能耗随客户工况变化。</li><li>回收阶段采用截断法，回收材料的环境收益未抵扣。</li><li>部分原材料采用行业平均因子，供应商一手数据覆盖后需更新。</li></ul>');
+    '<h3>局限性</h3><ul><li>使用阶段按完全燃烧计算，未考虑车辆实际燃烧效率差异。</li><li>炼厂多产品共生过程按热值分配，分配方法变化会影响结果。</li><li>部分原材料采用行业平均因子，供应商一手数据覆盖后需更新。</li></ul>');
   const ideas=[];
-  if(use)ideas.push(["电机能效由 IE3 升级为 IE4","使用维护",k(use*0.026),"额定效率 86.0% → 88.3%"]);
-  if(use)ideas.push(["配套变频控制","使用维护",k(use*0.15),"部分负载工况节电 15%"]);
-  const metal=lines.filter(item=>/铸铁|钢/.test(item.line.name));
-  if(metal.length)ideas.push(["铸件采用 30% 再生铁料","原材料获取",k(sumBy(metal)*0.3*0.55),"再生料单位排放降低约 55%"]);
+  if(use)ideas.push(["调和 10% 生物基组分（E10 乙醇汽油）","使用维护",k(use*0.07),"生物质碳不计入化石排放"]);
+  const crude=lines.filter(item=>/原油开采|开采/.test(item.line.name));
+  if(crude.length)ideas.push(["油田伴生气回收及甲烷泄漏检测与修复","原材料获取",k(sumBy(crude)*0.18),"甲烷排放强度 0.22% → 0.15%"]);
+  const fuel=lines.filter(item=>/干气|烧焦|蒸汽/.test(item.line.name));
+  if(fuel.length)ideas.push(["加热炉余热回收及催化烟气能量回收","生产制造",k(sumBy(fuel)*0.08),"装置综合能耗下降约 8%"]);
+  const h2=lines.filter(item=>/制氢|氢/.test(item.line.name));
+  if(h2.length)ideas.push(["制氢装置 CO₂ 捕集（CCUS 驱油）","生产制造",k(sumBy(h2)*0.6),"高浓度 CO₂ 捕集率 90%"]);
   const make=lines.filter(item=>item.stage===lifecycleStages[1]&&item.line.unit==="kWh");
-  if(make.length)ideas.push(["装配车间绿电覆盖 50%","生产制造",k(sumBy(make)*0.5),"绿电按零排放计"]);
+  if(make.length)ideas.push(["装置外购电绿电覆盖 50%","生产制造",k(sumBy(make)*0.5),"绿电按零排放计"]);
   push("结论与改进建议",'<p>'+textHtml(model.name)+' 的产品碳足迹为 <b>'+k(total)+' kgCO₂e / '+model.referenceFlow+' '+fu+'</b>（'+textHtml(model.boundary)+'），'+
     (totals[3]&&totals[3].enabled?'使用维护阶段占 '+p1(totals[3].total,total)+'%，是决定性阶段。':'原材料获取阶段占 '+p1(totals[0].total,total)+'%。')+'</p>'+
     rTable(["改进措施","阶段","减排潜力（kgCO₂e）","依据"],ideas));
@@ -675,7 +676,7 @@ function productQualityReport(model) {
       statTile("有凭证",lines.filter(item=>item.line.evidence).length+" / "+lines.length,"条")+statTile("情景估算排放占比",p1(lines.filter(item=>item.q.kind==="情景估算").reduce((a,b)=>a+b.emission,0),total)+"%","按排放量")+'</div>'+
     '<div class="homeGrid even"><div>'+card("数据来源构成",'<div class="tableWrap"><table class="compact"><thead><tr><th>数据类型</th><th>过程数</th><th>排放（kgCO₂e）</th><th>占比</th></tr></thead><tbody>'+kinds.map(row=>'<tr>'+row.map(c=>'<td>'+c+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>')+'</div>'+
     '<div>'+card("评分规则",'<div class="tableWrap"><table class="compact"><thead><tr><th>指标</th><th>1</th><th>2</th><th>3</th></tr></thead><tbody>'+
-      '<tr><td>技术代表性</td><td>实测或供应商</td><td>同类技术平均</td><td>相近技术</td></tr><tr><td>地理代表性</td><td>华东/浙江</td><td>全国</td><td>其他地区</td></tr>'+
+      '<tr><td>技术代表性</td><td>实测或供应商</td><td>同类技术平均</td><td>相近技术</td></tr><tr><td>地理代表性</td><td>东北/辽宁</td><td>全国</td><td>其他地区</td></tr>'+
       '<tr><td>时间代表性</td><td>≤ 1 年</td><td>≤ 4 年</td><td>&gt; 4 年</td></tr><tr><td>精确度</td><td>计量</td><td>供应商声明</td><td>估算</td></tr></tbody></table></div>')+'</div></div>'+
     '<section class="panel"><div class="tableWrap"><table><thead><tr><th>阶段</th><th>过程</th><th>数据类型</th><th>技术</th><th>地理</th><th>时间</th><th>精确度</th><th>DQR</th><th>排放占比</th><th>凭证</th><th>操作</th></tr></thead><tbody>'+
       lines.map(item=>'<tr><td>'+item.stage+'</td><td>'+textHtml(item.line.name)+'</td><td>'+item.q.kind+'</td><td>'+item.q.te+'</td><td>'+item.q.ge+'</td><td>'+item.q.ti+'</td><td>'+item.q.p+'</td><td><span class="status '+(item.q.dqr<=1.6?'ok':item.q.dqr<=2?'ok':item.q.dqr<=3?'warn':'bad')+'">'+item.q.dqr.toFixed(2)+' '+dqrLabel(item.q.dqr)+'</span></td><td>'+p1(item.emission,total)+'%</td><td>'+textHtml(item.line.evidence||"—")+'</td>'+

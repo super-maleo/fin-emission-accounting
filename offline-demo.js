@@ -1,4 +1,4 @@
-const storageKey = "deloitte-carbon-demo-v1";
+const storageKey = "deloitte-carbon-petro-v1";
 let savedDemoData;
 try {
   savedDemoData = JSON.parse(localStorage.getItem(storageKey));
@@ -141,14 +141,7 @@ renderScope3CollectionNew = function () {
 };
 
 const originalOrgDataEntry = orgDataEntry;
-const directTasks = [
-  {id:"T-S1-01", org:"上海工厂", name:"天然气燃烧", unit:"Nm³"},
-  {id:"T-S1-02", org:"苏州基地", name:"柴油叉车", unit:"L"},
-  {id:"T-S1-03", org:"总部办公区", name:"制冷剂泄漏", unit:"kg"},
-  {id:"T-S2-01", org:"上海工厂", name:"外购电力", unit:"kWh"},
-  {id:"T-S2-02", org:"苏州基地", name:"外购蒸汽", unit:"GJ"},
-  {id:"T-S2-03", org:"集团总部", name:"绿电采购", unit:"kWh"}
-];
+const directTasks = petroDirectTasks();
 demo.directEntries ||= {};
 
 orgDataEntry = function () {

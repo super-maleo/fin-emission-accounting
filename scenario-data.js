@@ -5,13 +5,13 @@ function prepareScenarioData() {
       if(factor.unit!=="t" && factor.unit!=="万元" && factor.factor_value>0.001) {
         factor.factor_value/=1000;
       }
-      factor.reference="2026年度场景因子 · 仅用于演示";
+      factor.reference="企业因子库 2026 版";
     });
     const suppliers=[
-      {id:"SC-001",task:"T-S3-C01",supplier:"苏州恒铸精密铸造",part:"HT250 泵体铸件",category:"C01",qty:1650,unit:"kg",unitCarbon:1.82,total:3.003,status:"已收集",sync:"已自动关联",evidence:"SUP-HT250-202610-018"},
-      {id:"SC-002",task:"T-S3-C01",supplier:"无锡华导铜业",part:"电磁线铜材",category:"C01",qty:210,unit:"kg",unitCarbon:4.1,total:.861,status:"待审核",sync:"待审核后关联",evidence:"SUP-CU-202610-041"},
-      {id:"SC-003",task:"T-S3-C04",supplier:"嘉兴联运物流",part:"原材料公路运输",category:"C04",qty:1064,unit:"t·km",unitCarbon:.092,total:.097888,status:"已收集",sync:"已自动关联",evidence:"LOG-IN-202610"},
-      {id:"SC-004",task:"T-S3-C01",supplier:"常州鑫叠电机材料",part:"定转子电工钢",category:"C01",qty:620,unit:"kg",unitCarbon:2.15,total:1.333,status:"退回补充",sync:"未关联",evidence:"SUP-SI-202610-026"}
+      {id:"SC-001",task:"T-S3-C01",supplier:"渤海钢管制造有限公司",part:"J55 油套管",category:"C01",qty:1300000,unit:"t",unitCarbon:1860,total:2418000,status:"已收集",sync:"已自动关联",evidence:"SUP-OCTG-202610-018"},
+      {id:"SC-002",task:"T-S3-C01",supplier:"华东催化剂有限公司",part:"FCC 催化裂化催化剂",category:"C01",qty:98000,unit:"t",unitCarbon:4200,total:411600,status:"待审核",sync:"待审核后关联",evidence:"SUP-FCC-202610-041"},
+      {id:"SC-003",task:"T-S3-C04",supplier:"海联油运股份有限公司",part:"进口原油 VLCC 海运",category:"C04",qty:320000000000,unit:"t·km",unitCarbon:0.0042,total:1344000,status:"已收集",sync:"已自动关联",evidence:"SHIP-VLCC-202610"},
+      {id:"SC-004",task:"T-S3-C01",supplier:"胜宇油田化学有限公司",part:"驱油用聚丙烯酰胺",category:"C01",qty:160000,unit:"t",unitCarbon:2850,total:456000,status:"退回补充",sync:"未关联",evidence:"SUP-PAM-202610-026"}
     ];
     supplyScope3Items.splice(0,supplyScope3Items.length,...suppliers);
     demo.supplierRows=suppliers;
@@ -26,14 +26,14 @@ function prepareScenarioData() {
 }
 
 const scenarioNames={
-  "A100整机":"P150 循环水泵","A100 整机":"P150 循环水泵","P-A100":"P-P150",
-  "A100":"P150","B200":"YE3-90L","标杆产品X":"P150 上年度设计",
-  "供应商A":"苏州恒铸精密铸造","供应商B":"无锡华导铜业","供应商C":"常州鑫叠电机材料",
-  "供应商D":"湖州成越包装","供应商E":"杭州联封密封件","供应商F":"嘉兴联运物流",
-  "电池模组":"铸铁泵体","铝型材":"漆包铜线","塑料件":"定转子电工钢",
-  "张三":"陈晓宁","李四":"周建华","王五":"沈嘉禾",
-  "集团总部":"杭州总部","上海工厂":"嘉兴装配工厂","苏州基地":"湖州机加工基地",
-  "德勤中国 / ESG管理部":"江南流体装备 / 可持续发展部"
+  "A100整机":"92# 车用汽油（国VI B）","A100 整机":"92# 车用汽油（国VI B）","P-A100":"P-GSL92",
+  "A100":"GSL92","B200":"HDPE-5000S","标杆产品X":"92# 汽油 2025 年度",
+  "供应商A":"渤海钢管制造有限公司","供应商B":"华东催化剂有限公司","供应商C":"胜宇油田化学有限公司",
+  "供应商D":"辽东化工助剂有限公司","供应商E":"西北压缩机制造有限公司","供应商F":"海联油运股份有限公司",
+  "电池模组":"FCC 催化剂","铝型材":"MTBE","塑料件":"加氢催化剂",
+  "张三":"刘建平","李四":"赵海峰","王五":"孙卫东",
+  "集团总部":"集团总部","上海工厂":"滨海石化分公司","苏州基地":"陇原石化分公司",
+  "德勤中国 / ESG管理部":"北辰石油 / 质量健康安全环保部"
 };
 function scenarioText(value) {
   let output=String(value);
@@ -147,7 +147,7 @@ render = function () {
   const texts=[];
   while(walker.nextNode())texts.push(walker.currentNode);
   texts.forEach(node=>{if(node.parentElement.tagName!=="SCRIPT")node.textContent=scenarioText(node.textContent)});
-  document.querySelector(".right .pill").textContent="江南流体装备 · 2026 年度场景";
+  document.querySelector(".right .pill").textContent="北辰石油 · 2026 年度场景";
   content.querySelectorAll(".bars,.donutWrap,.realSankey,.horizontalChart").forEach(chart=>{
     const controls=chart.previousElementSibling;
     if(controls?.classList.contains("chartControls"))controls.remove();
@@ -236,7 +236,7 @@ renderStandardReport = function () {
     optionList(demo.standards,"code","name",backendState.standard)+'</select></label>'+
     '<button class="btn primary" onclick="generateScope3Report()">生成范围三报告</button></div>'+
     '<div class="lcaReport"><div class="coverLogo">Deloitte</div><h2>2026 年 7 月范围三采集清单</h2>'+
-    '<p>江南流体装备 · '+textHtml(standardName(backendState.standard))+'</p><p>已采集排放 <b>'+
+    '<p>北辰石油 · '+textHtml(standardName(backendState.standard))+'</p><p>已采集排放 <b>'+
     formatEmission(calc.total_emission)+' tCO₂e</b> · '+calc.detail.length+' 条活动数据</p></div>'+
     table("类别汇总",["类别","tCO₂e","占比","操作"],calc.categories.map(row=>
       [row.category_name,formatEmission(row.emission_tco2e),row.share+"%",
@@ -248,7 +248,7 @@ renderStandardReport = function () {
 function downloadOrgReport(id) {
   const report=demo.reports.find(row=>row.id===id);
   const snapshot=JSON.parse(report.content_json);
-  downloadLcaFile("江南流体装备 · 范围三报告\n"+standardName(report.standard_code)+"\n期间 "+report.period+
+  downloadLcaFile("北辰石油 · 范围三报告\n"+standardName(report.standard_code)+"\n期间 "+report.period+
     "\n总排放 "+report.total_emission+" tCO₂e\n\n"+
     snapshot.detail.map(row=>scenarioText(row.source_name)+"\t"+row.activity_value+" "+row.activity_unit+
       "\t"+formatEmission(row.emission_tco2e)+" tCO₂e").join("\n"),
