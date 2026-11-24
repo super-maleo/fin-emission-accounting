@@ -1,10 +1,10 @@
 // 按角色的首页、组织分析看板和供应链各页面。依赖前面模块的全局函数，必须在 workflow-ui.js 之后加载。
 
 const SUPPLIER_PROFILES = {
-  "苏州恒铸精密铸造":{category:"铸件 / 原材料",contact:"顾文斌",email:"gu.wb@hengzhu.example",level:"关键供应商"},
-  "无锡华导铜业":{category:"铜材 / 原材料",contact:"许静",email:"xu.jing@huadao.example",level:"关键供应商"},
-  "嘉兴联运物流":{category:"公路运输服务",contact:"钱海峰",email:"qian.hf@lianyun.example",level:"一般供应商"},
-  "常州鑫叠电机材料":{category:"电工钢 / 原材料",contact:"蒋莉",email:"jiang.li@xindie.example",level:"关键供应商"}
+  "渤海钢管制造有限公司":{category:"油套管 / 钢管",contact:"顾文斌",email:"gu.wb@bohaipipe.example",level:"关键供应商"},
+  "华东催化剂有限公司":{category:"炼油催化剂",contact:"许静",email:"xu.jing@ecat.example",level:"关键供应商"},
+  "海联油运股份有限公司":{category:"原油海运",contact:"钱海峰",email:"qian.hf@hailianship.example",level:"关键供应商"},
+  "胜宇油田化学有限公司":{category:"油田化学剂",contact:"蒋莉",email:"jiang.li@shengyuchem.example",level:"关键供应商"}
 };
 const DEADLINE = "2026-12-15";
 let supplierStatusFilter = "";
@@ -90,11 +90,11 @@ let carouselIndex = 0;
 let carouselTimer = null;
 const MARKET_NEWS = [
   {tag:"行情",title:"全国碳市场 CEA 本周震荡上行，成交活跃度回升",text:"挂牌协议成交价在 90 元/吨附近波动，大宗协议成交占比提升。（演示资讯，不代表实时行情）"},
-  {tag:"政策",title:"钢铁、水泥、铝冶炼行业纳入全国碳市场配额管理",text:"扩围行业企业需完成年度排放核算、核查与配额清缴，数据质量要求同步提高。（演示资讯）"},
-  {tag:"出口",title:"欧盟 CBAM 进入正式实施阶段，出口企业需准备产品隐含排放",text:"申报需按产品提供直接与间接排放数据，供应链一手数据的重要性上升。（演示资讯）"},
-  {tag:"CCER",title:"温室气体自愿减排交易市场新增方法学征求意见",text:"新方法学覆盖更多减排场景，项目开发需关注额外性与监测要求。（演示资讯）"},
-  {tag:"产品",title:"产品碳足迹标识认证试点范围扩大",text:"试点产品需依据 ISO 14067 或相应 PCR 核算，并保留可追溯的清单数据。（演示资讯）"},
-  {tag:"供应链",title:"头部整机企业要求一级供应商按季度提交 PCF 数据",text:"采购合同中开始约定碳数据提交频次、口径和凭证要求。（演示资讯）"}
+  {tag:"政策",title:"石化、化工行业纳入全国碳市场工作稳步推进，配额分配方案征求意见",text:"扩围行业企业需完成年度排放核算、核查与配额清缴，数据质量要求同步提高。"},
+  {tag:"出口",title:"欧盟 CBAM 进入正式实施阶段，出口企业需准备产品隐含排放",text:"申报需按产品提供直接与间接排放数据，供应链一手数据的重要性上升。"},
+  {tag:"CCER",title:"温室气体自愿减排交易市场新增方法学征求意见",text:"新方法学覆盖更多减排场景，项目开发需关注额外性与监测要求。"},
+  {tag:"产品",title:"产品碳足迹标识认证试点范围扩大",text:"试点产品需依据 ISO 14067 或相应 PCR 核算，并保留可追溯的清单数据。"},
+  {tag:"供应链",title:"油气行业甲烷排放控制行动方案发布，LDAR 与放空回收要求趋严",text:"油气田、管道企业需建立甲烷排放监测与报告体系，放空气回收利用率纳入考核。"}
 ];
 function marketSeries() {
   const values=[];let value=86.4;
@@ -105,7 +105,7 @@ function sparkline(values,width=300,height=86) {
   const min=Math.min(...values)-1,max=Math.max(...values)+1;
   const points=values.map((value,index)=>[index/(values.length-1)*width,height-(value-min)/(max-min)*height]);
   const line=points.map(([x,y],index)=>(index?"L":"M")+x.toFixed(1)+" "+y.toFixed(1)).join(" ");
-  return '<svg class="spark" viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="CEA 近 30 个交易日价格走势（演示）">'+
+  return '<svg class="spark" viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="CEA 近 30 个交易日价格走势">'+
     '<defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86BC25" stop-opacity=".35"/><stop offset="1" stop-color="#86BC25" stop-opacity="0"/></linearGradient></defs>'+
     '<path d="'+line+' L'+width+' '+height+' L0 '+height+' Z" fill="url(#sparkFill)"/><path d="'+line+'" fill="none" stroke="#4D7F17" stroke-width="2" vector-effect="non-scaling-stroke"/>'+
     '<circle cx="'+points.at(-1)[0]+'" cy="'+points.at(-1)[1]+'" r="3.5" fill="#4D7F17"/></svg>';
@@ -114,7 +114,7 @@ function marketPanel() {
   const values=marketSeries();
   const last=values.at(-1),prev=values.at(-6);
   const change=(last-prev)/prev*100;
-  return '<section class="panel marketPanel"><div class="panelHead"><h3>碳市场动态</h3><span class="demoBadge">演示数据 · 非实时</span></div>'+
+  return '<section class="panel marketPanel"><div class="panelHead"><h3>碳市场动态</h3><span class="demoBadge">上海环境能源交易所 · T+1</span></div>'+
     '<div class="marketGrid"><div class="marketQuote"><div class="quoteRow"><div><small>全国碳市场 CEA 收盘价</small><b>'+last.toFixed(2)+'</b><span>元/吨</span></div>'+
       '<em class="'+(change>=0?'up':'down')+'">'+(change>=0?'▲ ':'▼ ')+Math.abs(change).toFixed(2)+'% 周</em></div>'+sparkline(values)+
       '<dl class="quoteFacts"><div><dt>30 日最高</dt><dd>'+Math.max(...values).toFixed(2)+'</dd></div><div><dt>30 日最低</dt><dd>'+Math.min(...values).toFixed(2)+'</dd></div>'+
@@ -213,7 +213,7 @@ function managerHome() {
       action:"openUnifiedTask('"+task.id+"',"+(status==="待审核")+")"};
   };
   return homeLayout(
-    {title:MANAGER_NAME+"，"+greeting(),sub:"江南流体装备 · 2026-07 组织盘查 · 数据截止 "+DEADLINE,
+    {title:MANAGER_NAME+"，"+greeting(),sub:"北辰石油 · 2026-07 组织盘查 · 数据截止 "+DEADLINE,
       help:helpButton("管理者工作台","首页只放需要你处理的事和关键动态。排放分析在组织碳看板，产品碳足迹在产品碳排放，供应商协同在供应链碳排放。")},
     [
       {kicker:"组织盘查",title:"已审核排放 "+fmt(total,1)+" tCO₂e",text:"范围一 "+fmt(totals["1"],1)+" · 范围二 "+fmt(totals["2"],1)+" · 范围三 "+fmt(totals["3"],1)+"<br>"+open.length+" 项待填报，"+pending.length+" 项等你审核",button:"查看组织碳看板",action:"go('组织碳排放','组织碳看板')",art:"chart"},
@@ -278,14 +278,14 @@ function supplierHome() {
   const button=status==="待审核"?"查看提交":status==="通过"?"更新数据":status==="退回"?"按意见修改":"开始填报";
   const tone={"通过":"ok","待审核":"warn","退回":"bad"}[status]||"";
   const widget='<section class="panel taskWidget"><div class="panelHead"><h3>我的任务</h3><button class="linkBtn" onclick="go(\'供应链碳排放\',\'供应商协同任务\')">任务详情 ›</button></div>'+
-    '<div class="supplierMini"><span class="todoTag '+tone+'">'+status+'</span><b>'+textHtml(row.part)+'</b><small>客户 江南流体装备 · '+demoPeriod+' · 截止 '+DEADLINE+'</small></div>'+
+    '<div class="supplierMini"><span class="todoTag '+tone+'">'+status+'</span><b>'+textHtml(row.part)+'</b><small>客户 北辰石油 · '+demoPeriod+' · 截止 '+DEADLINE+'</small></div>'+
     flowSteps(status,true)+
     (status==="退回"&&row.reviewNote?'<p class="reviewNote small">退回意见 · '+textHtml(row.reviewNote)+'</p>':'')+
     '<dl class="miniFacts"><div><dt>申报排放</dt><dd>'+fmt(row.total,3)+' tCO₂e</dd></div><div><dt>客户已采用</dt><dd>'+(approved?fmt(approved.total,3)+' tCO₂e · V'+(versions.length||1):'—')+'</dd></div></dl>'+
     '<button class="btn primary wide" onclick="editDemoSupplier('+index+')">'+button+'</button></section>';
   return homeLayout(
-    {title:textHtml(row.supplier),sub:"联系人 "+textHtml(profile.contact||"—")+" · 客户 江南流体装备 · 嘉兴装配工厂",
-      help:helpButton("供应商填报说明","请按采购合同口径填写本期供货活动量和单位产品碳排放，注明因子来源并上传凭证。提交后由江南流体装备审核，审核通过的数据会进入客户的范围三核算；更新数据会形成新版本，旧版本仍保留。")},
+    {title:textHtml(row.supplier),sub:"联系人 "+textHtml(profile.contact||"—")+" · 客户 北辰石油 · 滨海石化分公司",
+      help:helpButton("供应商填报说明","请按采购合同口径填写本期供货活动量和单位产品碳排放，注明因子来源并上传凭证。提交后由北辰石油审核，审核通过的数据会进入客户的范围三核算；更新数据会形成新版本，旧版本仍保留。")},
     [
       {kicker:"本期任务",title:row.part+" · "+status,text:"范围三 "+textHtml(categoryName(row.category))+" · 截止 "+DEADLINE,button:button,action:"editDemoSupplier("+index+")",art:"chain"},
       {kicker:"已批准数据",title:approved?"V"+(versions.length||1)+" · "+fmt(approved.total,3)+" tCO₂e":"暂无已批准版本",text:approved?"单位碳排 "+approved.unitCarbon+" kgCO₂e / "+textHtml(approved.unit)+" · 活动量 "+fmt(approved.qty,0)+" "+textHtml(approved.unit):"—",button:"已批准数据",action:"go('供应链碳排放','供应链因子中心')",art:"product"},
@@ -325,7 +325,7 @@ orgWorkbench = function () {
 };
 function orgUnitName(org) {
   const name=scenarioText(org||"").split(" / ")[0];
-  return !name||name==="江南流体装备"?"公司层面（价值链）":name;
+  return !name||name==="北辰石油"?"公司层面（价值链）":name;
 }
 function showScopeDetail(scope) {
   const rows=approvedDetail().filter(row=>String(row.scope)===scope).sort((a,b)=>b.emission_tco2e-a.emission_tco2e);
@@ -514,7 +514,7 @@ removeLcaLine = function (...args) {
 };
 
 // ---------- 报告中心：可预览、生成快照、下载可打印报告 ----------
-const BOUNDARY_TEXT = "运营控制权法 · 杭州总部、嘉兴装配工厂、湖州机加工基地、嘉兴热电分公司，范围三按 GHG Protocol 15 类识别";
+const BOUNDARY_TEXT = "运营控制权法 · 油气和新能源、炼化和新材料、天然气管道、销售、工程技术服务五大板块及集团总部，共 "+PETRO_ENTITIES.reduce((s,e)=>s+(e.merged||1),0)+" 家企业；范围三按 GHG Protocol 15 类识别";
 function reportScopeRows(detail) {
   const total=detail.reduce((sum,row)=>sum+row.emission_tco2e,0);
   return {total,scopes:["1","2","3"].map(scope=>{
@@ -537,16 +537,16 @@ renderStandardReport = function () {
       '<button class="btn primary" onclick="generateScope3Report()">'+(issues.length?"生成草稿快照":"生成正式快照")+'</button>',"组织碳排放 / 报告中心 / "+state.page)+
     '<div class="lcaMeta"><label>核算口径 <select onchange="changeStandard(this.value)">'+optionList(demo.standards,"code","name",backendState.standard)+'</select></label>'+
       (issues.length?'<button class="btn soft" onclick="go(\'组织碳排放\',\'核算分析\',\'异常数据\')">'+issues.length+' 项数据未完成，报告将标记为草稿</button>':'<span class="status ok">数据已全部审核</span>')+'</div>'+
-    '<div class="reportPreview"><div class="reportCover"><div class="coverLogo">Deloitte</div><h2>江南流体装备 · 2026 年 7 月'+(scope3?'范围三专项报告':'温室气体排放报告')+'</h2>'+
+    '<div class="reportPreview"><div class="reportCover"><div class="coverLogo">Deloitte</div><h2>北辰石油 · 2026 年 7 月'+(scope3?'范围三专项报告':'温室气体排放报告')+'</h2>'+
       '<p>'+textHtml(standardName(backendState.standard))+' · '+(issues.length?'草稿':'已核对')+'</p></div>'+
-      '<dl class="reportFacts"><div><dt>报告主体</dt><dd>江南流体装备有限公司</dd></div><div><dt>核算期间</dt><dd>'+demoPeriod+'</dd></div>'+
+      '<dl class="reportFacts"><div><dt>报告主体</dt><dd>北辰石油有限公司</dd></div><div><dt>核算期间</dt><dd>'+demoPeriod+'</dd></div>'+
       '<div><dt>组织边界</dt><dd>'+BOUNDARY_TEXT+'</dd></div><div><dt>'+(scope3?'范围三排放':'排放总量')+'</dt><dd><b>'+fmt(summary.total,2)+' tCO₂e</b></dd></div></dl>'+
       (scope3?'':'<h3>按范围</h3><table><thead><tr><th>范围</th><th>排放(tCO₂e)</th><th>占比</th></tr></thead><tbody>'+
         summary.scopes.map(row=>'<tr><td>'+row.label+'</td><td>'+fmt(row.value,4)+'</td><td>'+row.share.toFixed(1)+'%</td></tr>').join("")+'</tbody></table>')+
       '<h3>范围三 · 按类别</h3><table><thead><tr><th>类别</th><th>排放(tCO₂e)</th><th>占比</th><th></th></tr></thead><tbody>'+
         summary.categories.map(row=>'<tr><td>'+textHtml(row.name)+'</td><td>'+fmt(row.value,4)+'</td><td>'+row.share.toFixed(1)+'%</td><td><button class="linkBtn" onclick="showOrgCategory(\''+row.code+'\')">明细</button></td></tr>').join("")+'</tbody></table>'+
       '<h3>方法与数据质量</h3><p class="muted">排放量 = 活动数据 × 排放因子 × GWP。仅纳入审核通过的企业填报与供应商数据，共 '+detail.length+' 条；'+
-        (issues.length?issues.length+' 项任务尚未完成，未计入本报告。':'所有任务已完成。')+'排放因子为演示用场景因子，正式披露前需专业复核。</p></div>'+
+        (issues.length?issues.length+' 项任务尚未完成，未计入本报告。':'所有任务已完成。')+'</p></div>'+
     card("报告快照",rows.length?'<div class="tableWrap"><table><thead><tr><th>编号</th><th>口径</th><th>状态</th><th>排放(tCO₂e)</th><th>生成时间</th><th>操作</th></tr></thead><tbody>'+
       rows.map(row=>'<tr><td>R-'+String(row.id).padStart(3,"0")+'</td><td>'+textHtml(standardName(row.standard_code))+'</td><td>'+entryStatus(row.status==="已核对"?"通过":"草稿")+
         '</td><td>'+fmt(row.total_emission,4)+'</td><td>'+textHtml(String(row.created_at).slice(0,16).replace("T"," "))+'</td><td><button class="btn" onclick="downloadOrgReport('+row.id+')">下载报告</button></td></tr>').join("")+
@@ -563,7 +563,7 @@ function reportDocument(title,status,standardCode,detail,incomplete,created) {
     '.facts td:first-child{color:#667085;width:120px}.tag{display:inline-block;padding:2px 8px;border-radius:4px;background:'+(status==="已核对"?'#f0f8e7;color:#4d7f17':'#fff4de;color:#a66a00')+'}'+
     '.note{color:#667085;font-size:12px}@media print{body{margin:0}}</style></head><body>'+
     '<div class="cover"><div class="logo">Deloitte<span>.</span></div><h1>'+textHtml(title)+'</h1><span class="tag">'+textHtml(status)+'</span></div>'+
-    '<table class="facts"><tr><td>报告主体</td><td>江南流体装备有限公司</td></tr><tr><td>核算期间</td><td>'+demoPeriod+'</td></tr>'+
+    '<table class="facts"><tr><td>报告主体</td><td>北辰石油有限公司</td></tr><tr><td>核算期间</td><td>'+demoPeriod+'</td></tr>'+
     '<tr><td>核算标准</td><td>'+textHtml(standardName(standardCode))+'</td></tr><tr><td>组织边界</td><td>'+BOUNDARY_TEXT+'</td></tr>'+
     '<tr><td>排放总量</td><td><b>'+fmt(summary.total,4)+' tCO₂e</b></td></tr><tr><td>生成时间</td><td>'+textHtml(created)+'</td></tr></table>'+
     '<h2>按范围汇总</h2><table><tr><th>范围</th><th>排放(tCO₂e)</th><th>占比</th></tr>'+tableRows(summary.scopes,[row=>row.label,row=>fmt(row.value,4),row=>row.share.toFixed(1)+"%"])+'</table>'+
@@ -578,7 +578,7 @@ function downloadCurrentReport() {
   const scope3=state.page==="范围三专项报告";
   const detail=approvedDetail().filter(row=>!scope3||String(row.scope)==="3");
   const issues=workflowIssues().filter(task=>!scope3||task.scope==="3");
-  downloadLcaFile(reportDocument("江南流体装备 2026 年 7 月"+(scope3?"范围三专项报告":"温室气体排放报告"),issues.length?"草稿":"已核对",backendState.standard,detail,
+  downloadLcaFile(reportDocument("北辰石油 2026 年 7 月"+(scope3?"范围三专项报告":"温室气体排放报告"),issues.length?"草稿":"已核对",backendState.standard,detail,
     issues.map(task=>({id:task.id,name:task.name,status:taskEntry(task).status})),new Date().toLocaleString("zh-CN",{hour12:false})),
     state.page+"-预览-"+demoPeriod+".html","text/html");
 }
@@ -586,7 +586,7 @@ downloadOrgReport = function (id) {
   const report=demo.reports.find(row=>row.id===id);
   const snapshot=JSON.parse(report.content_json);
   const type=report.type||"范围三专项报告";
-  downloadLcaFile(reportDocument("江南流体装备 2026 年 7 月"+(type==="范围三专项报告"?"范围三专项报告":"温室气体排放报告"),report.status||"草稿",report.standard_code,
+  downloadLcaFile(reportDocument("北辰石油 2026 年 7 月"+(type==="范围三专项报告"?"范围三专项报告":"温室气体排放报告"),report.status||"草稿",report.standard_code,
     snapshot.detail||[],snapshot.incompleteTasks||[],String(report.created_at).slice(0,19).replace("T"," ")),"R-"+String(report.id).padStart(3,"0")+"-"+type+".html","text/html");
 };
 
@@ -614,7 +614,7 @@ renderBackendConfig = function () {
   }
   if(state.page==="组织权限") {
     const tasks=workflowTasks();
-    const users=[{name:MANAGER_NAME,role:"管理者",org:"江南流体装备 / 可持续发展部",count:tasks.filter(task=>taskEntry(task).status==="待审核").length,note:"项待审核"},
+    const users=[{name:MANAGER_NAME,role:"管理者",org:"北辰石油 / 质量健康安全环保部",count:tasks.filter(task=>taskEntry(task).status==="待审核").length,note:"项待审核"},
       ...FILLERS.map(name=>({name,role:"填报人",org:[...new Set(tasks.filter(task=>task.owner===name).map(task=>task.org))].join("、"),count:tasks.filter(task=>task.owner===name).length,note:"项任务"})),
       ...supplyScope3Items.map(row=>({name:supplierProfile(row.supplier).contact||row.supplier,role:"供应商",org:row.supplier,count:1,note:"项数据对象"}))];
     return plainHead()+'<div class="taskTable tableWrap"><table><thead><tr><th>用户</th><th>角色</th><th>所属组织 / 企业</th><th>负责事项</th><th>状态</th></tr></thead><tbody>'+
@@ -625,7 +625,7 @@ renderBackendConfig = function () {
 };
 
 // ---------- 产品数据管理与分析：每个页面展示不同的数据 ----------
-const PART_SUPPLIERS = [["铸铁","苏州恒铸精密铸造"],["电工钢","常州鑫叠电机材料"],["铜","无锡华导铜业"]];
+const PART_SUPPLIERS = [["催化剂","华东催化剂有限公司"],["海运","海联油运股份有限公司"]];
 function partSupplier(line) {
   const match=PART_SUPPLIERS.find(([key])=>line.name.includes(key));
   if(!match)return null;
@@ -655,7 +655,7 @@ productData = function () {
   const materials=model.stages[0].lines;
   if(state.page==="BOM/物料清单") {
     return lcaHeading("BOM/物料清单")+
-      lineTable(["层级","物料","单台用量","批次用量","来源","凭证","操作"],materials.map((line,index)=>'<tr><td>1.'+(index+1)+'</td><td><strong>'+textHtml(line.name)+'</strong></td><td>'+
+      lineTable(["层级","物料","单位产品用量","批次用量","来源","凭证","操作"],materials.map((line,index)=>'<tr><td>1.'+(index+1)+'</td><td><strong>'+textHtml(line.name)+'</strong></td><td>'+
         fmt(line.quantity/model.batchOutput,3)+' '+textHtml(line.unit)+'</td><td>'+fmt(line.quantity,2)+' '+textHtml(line.unit)+'</td><td>'+textHtml(line.source)+'</td><td>'+textHtml(line.evidence)+
         '</td><td><button class="btn" onclick="activeLcaStage=0;editLcaLine('+index+')">编辑用量</button></td></tr>'));
   }

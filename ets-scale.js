@@ -1,14 +1,14 @@
 // 碳履约：2019 年起全部履约周期、分机组监测与配额、完整账户流水与委托记录、筛选。
 ETS_YEARS.unshift(2019,2020,2021,2022);
 Object.assign(ETS_PROFILE,{
-  2019:{coal:102400,elec:3480,supply:201200,heat:318600,be:0.9790,bh:0.1260},
-  2020:{coal:96800,elec:3420,supply:190500,heat:301900,be:0.9790,bh:0.1260},
-  2021:{coal:103100,elec:3390,supply:203400,heat:335800,be:0.8218,bh:0.1111},
-  2022:{coal:100500,elec:3370,supply:198800,heat:332900,be:0.8177,bh:0.1105}
+  2019:{coal:1705300,elec:28280,supply:2963300,heat:7206700,be:0.8770,bh:0.1260},
+  2020:{coal:1612000,elec:27790,supply:2805700,heat:6829000,be:0.8770,bh:0.1260},
+  2021:{coal:1716900,elec:27550,supply:2995700,heat:7595800,be:0.8218,bh:0.1111},
+  2022:{coal:1673600,elec:27390,supply:2927900,heat:7530200,be:0.8177,bh:0.1105}
 });
 const ETS_UNITS = [
-  {id:"1",name:"1 号机组",spec:"25 MW 抽凝式汽轮发电机组 · 130 t/h 循环流化床锅炉",commissioned:"2009-06"},
-  {id:"2",name:"2 号机组",spec:"25 MW 背压式汽轮发电机组 · 130 t/h 循环流化床锅炉",commissioned:"2011-11"}
+  {id:"1",name:"1 号机组",spec:"350 MW 超临界抽凝式汽轮发电机组 · 1,110 t/h 煤粉锅炉",commissioned:"2009-06"},
+  {id:"2",name:"2 号机组",spec:"350 MW 超临界抽凝式汽轮发电机组 · 1,110 t/h 煤粉锅炉",commissioned:"2011-11"}
 ];
 const ETS_DEADLINE = {2019:"2021-12-31",2020:"2021-12-31",2021:"2023-12-31",2022:"2023-12-31"};
 function unitShare(unit,year,month,kind) {
@@ -48,18 +48,18 @@ etsBuild = function () {
   };
   const tranche=(total,parts)=>{const out=[];let left=total;parts.forEach((p,i)=>{const q=i===parts.length-1?left:Math.round(total*p/100/100)*100;out.push(q);left-=q;});return out;};
   const history=[
-    {year:2019,report:["2020-03-30","2020-06-18","HC-2020-ZJ-0127"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-08-11","2021-09-23","2021-11-17","2021-12-08"],prices:[46.8,43.1,44.6,51.2],channel:["挂牌协议","大宗协议","大宗协议","挂牌协议"]},
-      ccer:[{id:"CCER-2021-0168",project:"内蒙古乌兰察布察右中旗风电场项目",type:"存量 CCER · 并网风力发电",vintage:2015,qty:4200,acquiredAt:"2021-10-26",price:28.5}],surrender:"2021-12-20",cert:"QJ-2019-330400-0187"},
-    {year:2020,report:["2021-03-29","2021-06-25","HC-2021-ZJ-0163"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-10-14","2021-11-30","2021-12-15"],prices:[42.9,45.7,53.6],channel:["大宗协议","大宗协议","挂牌协议"]},
-      ccer:[{id:"CCER-2021-0203",project:"云南大理洱源光伏电站项目",type:"存量 CCER · 并网光伏发电",vintage:2016,qty:3100,acquiredAt:"2021-11-09",price:31.2},{id:"CCER-2021-0219",project:"湖北恩施清江水电站项目",type:"存量 CCER · 水力发电",vintage:2014,qty:1600,acquiredAt:"2021-11-22",price:26.8}],surrender:"2021-12-24",cert:"QJ-2020-330400-0187"},
-    {year:2021,report:["2022-03-30","2022-08-19","HC-2022-ZJ-0291"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-10-19","2023-11-08","2023-11-27"],prices:[78.6,72.4,70.1],channel:["挂牌协议","大宗协议","挂牌协议"]},
-      ccer:[{id:"CCER-2023-0544",project:"江西赣州农村户用沼气项目",type:"存量 CCER · 户用沼气",vintage:2015,qty:3800,acquiredAt:"2023-10-30",price:58.0}],surrender:"2023-12-14",cert:"QJ-2021-330400-0187"},
-    {year:2022,report:["2023-03-29","2023-08-25","HC-2023-ZJ-0318"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-11-14","2023-12-05"],prices:[71.3,69.8],channel:["大宗协议","挂牌协议"]},
-      ccer:[{id:"CCER-2023-0587",project:"浙江丽水缙云抽水蓄能配套光伏项目",type:"存量 CCER · 并网光伏发电",vintage:2017,qty:2600,acquiredAt:"2023-11-21",price:61.5}],surrender:"2023-12-19",cert:"QJ-2022-330400-0187"}
+    {year:2019,report:["2020-03-30","2020-06-18","HC-2020-LN-0127"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-08-11","2021-09-23","2021-11-17","2021-12-08"],prices:[46.8,43.1,44.6,51.2],channel:["挂牌协议","大宗协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2021-0168",project:"内蒙古乌兰察布察右中旗风电场项目",type:"存量 CCER · 并网风力发电",vintage:2015,qty:50400,acquiredAt:"2021-10-26",price:28.5}],surrender:"2021-12-20",cert:"QJ-2019-210200-0187"},
+    {year:2020,report:["2021-03-29","2021-06-25","HC-2021-LN-0163"],pre:["2021-01-29"],final:["2021-07-16","2021-07-28"],trade:{side:"卖出",dates:["2021-10-14","2021-11-30","2021-12-15"],prices:[42.9,45.7,53.6],channel:["大宗协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2021-0203",project:"云南大理洱源光伏电站项目",type:"存量 CCER · 并网光伏发电",vintage:2016,qty:37200,acquiredAt:"2021-11-09",price:31.2},{id:"CCER-2021-0219",project:"湖北恩施清江水电站项目",type:"存量 CCER · 水力发电",vintage:2014,qty:19200,acquiredAt:"2021-11-22",price:26.8}],surrender:"2021-12-24",cert:"QJ-2020-210200-0187"},
+    {year:2021,report:["2022-03-30","2022-08-19","HC-2022-LN-0291"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-10-19","2023-11-08","2023-11-27"],prices:[78.6,72.4,70.1],channel:["挂牌协议","大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2023-0544",project:"江西赣州农村户用沼气项目",type:"存量 CCER · 户用沼气",vintage:2015,qty:45600,acquiredAt:"2023-10-30",price:58.0}],surrender:"2023-12-14",cert:"QJ-2021-210200-0187"},
+    {year:2022,report:["2023-03-29","2023-08-25","HC-2023-LN-0318"],pre:["2023-01-31"],final:["2023-09-15","2023-09-28"],trade:{side:"买入",dates:["2023-11-14","2023-12-05"],prices:[71.3,69.8],channel:["大宗协议","挂牌协议"]},
+      ccer:[{id:"CCER-2023-0587",project:"辽宁朝阳建平风光储一体化项目",type:"存量 CCER · 并网光伏发电",vintage:2017,qty:31200,acquiredAt:"2023-11-21",price:61.5}],surrender:"2023-12-19",cert:"QJ-2022-210200-0187"}
   ];
   history.forEach(h=>{
     const year=h.year,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
-    data.cycles[year]={year,deadline:ETS_DEADLINE[year],report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:h.report[0],verifiedAt:h.report[1],verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:h.report[2]},
+    data.cycles[year]={year,deadline:ETS_DEADLINE[year],report:{status:"已核查",no:"ER-"+year+"-210200-0187",submittedAt:h.report[0],verifiedAt:h.report[1],verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:h.report[2]},
       alloc:{pre:{qty:pre,at:h.pre[0]},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:h.final[0],status:"已确认",confirmedAt:h.final[1]}},surrender:{status:"未清缴"}};
     add(h.pre[0],"预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
     add(h.final[1],"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
@@ -77,14 +77,14 @@ etsBuild = function () {
   // 2023–2024：与原履约记录一致，交易拆分为多笔成交
   [2023,2024].forEach(year=>{
     const months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
-    const ccer=year===2023?1850:0;
+    const ccer=year===2023?22000:0;
     data.cycles[year]={year,deadline:(year+1)+"-12-31",
-      report:{status:"已核查",no:"ER-"+year+"-330400-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-ZJ-0"+(412+year-2023)},
+      report:{status:"已核查",no:"ER-"+year+"-210200-0187",submittedAt:(year+1)+"-03-27",verifiedAt:(year+1)+"-06-2"+(year-2022),verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-"+(year+1)+"-LN-0"+(412+year-2023)},
       alloc:{pre:{qty:pre,at:(year+1)+"-03-15"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:(year+1)+"-09-27",status:"已确认",confirmedAt:(year+1)+"-10-0"+(year-2021)}},surrender:{status:"未清缴"}};
     add((year+1)+"-03-15","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
     add((year+1)+"-10-0"+(year-2021),"核定补发",year,alloc.qty-pre,ETS_AUTHORITY+" 核定",year);
-    if(ccer){data.ccer.push({id:"CCER-"+year+"-0412",project:"浙江安吉竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
-      order((year+1)+"-08-14","15:06","买入","CCER",2016,ccer,62.5,year,{project:"浙江安吉竹林经营碳汇项目",channel:"协议转让"});}
+    if(ccer){data.ccer.push({id:"CCER-"+year+"-0412",project:"辽宁本溪竹林经营碳汇项目",type:"存量 CCER · 林业碳汇",vintage:2016,qty:ccer,acquiredAt:(year+1)+"-08-14",price:62.5,status:"已注销",usedFor:year});
+      order((year+1)+"-08-14","15:06","买入","CCER",2016,ccer,62.5,year,{project:"辽宁本溪竹林经营碳汇项目",channel:"协议转让"});}
     const short=verified-ccer-balance(year);
     if(short>0) {
       const qty=Math.ceil(short/100)*100,price=year===2023?78.4:96.2;
@@ -93,27 +93,27 @@ etsBuild = function () {
       tranche(qty,[35,30,35]).forEach((q,i)=>order(dates[i],String(10+i)+":"+String(12+i*9).padStart(2,"0"),"买入","CEA",year,q,prices[i],year,{channel:i===1?"大宗协议":"挂牌协议"}));
       order(dates[0],"09:41","买入","CEA",year,Math.round(qty/4/100)*100,+(prices[0]-3.2).toFixed(2),year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
     }
-    else if(-short>1500) {
+    else if(-short>15000) {
       const qty=Math.floor((-short-600)/50)*50,half=Math.round(qty/2/50)*50;
       order((year+1)+"-11-20","10:33","卖出","CEA",year,half,97.8,year);
       order((year+1)+"-11-20","13:47","卖出","CEA",year,qty-half,97.8,year,{channel:"大宗协议"});
     }
-    const date=(year+1)+"-12-1"+(year-2015),cert="QJ-"+year+"-330400-0187";
+    const date=(year+1)+"-12-1"+(year-2015),cert="QJ-"+year+"-210200-0187";
     surrender(year,verified-ccer,date,cert);
     Object.assign(data.cycles[year].surrender,{status:"已清缴",at:date,cea:verified-ccer,ccer,cert});
   });
   {
     const year=2025,months=data.monthly[year],verified=Math.round(etsSums(months).emission),alloc=etsAllocFormula(year,months),pre=Math.round(alloc.qty*0.7);
     data.cycles[year]={year,deadline:"2026-12-31",
-      report:{status:"已核查",no:"ER-2025-330400-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-ZJ-0438"},
+      report:{status:"已核查",no:"ER-2025-210200-0187",submittedAt:"2026-03-26",verifiedAt:"2026-06-26",verifier:ETS_VERIFIER,verifiedQty:verified,verifyNo:"HC-2026-LN-0438"},
       alloc:{pre:{qty:pre,at:"2026-03-16"},final:{qty:alloc.qty,power:alloc.power,heat:alloc.heat,at:"2026-11-12",status:"待确认",confirmBy:"2026-11-26"}},surrender:{status:"未清缴"}};
     add("2026-03-16","预分配",year,pre,ETS_AUTHORITY+" 预分配",year);
-    order("2026-07-08","10:05","买入","CEA",2025,800,86.9,year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
-    order("2026-09-18","10:26","买入","CEA",2025,1500,93.4,year);
-    const c1=order("2026-08-21","14:12","买入","CCER",2024,1200,79.6,year,{project:"福建平潭海上风电项目",channel:"挂牌协议"});
-    const c2=order("2026-10-15","14:05","买入","CCER",2024,800,85.9,year,{project:"广西北海红树林营造项目",channel:"挂牌协议"});
-    data.ccer.push({id:"CCER-2026-1036",project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,qty:1200,acquiredAt:"2026-08-21",price:79.6,status:"可用",ref:c1});
-    data.ccer.push({id:"CCER-2026-1187",project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,qty:800,acquiredAt:"2026-10-15",price:85.9,status:"可用",ref:c2});
+    order("2026-07-08","10:05","买入","CEA",2025,10000,86.9,year,{status:"已撤单",filledPrice:0,note:"价格未成交，收盘撤单"});
+    order("2026-09-18","10:26","买入","CEA",2025,18000,93.4,year);
+    const c1=order("2026-08-21","14:12","买入","CCER",2024,14000,79.6,year,{project:"福建平潭海上风电项目",channel:"挂牌协议"});
+    const c2=order("2026-10-15","14:05","买入","CCER",2024,9000,85.9,year,{project:"广西北海红树林营造项目",channel:"挂牌协议"});
+    data.ccer.push({id:"CCER-2026-1036",project:"福建平潭海上风电项目",type:"并网海上风力发电",vintage:2024,qty:14000,acquiredAt:"2026-08-21",price:79.6,status:"可用",ref:c1});
+    data.ccer.push({id:"CCER-2026-1187",project:"广西北海红树林营造项目",type:"红树林营造",vintage:2024,qty:9000,acquiredAt:"2026-10-15",price:85.9,status:"可用",ref:c2});
   }
   data.cycles[2026]={year:2026,deadline:"2027-12-31",report:{status:"监测中"},alloc:{},surrender:{status:"未清缴"}};
   data.ledger.sort((a,b)=>a.date.localeCompare(b.date)||(a.qty<0)-(b.qty<0));
@@ -122,7 +122,7 @@ etsBuild = function () {
   // 操作日志：由业务记录生成
   const log=[];
   ETS_YEARS.forEach(year=>{
-    data.monthly[year].filter(row=>row.status==="已存证").forEach(row=>log.push({at:row.at+" 09:"+String(10+row.month*3).padStart(2,"0"),actor:"周建华",text:year+" 年 "+row.month+" 月监测数据存证"}));
+    data.monthly[year].filter(row=>row.status==="已存证").forEach(row=>log.push({at:row.at+" 09:"+String(10+row.month*3).padStart(2,"0"),actor:"赵海峰",text:year+" 年 "+row.month+" 月监测数据存证"}));
     const c=data.cycles[year];
     if(c.report.submittedAt)log.push({at:c.report.submittedAt+" 16:05",actor:MANAGER_NAME,text:"提交 "+year+" 年度排放报告 "+c.report.no});
     if(c.report.verifiedAt)log.push({at:c.report.verifiedAt+" 11:30",actor:ETS_VERIFIER,text:"出具 "+year+" 年度核查报告 "+c.report.verifyNo});

@@ -7,24 +7,9 @@ const XK_GRID = 0.0005703;
 const XK_HEAT = 0.11;
 
 // ---------- 新增排放源任务 ----------
-directTasks.push(
-  {id:"T-S1-05",org:"杭州总部",name:"公务车汽油",unit:"L"},
-  {id:"T-S1-06",org:"湖州机加工基地",name:"CO₂ 气体保护焊",unit:"kg"},
-  {id:"T-S1-07",org:"嘉兴装配工厂",name:"化粪池甲烷逸散",unit:"人·年"},
-  {id:"T-S1-08",org:"嘉兴装配工厂",name:"CO₂ 灭火器充装",unit:"kg"}
-);
-const XK_TASKS = {
-  "T-S1-05":{factor:0.0021354,factorLabel:"车用汽油 · 国家核算指南缺省参数",owner:"陈晓宁",kind:"移动燃烧",mode:"加油卡记录导入",entry:{activity:42600,evidence:"FUEL-HQ-2026-Q3-011",status:"通过"}},
-  "T-S1-06":{factor:0.001,factorLabel:"CO₂ 保护气 · 消耗量全部计排",owner:"周建华",kind:"工业过程",mode:"气瓶领用台账",entry:{activity:18600,evidence:"WLD-HZ-2026-09",status:"待审核"}},
-  "T-S1-07":{factor:0.0409,factorLabel:"化粪池 CH₄ · IPCC 2006 BOD 法（40 g/人·d × 1/3 在厂 × B₀ 0.6 × MCF 0.5 × GWP 28）",owner:"陈晓宁",kind:"逸散排放",mode:"在册人数 × 系数",entry:{activity:1320,evidence:"HR-JX-2026-HC",status:"通过",note:"在册 1,320 人"}},
-  "T-S1-08":{factor:0.001,factorLabel:"CO₂ 灭火器 · 充装量全部计排",owner:"周建华",kind:"逸散排放",mode:"消防维保记录",entry:{activity:360,evidence:"FIRE-2026-REFILL",status:"通过"}}
-};
-const XK_TASK_FACTOR = {"T-S3-C03":{factor:0.0125,factorLabel:"天然气上游开采与输送 · 行业平均"}};
-const XK_SCOPE3_ENTRIES = {
-  "T-S3-C03":{activity:46172,evidence:"GAS-JX-2026-Q3-021",status:"通过",note:"1,186,000 Nm³ × 0.038931 GJ/Nm³"},
-  "T-S3-C08":{activity:1260000,evidence:"WH-JS-2026-ELE",status:"通过",note:"嘉善外租成品仓，第三方运营，按面积分摊"},
-  "T-S3-C09":{activity:38000000,evidence:"LOG-OUT-2026-CUS",status:"待审核",note:"客户承担运费的发运"}
-};
+const XK_TASKS = {};
+const XK_TASK_FACTOR = {};
+const XK_SCOPE3_ENTRIES = {};
 const workflowTasksBeforeXk = workflowTasks;
 workflowTasks = function () {
   return workflowTasksBeforeXk().map(task=>{
@@ -41,39 +26,40 @@ function xkPrepare() {
   demo.taskEntries ||= {};
   Object.entries(XK_TASKS).forEach(([id,x])=>{if(!demo.taskEntries[id])demo.taskEntries[id]={...x.entry};});
   Object.entries(XK_SCOPE3_ENTRIES).forEach(([id,entry])=>{if(!demo.taskEntries[id]||demo.taskEntries[id].status==="待填报")demo.taskEntries[id]={...entry};});
-  demo.taskEntries["T-S3-C14"]={activity:"",evidence:"",status:"不适用",note:"无特许经营业务：经销商为独立买断经销"};
-  demo.taskEntries["T-S3-C10"]={activity:"",evidence:"",status:"不适用",note:"中间品销售占比 6%，客户加工能耗不可得，估算低于总排放 0.1%"};
   demo.xk={
-    template:"装备制造",
+    template:"石油石化",
     idents:{},
     s3:{},
-    dedup:{D1:"待确认",D3:"待确认",D4:"待确认"},
+    dedup:{D1:"待确认",D2:"待确认",D3:"待确认",D4:"待确认"},
     dedupLog:[],
     cross:{
-      "T-S1-01":{src:"厂内燃气流量计累计",value:1171400},
-      "T-S1-02":{src:"财务发票（加油）",value:87950},
-      "T-S1-03":{src:"制冷剂采购入库",value:92,note:"7 kg 入库未充注，在库待用",accepted:true},
-      "T-S1-04":{src:"入炉煤皮带秤 + 库存变化",value:98460},
-      "T-S1-05":{src:"财务报销（油费折算）",value:41700},
-      "T-S2-01":{src:"厂内关口电表",value:21452000},
-      "T-S2-02":{src:"蒸汽计量月报",value:54900},
-      "T-S2-03":{src:"绿证核发量",value:6500000},
-      "T-S2-04":{src:"电网结算单",value:3162000}
+      "T-S1-01":{src:"燃料气计量月报",value:948200},
+      "T-S1-02":{src:"天然气贸易交接结算单",value:42380},
+      "T-S1-04":{src:"入炉煤皮带秤 + 库存变化",value:1638600},
+      "T-S1-07":{src:"再生烟气在线分析（CEMS）反算",value:371900,note:"烟气量计量偏低 1.6%，以烧焦量月报为准",accepted:true},
+      "T-S1-10":{src:"制氢原料流量计（DCS 历史数据）",value:224100},
+      "T-S1-14":{src:"油田接收站计量",value:20310},
+      "T-S2-01":{src:"电网结算单",value:1603400000},
+      "T-S2-04":{src:"电网结算单",value:25700000},
+      "T-S1-43":{src:"能源统计报表",value:183900},
+      "T-S1-52":{src:"注入井口计量汇总",value:36850},
+      "T-S2-10":{src:"厂内关口电表",value:11762000000},
+      "T-S1-76":{src:"压气站自耗气月报",value:98600}
     },
     validityMonths:12,
     validity:{"SC-001":{from:"2026-08-05",to:"2027-08-04"},"SC-003":{from:"2025-11-01",to:"2026-10-31"}},
     renew:{},
     lca:{
-      "LCA-P150-2026":{pcr:"PCR-01",
-        assumptions:["使用阶段按额定输入功率 1.5 kW、年运行 2,000 h、寿命 10 年","电力因子采用全国电力平均二氧化碳排放因子 0.5366 kgCO₂/kWh（2022）","成品配送平均运距 700 km，中型柴油货车，满载率 70%","报废后金属 95% 回收（截断法，不计回收收益），其余填埋","10 年内更换机械密封 2 次"],
-        cutoffs:[["紧固件（螺栓、螺母）","0.6%","质量占比 <1%"],["铭牌、标签及说明书","0.05%","质量占比 <1%"],["厂房及生产设备建造","—","PCR 规定排除（资本品）"],["员工通勤","—","PCR 规定排除"]],
-        allocations:[["机加工与装配用电","共线 6 个型号","按工时","MES 工时统计 2026-01 至 2026-10","18.4%"],["试机用电","P150 专线","直接计量","试验台独立电表","100%"],["冷却液补充","共线 6 个型号","按工时","MES 工时统计","18.4%"],["机加工铁屑","副产品","截断法","回收收益不分配","—"]],
-        periods:[["原材料获取","2026-01 至 2026-10","供应商声明 / 行业平均"],["生产制造","2026-01 至 2026-10","企业实测"],["运输配送","2026-01 至 2026-10","物流台账"],["使用维护","设计寿命 10 年","情景假设"],["回收处置","—","情景假设"]]},
-      "LCA-M15-2026":{pcr:"PCR-02",
-        assumptions:["出厂边界，不含使用阶段","硅钢片与铜线采用供应商声明值","电力因子采用全国电力平均二氧化碳排放因子 0.5366 kgCO₂/kWh（2022）"],
-        cutoffs:[["接线盒密封圈","0.3%","质量占比 <1%"],["包装胶带","0.02%","质量占比 <1%"]],
-        allocations:[["绕线与浸漆用电","共线 4 个功率段","按产量（台）","MES 产量统计","22.0%"]],
-        periods:[["原材料获取","2026-01 至 2026-10","供应商声明"],["生产制造","2026-01 至 2026-10","企业实测"],["运输配送","2026-01 至 2026-10","物流台账"]]}
+      "LCA-GSL92-2026":{pcr:"PCR-01",
+        assumptions:["原油按滨海石化 2026 年 1–10 月加工结构：自产 42%（松原、鄂南管输）、进口 58%（VLCC 海运至大连港）","炼厂共用燃料、蒸汽、电力和氢气按装置能量分配至汽油组分（催化汽油、重整汽油、烷基化油、MTBE）","外购电力采用全国电网平均排放因子 0.5703 kgCO₂/kWh","使用阶段按车用汽油完全燃烧，碳氧化率 98%","成品油经管道和铁路至油库，平均运距 620 km"],
+        cutoffs:[["炼厂建设及设备制造","—","PCR 规定排除（资本品）"],["员工通勤","—","PCR 规定排除"],["添加剂（清净剂）","0.02%","质量占比 <1%"]],
+        allocations:[["常减压蒸馏燃料","汽油、柴油、航煤等 9 种产品","按能量（热值）","装置物料平衡 2026-01 至 2026-10","24.6%"],["催化裂化烧焦","催化汽油、柴油、液化气","按能量（热值）","装置物料平衡","41.3%"],["制氢装置","加氢精制汽油组分","按氢耗","氢平衡月报","18.9%"],["蒸汽及电力","全厂产品","按装置能耗折算","能源管理系统","按装置"]],
+        periods:[["原材料获取","2026-01 至 2026-10","上游企业实测 / 行业平均"],["生产制造","2026-01 至 2026-10","企业实测"],["运输配送","2026-01 至 2026-10","物流台账"],["使用维护","—","化学计量计算"],["回收处置","—","不适用"]]},
+      "LCA-HDPE-2026":{pcr:"PCR-02",
+        assumptions:["出厂边界，不含使用与废弃处置阶段","乙烯来自滨海石化 120 万 t/a 乙烯装置，按质量分配裂解炉燃料","1-丁烯共聚单体采用行业平均因子","电力因子采用全国电网平均排放因子 0.5703 kgCO₂/kWh"],
+        cutoffs:[["抗氧剂、爽滑剂","0.15%","质量占比 <1%"],["包装膜袋","0.4%","质量占比 <1%"]],
+        allocations:[["乙烯裂解炉燃料","乙烯、丙烯、裂解汽油等 7 种产品","按质量","裂解装置物料平衡","32.0%"],["聚乙烯装置用电","HDPE 3 个牌号","按产量","MES 产量统计","41.0%"]],
+        periods:[["原材料获取","2026-01 至 2026-10","企业实测 / 行业平均"],["生产制造","2026-01 至 2026-10","企业实测"],["运输配送","2026-01 至 2026-10","物流台账"]]}
     },
     pcrs:[],
     docs:{},
@@ -95,24 +81,27 @@ function xk(){if(!demo.xk)xkPrepare();return demo.xk;}
 
 // ---------- 能源输入输出 ----------
 const XK_ENERGY = [
-  {id:"E1",org:"嘉兴热电分公司",dir:"输出",kind:"电力",qty:96000,unit:"MWh",to:"国网嘉兴供电公司（上网电量）",ghg:"范围一全额计入，单独披露",cn:"范围一扣减",factor:XK_GRID*1000,fl:"全国电网平均排放因子"},
-  {id:"E2",org:"嘉兴热电分公司",dir:"输出",kind:"热力",qty:186000,unit:"GJ",to:"嘉善经开区 3 家园区企业",ghg:"范围一全额计入，单独披露",cn:"范围一扣减",factor:XK_HEAT,fl:"热力缺省因子 0.11 tCO₂/GJ"},
-  {id:"E3",org:"嘉兴热电分公司",dir:"集团内部供应",kind:"电力",qty:8400,unit:"MWh",to:"嘉兴装配工厂（直供线）",ghg:"合并层面剔除受方范围二",cn:"合并层面剔除受方范围二",factor:XK_GRID*1000,fl:"全国电网平均排放因子",dedup:"D1"},
-  {id:"E4",org:"嘉兴装配工厂",dir:"转供",kind:"电力",qty:1850,unit:"MWh",to:"园区租户 4 户（外购电转供）",ghg:"范围二扣减，计入范围三 C3",cn:"范围二扣减",factor:XK_GRID*1000,fl:"全国电网平均排放因子"},
-  {id:"E5",org:"嘉兴热电分公司",dir:"输入",kind:"电力",qty:3150,unit:"MWh",to:"厂用电下网（机组停运 / 启动期间自电网购入）",ghg:"范围二计入（自用，非转供）",cn:"范围二计入（自用，非转供）",factor:XK_GRID*1000,fl:"全国电网平均排放因子"}
+  {id:"E1",org:"滨海石化热电厂",dir:"输出",kind:"电力",qty:126000,unit:"MWh",to:"国网大连供电公司（上网电量）",ghg:"范围一全额计入，单独披露",cn:"范围一扣减",factor:XK_GRID*1000,fl:"全国电网平均排放因子"},
+  {id:"E2",org:"滨海石化热电厂",dir:"输出",kind:"热力",qty:1450000,unit:"GJ",to:"大连长兴岛化工园区 6 家园区企业",ghg:"范围一全额计入，单独披露",cn:"范围一扣减",factor:XK_HEAT,fl:"热力缺省因子 0.11 tCO₂/GJ"},
+  {id:"E3",org:"滨海石化热电厂",dir:"集团内部供应",kind:"电力",qty:2640000,unit:"MWh",to:"滨海石化分公司（厂内直供线）",ghg:"合并层面剔除受方范围二",cn:"合并层面剔除受方范围二",factor:XK_GRID*1000,fl:"全国电网平均排放因子",dedup:"D1"},
+  {id:"E4",org:"滨海石化分公司",dir:"转供",kind:"电力",qty:42000,unit:"MWh",to:"园区配套企业 5 户（外购电转供）",ghg:"范围二扣减，计入范围三 C3",cn:"范围二扣减",factor:XK_GRID*1000,fl:"全国电网平均排放因子"},
+  {id:"E5",org:"滨海石化热电厂",dir:"输入",kind:"电力",qty:25600,unit:"MWh",to:"厂用电下网（机组停运 / 启动期间自电网购入）",ghg:"范围二计入（自用，非转供）",cn:"范围二计入（自用，非转供）",factor:XK_GRID*1000,fl:"全国电网平均排放因子"}
 ];
 const XK_C3 = {upstream:0.0000586,lossRate:0.05};
 function xkApproved(id){const entry=demo.taskEntries?.[id];return entry&&entry.status==="通过"?Number(entry.activity)||0:0;}
-function xkPurchasedKwh(){return xkApproved("T-S2-01")+xkApproved("T-S2-04");}
+function xkPurchasedKwh(){return PETRO_SOURCES.filter(s=>s.method==="elec").reduce((sum,s)=>sum+xkApproved(s.id),0);}
 
 // ---------- 重复计算 ----------
 function xkDedupItems() {
-  const steel=demo.records.find(row=>row.id===1);
-  const steelFactor=Number(demo.factors.find(f=>f.id===steel?.factor_id)?.factor_value||1.9973);
+  const pipe=demo.records.find(row=>row.source_name==="无缝钢管及油套管");
+  const pipeFactor=Number(demo.factors.find(f=>f.id===pipe?.factor_id)?.factor_value||2.05);
+  const ship=demo.records.find(row=>row.source_name==="原油进口海运");
+  const shipFactor=Number(demo.factors.find(f=>f.id===ship?.factor_id)?.factor_value||0.0000045);
   return [
-    {id:"D1",rule:"R1",type:"集团内部能源互供",what:"嘉兴热电分公司直供嘉兴装配工厂电量",a:"供方 · 嘉兴热电分公司 范围一（燃煤热电联产）",b:"受方 · 嘉兴装配工厂 范围二（外购电力）",qty:8400000,unit:"kWh",factor:XK_GRID,scope:"2",cat:"S2",where:"范围二 · 外购电力"},
-    {id:"D3",rule:"R2",type:"采购台账与供应商明细重叠",what:"钢材采购台账中含常州鑫叠定转子电工钢 6,400 t",a:"C01 · 钢材采购（采购台账汇总）",b:"C01 · 常州鑫叠电机材料 / 定转子电工钢（单独核算）",qty:6400,unit:"t",factor:steelFactor,scope:"3",cat:"C01",where:"范围三 C01 · 钢材采购"},
-    {id:"D4",rule:"R3",type:"因子边界含运输",what:"苏州恒铸供应商因子含送货至客户，C04 货物公路运输中同一批运量",a:"C01 · 苏州恒铸 HT250 泵体铸件（边界：从摇篮到大门，含送货）",b:"C04 · 货物公路运输 8,600 t × 120 km",qty:1032000,unit:"t·km",factor:0.000087,scope:"3",cat:"C04",where:"范围三 C04 · 货物公路运输"}
+    {id:"D1",rule:"R1",type:"集团内部能源互供",what:"滨海石化热电厂直供滨海石化分公司电量",a:"供方 · 滨海石化热电厂 范围一（燃煤热电联产）",b:"受方 · 滨海石化分公司 范围二（外购电力中含热电厂直供结算电量）",qty:310000000,unit:"kWh",factor:XK_GRID,scope:"2",cat:"S2",where:"范围二 · 外购电力"},
+    {id:"D2",rule:"R1",type:"集团内部 CO₂ 转移",what:"滨海石化捕集 CO₂ 外供松原油田驱油",a:"供方 · 滨海石化分公司 CO₂ 回收扣减（T-S1-14）",b:"受方 · 松原油田 CCUS 注入量中含外购 CO₂，不得再次扣减",qty:6200,unit:"万Nm³",factor:-0.985*19.7,scope:"1",cat:"S1",where:"范围一 · CO₂ 回收（CCUS 驱油埋存）"},
+    {id:"D3",rule:"R2",type:"采购台账与供应商明细重叠",what:"油套管采购台账中含渤海钢管 J55 油套管 130 万 t",a:"C01 · 无缝钢管及油套管（采购台账汇总）",b:"C01 · 渤海钢管制造有限公司 / J55 油套管（单独核算）",qty:1300000,unit:"t",factor:pipeFactor,scope:"3",cat:"C01",where:"范围三 C01 · 无缝钢管及油套管"},
+    {id:"D4",rule:"R3",type:"因子边界含运输",what:"海联油运供应商因子为 VLCC 航次全程，C04 原油进口海运中同一航次运量",a:"SUP · 海联油运 / 进口原油 VLCC 海运（边界：装港至卸港全程）",b:"C04 · 原油进口海运 3,200 亿 t·km",qty:320000000000,unit:"t·km",factor:shipFactor,scope:"3",cat:"C04",where:"范围三 C04 · 原油进口海运"}
   ].map(item=>({...item,emission:item.qty*item.factor,status:xk().dedup[item.id]||"待确认"}));
 }
 function xkDedupRules() {
@@ -120,7 +109,7 @@ function xkDedupRules() {
   const lines=typeof procurementLines==="function"?procurementLines():[];
   const replaced=lines.filter(line=>line.sup&&line.tier===1).length;
   return [
-    ["R1","集团内部能源互供","供方范围一与受方范围二同一能量",items.filter(i=>i.rule==="R1").length],
+    ["R1","集团内部能源互供 / CO₂ 转移","供方范围一与受方范围二同一能量；CO₂ 回收在供需双方重复扣减",items.filter(i=>i.rule==="R1").length],
     ["R2","采购台账与供应商明细重叠","同一物料同时以台账汇总和供应商明细计入",items.filter(i=>i.rule==="R2").length],
     ["R3","因子系统边界含运输","供应商 / 物料因子已含运输，C04 再计同一运量",items.filter(i=>i.rule==="R3").length],
     ["R4","同一采购行多级数据","一级数据存在时停用二、三级兜底","通过 · "+replaced+" 条采购行使用一级数据"],
@@ -138,12 +127,12 @@ function xkAdjustRows(standardCode) {
     source_name:name,activity_value:qty,activity_unit:unit,factor_value:factor,emission_tco2e:qty*factor,quality,evidence,xk:true});
   const kwh=xkPurchasedKwh();
   if(xkApproved("T-S2-01")) {
-    push("2","S2","转供园区租户电量（扣减）",-1850000,"kWh",XK_GRID,"一级 · 实测/票据","ELE-JX-2026-TEN");
-    push("3","C03","转售外购电（转供租户）",1850000,"kWh",XK_GRID,"一级 · 实测/票据","ELE-JX-2026-TEN");
+    push("2","S2","转供园区配套企业电量（扣减）",-42000000,"kWh",XK_GRID,"一级 · 实测/票据","ELE-BH-2026-TEN");
+    push("3","C03","转售外购电（转供园区配套企业）",42000000,"kWh",XK_GRID,"一级 · 实测/票据","ELE-BH-2026-TEN");
   }
   if(kwh) {
-    push("3","C03","外购电力上游燃料链",kwh,"kWh",XK_C3.upstream,"二级 · 系统派生","ELE-JX-2026-001");
-    push("3","C03","外购电力输配电损耗（线损率 5%）",kwh*XK_C3.lossRate,"kWh",XK_GRID,"二级 · 系统派生","ELE-JX-2026-001");
+    push("3","C03","外购电力上游燃料链",kwh,"kWh",XK_C3.upstream,"二级 · 系统派生","ELE-ALL-2026");
+    push("3","C03","外购电力输配电损耗（线损率 5%）",kwh*XK_C3.lossRate,"kWh",XK_GRID,"二级 · 系统派生","ELE-ALL-2026");
   }
   xkDedupItems().filter(item=>item.status==="已剔除").forEach(item=>
     push(item.scope,item.cat,"重复计算剔除 · "+item.what,-item.qty,item.unit,item.factor,"调整项",item.id));
@@ -158,7 +147,7 @@ function xkValidity(id) {
   const days=Math.ceil((new Date(v.to+"T23:59:59")-new Date(todayText()+"T00:00:00"))/86400000);
   return days<0?{...v,label:"已过期",tone:"bad",days}:days<=30?{...v,label:"即将到期",tone:"warn",days}:{...v,label:"有效",tone:"ok",days};
 }
-const XK_FALLBACK = {"SC-003":{factor:0.000135,label:"公路货运（中型柴油货车）",id:"TR-133"},"SC-001":{factor:0.0021,label:"球墨铸铁件",id:"MT-109"}};
+const XK_FALLBACK = {"SC-003":{factor:0.0000052,label:"原油油轮运输（VLCC）· 行业平均",id:"TR-133"},"SC-001":{factor:2.05,label:"无缝钢管 · 行业平均",id:"MT-109"}};
 const demoCalculateBeforeXk = demoCalculate;
 demoCalculate = function (standardCode,org,period) {
   const result=demoCalculateBeforeXk(standardCode,org,period);
@@ -198,49 +187,51 @@ function xkNum(value,digits=0){return fmt(value,digits);}
 
 // ---------- 排放源（台账 / 行业模板识别 / 范围三筛查） ----------
 const XK_TEMPLATES = {
-  "装备制造":{guide:"机械设备制造企业温室气体排放核算方法与报告指南（试行）",rows:[
-    ["1","固定燃烧","锅炉、热处理炉、涂装烘道天然气","T-S1-01"],
-    ["1","移动燃烧","厂内叉车柴油","T-S1-02"],
-    ["1","移动燃烧","公务车、班车汽油","T-S1-05"],
-    ["1","工业过程","CO₂ 气体保护焊","T-S1-06"],
-    ["1","工业过程","配电设备 SF₆ 泄漏","",{status:"待确认",note:"10kV 配电室 SF₆ 断路器 6 台，充气量待设备科确认"}],
-    ["1","逸散排放","空调、冷水机组制冷剂","T-S1-03"],
-    ["1","逸散排放","化粪池 CH₄","T-S1-07"],
-    ["1","逸散排放","CO₂ 灭火器","T-S1-08"],
-    ["1","逸散排放","污水厌氧处理 CH₄","",{status:"不适用",note:"厂区废水经预处理后接入市政管网，无厌氧处理单元"}],
-    ["2","购入电力","外购电力","T-S2-01"],
-    ["2","购入热力","外购蒸汽","T-S2-02"],
-    ["2","购入电力","绿电","T-S2-03"],
-    ["2","转供扣减","外购电转供租户（范围二扣减，计入 C3）","ENERGY"]]},
+  "油气开采":{guide:"中国石油天然气生产企业温室气体排放核算方法与报告指南（试行）",rows:[
+    ["1","固定燃烧","加热炉、锅炉、注汽锅炉天然气","T-S1-43"],
+    ["1","固定燃烧","加热炉自用原油","T-S1-44"],
+    ["1","移动燃烧","作业机具、车辆柴油","T-S1-45"],
+    ["1","火炬燃烧","伴生气火炬（CO₂ + 未完全燃烧 CH₄）","T-S1-46"],
+    ["1","工艺放空","油井套管气放空","T-S1-47"],
+    ["1","工艺放空","原油储罐呼吸及装车挥发 CH₄","",{status:"待确认",note:"联合站储罐 286 座，大罐抽气覆盖率待生产部门确认"}],
+    ["1","设备逃逸","井口装置、联合站、接转站","T-S1-48"],
+    ["1","工业过程","含 CO₂ 天然气酸性气体脱除","T-S1-51"],
+    ["1","回收扣减","CO₂ 回收（CCUS 驱油埋存）","T-S1-52"],
+    ["1","回收扣减","CH₄ 回收利用（套管气回收）","T-S1-53"],
+    ["1","逸散排放","油田采出水处理 CH₄","",{status:"不适用",note:"采出水密闭回注，无厌氧处理单元"}],
+    ["2","购入电力","机采井、注水泵、集输泵外购电力","T-S2-10"],
+    ["3","C01","外购 CO₂ 驱油（集团内部供应，不重复扣减）","DEDUP"]]},
+
   "热电联产":{guide:"企业温室气体排放核算与报告指南 发电设施",rows:[
     ["1","固定燃烧","燃煤机组","T-S1-04"],
-    ["1","固定燃烧","点火及助燃用油","",{status:"待确认",note:"2026 年启停 4 次，柴油用量待燃料部统计"}],
+    ["1","固定燃烧","点火及助燃用油","",{status:"待确认",note:"2026 年启停 6 次，柴油用量待燃料部统计"}],
     ["1","工业过程","石灰石-石膏湿法脱硫","",{status:"待确认",note:"石灰石消耗量取自脱硫系统月报"}],
     ["1","输出扣减","上网电量、对外供热（国内口径范围一扣减）","ENERGY"],
     ["2","购入电力","厂用电下网（自用，非转供）","T-S2-04"],
     ["3","C03","集团内部直供电（合并层面剔除）","DEDUP"]]},
+
   "石油石化":{guide:"中国石油化工企业温室气体排放核算方法与报告指南（试行）",rows:[
-    ["1","固定燃烧","加热炉、锅炉燃料气 / 燃料油",""],
-    ["1","移动燃烧","汽油、柴油车辆",""],
-    ["1","工业过程","制氢装置原料（天然气 / 轻烃）转化 CO₂",""],
-    ["1","工业过程","催化裂化 / 催化重整烧焦",""],
-    ["1","固定燃烧","废气、废液焚烧炉",""],
-    ["1","火炬燃烧","火炬燃烧及 CH₄ 未完全燃烧逸散",""],
-    ["1","逸散排放","设备与管线组件 CH₄ 逸散",""],
-    ["1","逸散排放","化粪池 CH₄",""],
-    ["1","逸散排放","CO₂ 灭火器",""],
-    ["1","输出扣减","蒸汽 / 热力 / 电力转供（热电联产电在范围一扣减）",""],
-    ["1","回收扣减","CO₂ 回收利用",""],
-    ["2","购入电力","外购电力（含加油站用电）",""],
-    ["2","购入热力","外购蒸汽",""],
-    ["2","转供扣减","外购电转售（范围二扣减，计入 C3）",""],
-    ["3","C03","外购电力上游及线损、转售电",""],
-    ["3","C08","上游租赁资产（租赁油库、储罐）",""],
-    ["3","C09","下游运输和配送（成品油二次配送）",""],
-    ["3","C11","售出燃料燃烧",""],
-    ["3","C14","特许经营（加盟加油站）",""]]}
+    ["1","固定燃烧","加热炉、锅炉炼厂干气","T-S1-01"],
+    ["1","固定燃烧","转化炉、加热炉天然气","T-S1-02"],
+    ["1","固定燃烧","开工及备用燃料油","T-S1-03"],
+    ["1","火炬燃烧","火炬气（正常工况）","T-S1-05"],
+    ["1","火炬燃烧","火炬气（事故工况）","T-S1-06"],
+    ["1","工业过程","催化裂化装置烧焦","T-S1-07"],
+    ["1","工业过程","连续重整装置烧焦","T-S1-08"],
+    ["1","工业过程","加氢装置催化剂间歇再生","T-S1-09"],
+    ["1","工业过程","制氢装置原料转化 CO₂","T-S1-10"],
+    ["1","工业过程","乙烯裂解炉管烧焦","T-S1-12"],
+    ["1","工业过程","环氧乙烷 / 乙二醇","T-S1-13"],
+    ["1","工业过程","延迟焦化 / 石油焦煅烧","",{status:"不适用",note:"滨海石化无焦化及煅烧装置（天山石化已纳入 T-S1-32）"}],
+    ["1","固定燃烧","废气、废液焚烧炉","",{status:"待确认",note:"硫磺回收尾气焚烧炉 2 台，燃料气已计入 T-S1-01，需确认是否单独计量"}],
+    ["1","回收扣减","CO₂ 回收利用（外供驱油）","T-S1-14"],
+    ["1","输出扣减","热电厂上网电量、对外供热（国内口径范围一扣减）","ENERGY"],
+    ["2","购入电力","外购电力","T-S2-01"],
+    ["2","转供扣减","外购电转供园区配套企业（范围二扣减，计入 C3）","ENERGY"],
+    ["3","C03","热电厂厂内直供电（合并层面剔除）","DEDUP"],
+    ["3","C11","售出成品油及化工产品燃烧","",{status:"已纳入",note:"由销售板块按销量统一核算"}]]}
 };
-const XK_TEMPLATE_ORGS = {"装备制造":"杭州总部、嘉兴装配工厂、湖州机加工基地","热电联产":"嘉兴热电分公司","石油石化":"未应用"};
+const XK_TEMPLATE_ORGS = {"油气开采":"松原油田分公司、鄂南油气田分公司、塔河油田分公司","热电联产":"滨海石化热电厂","石油石化":"滨海石化分公司、陇原石化分公司、天山石化分公司"};
 function xkIdentRows(name) {
   const tpl=XK_TEMPLATES[name];
   const tasks=workflowTasks();
@@ -257,8 +248,8 @@ function xkIdentRows(name) {
 }
 function xkSourceLedger() {
   const tasks=workflowTasks().filter(t=>t.scope!=="3"&&!t.locked);
-  const kinds={"T-S1-01":"固定燃烧","T-S1-02":"移动燃烧","T-S1-03":"逸散排放","T-S1-04":"固定燃烧","T-S2-01":"购入电力","T-S2-02":"购入热力","T-S2-03":"购入电力","T-S2-04":"购入电力"};
-  const modes={"T-S1-01":"燃气账单导入","T-S1-02":"加油记录导入","T-S1-03":"维保记录填报","T-S1-04":"DCS 月报导入","T-S2-01":"电费账单导入","T-S2-02":"结算单填报","T-S2-03":"绿电交易凭证","T-S2-04":"关口电表导入"};
+  const kinds={};const modes={};
+  PETRO_SOURCES.forEach(s=>{kinds[s.id]=s.kind;modes[s.id]=s.mode;});
   const rows=tasks.map(t=>{const entry=taskEntry(t);const x=XK_TASKS[t.id];
     return ['<strong>'+textHtml(t.name)+'</strong><small>'+t.id+'</small>','范围'+["","一","二"][t.scope],x?x.kind:kinds[t.id]||(t.created?"工业过程":"—"),textHtml(t.org),'<span class="srcCell">'+textHtml(t.factorLabel)+'</span>',x?x.mode:modes[t.id]||"任务填报",entryStatus(entry.status)];});
   XK_ENERGY.filter(e=>e.dir!=="输入").forEach(e=>rows.push(['<strong>'+textHtml(e.org+" · "+e.dir+e.kind)+'</strong><small>'+e.id+'</small>',e.dir==="转供"?"范围二":"范围一",e.dir==="集团内部供应"?"内部互供":e.dir==="转供"?"转供扣减":"输出扣减",textHtml(e.org),'<span class="srcCell">'+textHtml(e.fl)+'</span>',"能源转供台账",xkStatus("启用","ok")]));
@@ -282,10 +273,10 @@ function xkSetTemplate(value){xk().template=value;persistDemo();render();}
 function xkOpenIdent(key) {
   const [name,i]=key.split("#");
   const r=xkIdentRows(name)[Number(i)];
-  const canCreate=name!=="石油石化";
+  const canCreate=true;
   openModal('<h2>'+textHtml(r.name)+'</h2><div class="taskContext"><span>'+name+'</span><span>范围'+["","一","二","三"][r.scope]+'</span><span>'+textHtml(r.kind)+'</span></div>'+
     '<div class="modalForm"><label>识别结论<select id="xkIdentStatus"><option>待确认</option><option>已纳入</option><option>不适用</option></select></label>'+
-    (canCreate?'<label>责任组织<select id="xkIdentOrg">'+["嘉兴装配工厂","湖州机加工基地","嘉兴热电分公司","杭州总部"].map(o=>'<option>'+o+'</option>').join("")+'</select></label>'+
+    (canCreate?'<label>责任组织<select id="xkIdentOrg">'+PETRO_ENTITIES.map(e=>e.org).map(o=>'<option>'+o+'</option>').join("")+'</select></label>'+
       '<label>活动数据单位<input id="xkIdentUnit" value="'+(r.scope==="1"&&/SF₆|制冷/.test(r.name)?"kg":r.kind==="工业过程"?"t":"t")+'"></label>'+
       '<label>排放因子（tCO₂e/单位）<input id="xkIdentFactor" type="number" step="any" value="'+(/SF₆/.test(r.name)?"23.5":/石灰石/.test(r.name)?"0.44":/油/.test(r.name)?"3.0959":"")+'"></label>':'')+
     '<label class="wide">依据 / 说明<input id="xkIdentNote" value="'+textHtml(r.note||"")+'"></label></div>'+
@@ -303,7 +294,7 @@ function xkSaveIdent(key) {
     const factor=Number(document.getElementById("xkIdentFactor").value);
     const unit=document.getElementById("xkIdentUnit").value.trim()||"t";
     if(!(factor>0)){showToast("纳入时请填写排放因子");return;}
-    const id="T-S"+r.scope+"-"+String(10+Object.keys(xk().created||{}).length).padStart(2,"0");
+    const id="T-S"+r.scope+"-N"+String(1+Object.keys(xk().created||{}).length).padStart(2,"0");
     xk().created ||= {};
     xk().created[id]={id,org:document.getElementById("xkIdentOrg").value,name:r.name.replace(/（.*?）/g,""),unit,factor,factorLabel:r.name+" · 识别清单新增",scope:r.scope};
     demo.taskEntries[id]={activity:"",evidence:"",status:"待填报"};
@@ -318,19 +309,19 @@ function xkSaveIdent(key) {
 const workflowTasksBeforeXkCreated = workflowTasks;
 workflowTasks = function () {
   const list=workflowTasksBeforeXkCreated();
-  const created=Object.values(demo.xk?.created||{}).map(t=>({...t,scope:String(t.scope),category:"",owner:"周建华",period:demoPeriod,deadline:"2026-12-15",origin:"企业填报",locked:false,created:true}));
+  const created=Object.values(demo.xk?.created||{}).map(t=>({...t,scope:String(t.scope),category:"",owner:petroEntity(t.org)?.owner||"赵海峰",period:demoPeriod,deadline:"2026-12-15",origin:"企业填报",locked:false,created:true}));
   const index=list.findIndex(t=>t.scope==="3");
   return index<0?[...list,...created]:[...list.slice(0,index),...created,...list.slice(index)];
 };
 
 const XK_S3_DEFAULT = {
-  C01:["纳入","采购台账 + 供应商一手数据，排放占比高",[1,1,1,1]],C02:["纳入","资本性支出（支出法）",[1,0,0,1]],
-  C03:["纳入","天然气上游、外购电上游燃料链及线损、转售外购电",[0,1,0,1]],C04:["纳入","供应商物流与采购运输",[0,1,1,1]],
-  C05:["纳入","一般固废、危废委外处置",[0,1,0,1]],C06:["纳入","差旅平台导入",[0,1,0,1]],C07:["纳入","通勤问卷推算",[0,0,0,1]],
-  C08:["纳入","嘉善外租成品仓（第三方运营，未计入范围一、二）",[0,0,1,1]],C09:["纳入","客户承担运费的发运（销售合同 FCA 条款）",[0,1,1,1]],
-  C10:["不适用","中间品销售占比 6%，客户加工能耗不可得，估算低于总排放 0.1%",[0,0,0,0]],C11:["纳入","泵、电机为直接耗能产品，使用阶段占比最高",[1,1,1,1]],
-  C12:["纳入","金属回收及非金属焚烧情景",[0,1,0,1]],C13:["纳入","应急排涝泵组对外出租",[0,0,0,1]],
-  C14:["不适用","无特许经营业务：经销商为独立买断经销",[0,0,0,0]],C15:["纳入","参股企业按持股比例",[0,0,1,1]]
+  C01:["纳入","外购原油、进口天然气、催化剂及化学助剂、油套管",[1,1,1,1]],C02:["纳入","工程建设与设备购置（支出法）",[1,0,0,1]],
+  C03:["纳入","外购天然气上游、外购电上游燃料链及线损、转售外购电",[0,1,0,1]],C04:["纳入","原油进口海运、原油及成品油铁路运输",[1,1,1,1]],
+  C05:["纳入","含油污泥、废催化剂等危废委外处置",[0,1,1,1]],C06:["纳入","差旅平台导入",[0,1,0,1]],C07:["纳入","在岗员工通勤问卷推算",[0,0,0,1]],
+  C08:["纳入","承租社会油库及储罐（第三方运营，未计入范围一、二）",[0,0,1,1]],C09:["纳入","成品油二次配送（承运商）",[1,1,1,1]],
+  C10:["纳入","合成树脂、合成纤维原料等中间品下游加工",[1,0,1,1]],C11:["纳入","售出成品油、天然气、液化石油气燃烧，占范围三 90% 以上",[1,1,1,1]],
+  C12:["纳入","售出合成树脂废弃焚烧及填埋",[0,1,1,1]],C13:["纳入","对外出租油库及码头",[0,0,0,1]],
+  C14:["纳入","品牌加盟加油站",[0,1,1,1]],C15:["纳入","联营及合营企业按持股比例",[1,0,1,1]]
 };
 function xkScope3Rows() {
   const detail=approvedDetail();
@@ -386,12 +377,12 @@ function xkEnergyPage() {
   const t=e=>e.qty*e.factor;
   const out=XK_ENERGY.filter(e=>e.dir==="输出");
   const kwh=xkPurchasedKwh();
-  const c3=[["外购电力上游燃料链",kwh,"kWh",XK_C3.upstream*1000,"kgCO₂e/kWh · 行业平均"],["外购电力输配电损耗",kwh*XK_C3.lossRate,"kWh",XK_GRID*1000,"线损率 5% × 全国电网平均排放因子"],["转售外购电（转供租户）",1850000,"kWh",XK_GRID*1000,"全国电网平均排放因子"]];
+  const c3=[["外购电力上游燃料链",kwh,"kWh",XK_C3.upstream*1000,"kgCO₂e/kWh · 行业平均"],["外购电力输配电损耗",kwh*XK_C3.lossRate,"kWh",XK_GRID*1000,"线损率 5% × 全国电网平均排放因子"],["转售外购电（转供园区配套企业）",42000000,"kWh",XK_GRID*1000,"全国电网平均排放因子"]];
   return pageHead("能源转供",'<label class="inlineSelect">核算口径 <select onchange="changeStandard(this.value)">'+optionList(demo.standards,"code","name",std)+'</select></label>',"组织碳排放 / 盘查准备 / 能源转供")+
     '<div class="statRow">'+statTile("对外输出电力",xkNum(out[0].qty)+" MWh",cn?"范围一扣减 "+xkNum(t(out[0]))+" t":"单独披露 "+xkNum(t(out[0]))+" t")+
       statTile("对外输出热力",xkNum(out[1].qty)+" GJ",cn?"范围一扣减 "+xkNum(t(out[1]))+" t":"单独披露 "+xkNum(t(out[1]))+" t")+
-      statTile("集团内部直供",xkNum(8400)+" MWh",'重复计算 '+xkStatus(xk().dedup.D1,xk().dedup.D1==="已剔除"?"ok":"warn"),"go('组织碳排放','核算分析','重复计算剔除')")+
-      statTile("外购电转供",xkNum(1850)+" MWh","范围二扣减 → C3 "+xkNum(1850*XK_GRID*1000)+" t")+'</div>'+
+      statTile("集团内部直供",xkNum(2640000)+" MWh",'重复计算 '+xkStatus(xk().dedup.D1,xk().dedup.D1==="已剔除"?"ok":"warn"),"go('组织碳排放','核算分析','重复计算剔除')")+
+      statTile("外购电转供",xkNum(42000)+" MWh","范围二扣减 → C3 "+xkNum(42000*XK_GRID*1000)+" t")+'</div>'+
     xkPanel("能源输入输出台账",xkTable(["编号","主体","方向","能源","数量","对象","GHG Protocol / ISO 14064","国内企业核算指南","折算排放(tCO₂e)"],XK_ENERGY.map(e=>[
       e.id,textHtml(e.org),xkStatus(e.dir,e.dir==="输入"?"gray":e.dir==="转供"?"warn":"ok"),e.kind,xkNum(e.qty)+" "+e.unit,textHtml(e.to),
       '<span class="'+(!cn?'xkOn':'')+'">'+textHtml(e.ghg)+'</span>','<span class="'+(cn?'xkOn':'')+'">'+textHtml(e.cn)+'</span>',xkNum(t(e),1)])))+
@@ -436,11 +427,11 @@ async function xkUndoDedup(id) {
 
 // ---------- 数据交叉核对 ----------
 const XK_CROSS_META = {
-  "T-S1-01":["燃气公司结算单",2],"T-S1-02":["加油卡记录",2],"T-S1-03":["维保充注记录",5],"T-S1-04":["入厂煤计量",1],"T-S1-05":["加油卡记录",2],
-  "T-S1-06":["气瓶领用台账",5],"T-S1-07":["人事在册人数",3],"T-S1-08":["消防维保记录",5],
-  "T-S2-01":["电费结算单",1],"T-S2-02":["蒸汽结算单",2],"T-S2-03":["绿电交易凭证",0.5],"T-S2-04":["关口电表",1]
+  "T-S1-01":["燃料气流量计",2],"T-S1-02":["贸易交接计量",1],"T-S1-04":["入厂煤计量",1],"T-S1-07":["烧焦量月报",2],"T-S1-10":["原料计量",2],
+  "T-S1-14":["外输 CO₂ 质量流量计",1],"T-S2-01":["关口电表",1],"T-S2-04":["关口电表",1],"T-S1-43":["采油厂计量间汇总",3],
+  "T-S1-47":["单井套压测试推算",10],"T-S1-52":["注入站质量流量计",2],"T-S2-10":["电网结算单",1],"T-S1-76":["自耗气计量",2]
 };
-const XK_CROSS_SOURCES = ["厂内计量表","财务发票","采购入库","能源统计报表","ERP 领料","电网结算单","第三方检测报告","DCS 历史数据"];
+const XK_CROSS_SOURCES = ["DCS 历史数据","能源统计报表","贸易交接结算单","电网结算单","第三方检测报告","物料平衡月报","CEMS 在线监测","财务发票"];
 function xkCrossRows() {
   return workflowTasks().filter(t=>XK_CROSS_META[t.id]).map(t=>{
     const entry=taskEntry(t);
@@ -567,7 +558,7 @@ matchFactors = function (task,limit) {
 };
 
 // ---------- 供应商因子有效期 ----------
-const XK_SUP_BOUNDARY = {"SC-001":"从摇篮到大门（含送货至客户）","SC-002":"从摇篮到大门","SC-003":"车轮到车轮（TTW）","SC-004":"从摇篮到大门"};
+const XK_SUP_BOUNDARY = {"SC-001":"从摇篮到大门","SC-002":"从摇篮到大门","SC-003":"装港至卸港全程（TTW）","SC-004":"从摇篮到大门"};
 function xkSupplierFactorTable() {
   const rows=supplyScope3Items.map((row,index)=>({row,index})).filter(({row})=>demo.approvedSuppliers[row.id]);
   const months=xk().validityMonths;
@@ -625,17 +616,17 @@ if(typeof reviewSupplierTask==="function") {
 // ---------- 产品碳足迹：系统边界、PCR、建模说明 ----------
 const XK_BOUNDARIES = ["从摇篮到坟墓","从摇篮到大门","从大门到大门"];
 const XK_PCR_BASE = [
-  {id:"PCR-01",code:"Q/JNFE 018-2026",name:"离心泵产品碳足迹核算规则",org:"企业 PCR",scope:"单级 / 多级离心泵、管道泵",unit:"1 台泵在额定工况下运行 10 年",boundary:"从摇篮到坟墓",valid:"2026-03-01 至 2029-02-28",status:"有效",match:/泵/,
-    req:[["功能单位","1 台泵在额定工况下运行 10 年"],["必选阶段","原材料获取、生产制造、运输配送、使用维护、回收处置"],["截断准则","单项 <1%，累计 <5%，危险物质不截断"],["分配规则","共线能耗按工时；副产品采用截断法"],["使用情景","额定功率 × 年运行 2,000 h × 10 年"],["数据质量","主要原材料优先供应商数据；电力用最新全国电力平均因子"]]},
-  {id:"PCR-02",code:"Q/JNFE 019-2026",name:"三相异步电动机产品碳足迹核算规则",org:"企业 PCR",scope:"IE3 / IE4 低压三相异步电动机",unit:"1 台电动机出厂",boundary:"从摇篮到大门",valid:"2026-03-01 至 2029-02-28",status:"有效",match:/电动机|电机/,
-    req:[["功能单位","1 台电动机出厂（配套）/ 运行 15 年（独立销售）"],["必选阶段","原材料获取、生产制造"],["截断准则","单项 <1%，累计 <5%"],["分配规则","共线能耗按产量（台）"]]},
-  {id:"PCR-03",code:"PEP-PCR-ed4-2021",name:"电气、电子及暖通空调产品类别规则（第 4 版）",org:"PEP ecopassport",scope:"电气、电子及暖通空调设备",unit:"按产品特定规则（PSR）",boundary:"从摇篮到坟墓",valid:"现行",status:"有效",match:/电机|电动机|变频/,
-    req:[["系统边界","从摇篮到坟墓"],["特定规则","需配合产品特定规则（PSR）"]]},
-  {id:"PCR-04",code:"PCR 2019:14",name:"建筑产品 PCR（EN 15804+A2）",org:"EPD International",scope:"建筑产品及建筑设备",unit:"声明单位或功能单位",boundary:"从摇篮到大门（A1–A3）及选配模块",valid:"现行",status:"有效",match:/供水设备|消防/,
-    req:[["系统边界","A1–A3 必选，C1–C4、D 模块按要求"],["适用","建筑给排水、消防设备申请建筑类 EPD"]]},
+  {id:"PCR-01",code:"Q/BCSY 018-2026",name:"车用汽油、柴油产品碳足迹核算规则",org:"企业 PCR",scope:"国 VI 车用汽油、车用柴油、航空煤油",unit:"1 t 出厂成品油（可选含燃烧使用）",boundary:"从摇篮到坟墓",valid:"2026-03-01 至 2029-02-28",status:"有效",match:/汽油|柴油|煤油/,
+    req:[["功能单位","1 t 出厂成品油；含使用阶段时以 1 t 完全燃烧计"],["必选阶段","原油开采与运输、炼制、储运配送、燃烧使用"],["截断准则","单项 <1%，累计 <5%"],["分配规则","炼厂共用燃料、蒸汽、电力和氢气按装置能量（热值）分配"],["使用情景","完全燃烧，碳氧化率 98%"],["数据质量","原油上游优先采用油田实测；进口原油采用行业平均并注明来源国"]]},
+  {id:"PCR-02",code:"Q/BCSY 019-2026",name:"聚烯烃树脂产品碳足迹核算规则",org:"企业 PCR",scope:"聚乙烯、聚丙烯树脂",unit:"1 t 出厂树脂",boundary:"从摇篮到大门",valid:"2026-03-01 至 2029-02-28",status:"有效",match:/聚乙烯|聚丙烯|树脂|HDPE|LLDPE|PP/,
+    req:[["功能单位","1 t 出厂树脂"],["必选阶段","原料获取（含乙烯裂解）、聚合、造粒包装"],["截断准则","单项 <1%，累计 <5%"],["分配规则","乙烯裂解按质量分配"]]},
+  {id:"PCR-03",code:"PCR 2019:13",name:"Basic chemicals（基础化学品）",org:"EPD International",scope:"乙烯、丙烯、芳烃等基础化学品",unit:"1 t 产品",boundary:"从摇篮到大门",valid:"现行",status:"有效",match:/乙烯|丙烯|芳烃|乙二醇/,
+    req:[["系统边界","从摇篮到大门"],["分配","联产品按质量或经济价值分配"]]},
+  {id:"PCR-04",code:"ISO 14067 + IPIECA",name:"天然气产品价值链碳排放指南",org:"IPIECA / OGCI",scope:"管道天然气、LNG",unit:"1 GJ 交付天然气",boundary:"从摇篮到大门",valid:"现行",status:"有效",match:/天然气|LNG/,
+    req:[["系统边界","开采、处理、管输 / 液化至交付点"],["甲烷","须单列甲烷排放强度"]]},
   {id:"PCR-05",code:"GB/T 24067-2024",name:"温室气体 产品碳足迹 量化要求和指南",org:"国家标准",scope:"通用（无适用 PCR 时）",unit:"按研究目的确定",boundary:"按研究目的确定",valid:"现行",status:"有效",match:/./,
     req:[["用途","无适用 PCR 时作为通则"]]},
-  {id:"PCR-06",code:"Q/JNFE 020（在编）",name:"工业阀门产品碳足迹核算规则",org:"企业 PCR",scope:"闸阀、截止阀、蝶阀、止回阀",unit:"1 只阀门出厂",boundary:"从摇篮到大门",valid:"—",status:"编制中",match:/阀/,
+  {id:"PCR-06",code:"Q/BCSY 020（在编）",name:"润滑油产品碳足迹核算规则",org:"企业 PCR",scope:"内燃机油、工业润滑油",unit:"1 t 出厂润滑油",boundary:"从摇篮到大门",valid:"—",status:"编制中",match:/润滑油/,
     req:[["进度","2026-12 完成内部评审"]]}
 ];
 function xkPcrs(){return [...XK_PCR_BASE,...(xk().pcrs||[]).map(p=>({...p,match:new RegExp(p.matchText||"$^")}))];}
@@ -751,7 +742,7 @@ function xkOpenPcr(id) {
 }
 function xkOpenPcrNew() {
   openModal('<h2>新增 PCR</h2><div class="modalForm"><label>编号<input id="xkPcrCode"></label><label>名称<input id="xkPcrName"></label><label>发布机构<input id="xkPcrOrg"></label>'+
-    '<label>适用产品关键词<input id="xkPcrMatch" placeholder="如：泵|阀"></label><label>功能 / 声明单位<input id="xkPcrUnit"></label><label>系统边界<select id="xkPcrBoundary">'+XK_BOUNDARIES.map(b=>'<option>'+b+'</option>').join("")+'</select></label>'+
+    '<label>适用产品关键词<input id="xkPcrMatch" placeholder="如：汽油|柴油"></label><label>功能 / 声明单位<input id="xkPcrUnit"></label><label>系统边界<select id="xkPcrBoundary">'+XK_BOUNDARIES.map(b=>'<option>'+b+'</option>').join("")+'</select></label>'+
     '<label>有效期<input id="xkPcrValid" placeholder="2026-01-01 至 2028-12-31"></label></div><div class="modalActions"><button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="xkSavePcrNew()">保存</button></div>');
 }
 function xkSavePcrNew() {
@@ -814,24 +805,17 @@ if(typeof productReportHtml==="function") {
 }
 
 // ---------- 碳履约：国家核算口径、核查管理 ----------
-const XK_DIESEL_CN = 0.84*43.33*0.0202*0.98*44/12/1000;
 function xkNationalRows() {
-  const act=id=>Number(taskEntry({id})?.activity)||0;
-  const t=id=>workflowTasks().find(x=>x.id===id)||{};
-  const rows=[
-    ["天然气燃烧","T-S1-01","燃料燃烧",act("T-S1-01"),"Nm³",t("T-S1-01").factor,0.0021622,"指南缺省值，与盘查一致"],
-    ["柴油叉车","T-S1-02","燃料燃烧",act("T-S1-02"),"L",t("T-S1-02").factor,XK_DIESEL_CN,"指南缺省参数（NCV 43.33 GJ/t，CC 20.2 tC/TJ，OF 98%）"],
-    ["公务车汽油","T-S1-05","燃料燃烧",act("T-S1-05"),"L",t("T-S1-05").factor,0.0021354,"一致"],
-    ["CO₂ 气体保护焊","T-S1-06","工业过程",act("T-S1-06"),"kg",0.001,0.001,"一致（指南规定的过程排放）"],
-    ["制冷剂泄漏","T-S1-03","逸散",act("T-S1-03"),"kg",t("T-S1-03").factor,0,"指南不含建筑空调维保 HFCs"],
-    ["化粪池甲烷逸散","T-S1-07","逸散",act("T-S1-07"),"人·年",t("T-S1-07").factor,0,"指南不含"],
-    ["CO₂ 灭火器充装","T-S1-08","逸散",act("T-S1-08"),"kg",0.001,0,"指南不含"],
-    ["外购电力","T-S2-01","净购入电力",act("T-S2-01"),"kWh",XK_GRID,XK_GRID,"一致"],
-    ["外购电转供租户","E4","净购入电力",-1850000,"kWh",XK_GRID,XK_GRID,"一致（净购入扣减）"],
-    ["绿电采购","T-S2-03","净购入电力",act("T-S2-03"),"kWh",0,XK_GRID,"指南按电网平均因子计，不采用市场法"],
-    ["外购蒸汽","T-S2-02","净购入热力",act("T-S2-02"),"GJ",XK_HEAT,XK_HEAT,"一致"]
-  ];
-  return rows.map(r=>({name:r[0],id:r[1],kind:r[2],qty:r[3],unit:r[4],ent:r[3]*r[5],cn:r[3]*r[6],note:r[7]}));
+  const tasks=workflowTasks().filter(t=>t.org==="滨海石化分公司"&&t.petro);
+  const rows=tasks.map(t=>{
+    const entry=taskEntry(t);const qty=Number(entry.activity)||0;const src=petroSource(t.id);
+    const cnF=petroCalc(src,entry.params,qty);const cn=cnF.co2+cnF.ch4*21;
+    return {name:t.name,id:t.id,kind:PETRO_METHODS[src.method].label,qty,unit:t.unit,ent:qty*t.factor,cn,
+      note:src.method==="elec"?"一致（净购入电力）":src.method==="rec"?"一致（回收量扣减）":"一致（"+PETRO_METHODS[src.method].formula+"）",status:entry.status};
+  });
+  rows.push({name:"外购电转供园区配套企业",id:"E4",kind:"净购入电力",qty:-42000000,unit:"kWh",ent:-42000000*XK_GRID,cn:-42000000*XK_GRID,note:"一致（净购入扣减）"});
+  rows.push({name:"热电厂直供电量（报告主体外）",id:"E3",kind:"净购入电力",qty:0,unit:"kWh",ent:0,cn:310000000*XK_GRID,note:"国家口径按法人边界计入净购入电力；集团合并层面剔除"});
+  return rows;
 }
 function xkNationalPage() {
   const tab=XK_TAB.nat;
@@ -841,46 +825,50 @@ function xkNationalPage() {
   const verified=typeof etsCalc==="function"?etsCalc(year).verified:0;
   const chp2026=(Number(taskEntry({id:"T-S1-04"}).activity)||0)*(typeof etsCoalFactor==="function"?etsCoalFactor():2.0047);
   const threshold=26000;
+  const entitySum=org=>workflowTasks().filter(t=>t.org===org&&t.petro).reduce((s,t)=>{const e=taskEntry(t);const src=petroSource(t.id);const c=petroCalc(src,e.params,Number(e.activity)||0);return s+c.co2+c.ch4*21;},0);
   const entities=[
-    ["嘉兴热电分公司","电力（热电联产）","企业温室气体排放核算与报告指南 发电设施",xkStatus("全国碳市场","ok"),xkNum(verified)+'<small>'+year+' 年度核查量</small>',xkNum(chp2026)+'<small>2026 年度（月度存证）</small>',"—",'<button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button>'],
-    ["江南流体装备（制造板块）","通用设备制造","机械设备制造企业温室气体排放核算方法与报告指南（试行）",xkStatus("未纳入","gray"),"—",xkNum(cn)+'<small>2026 年度（按当前填报）</small>',
-      '<span class="'+(cn>=threshold?'badText':'')+'">2.6 万 tCO₂e</span><small>已达 '+(cn/threshold*100).toFixed(0)+'%</small>','<button class="linkBtn" onclick="xkSetTab(\'nat\',\'recon\')">口径对照 ›</button>']
+    ["滨海石化热电厂","电力（热电联产）","企业温室气体排放核算与报告指南 发电设施",xkStatus("全国碳市场","ok"),xkNum(verified)+'<small>'+year+' 年度核查量</small>',xkNum(chp2026)+'<small>2026 年度（月度存证）</small>',"—",'<button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button>'],
+    ["滨海石化分公司","石油化工（原油加工、乙烯）","中国石油化工企业温室气体排放核算方法与报告指南（试行）",xkStatus("年度排放报告 · 拟纳入","warn"),"—",xkNum(cn)+'<small>2026 年度（按当前填报）</small>',
+      '<span class="badText">2.6 万 tCO₂e</span><small>已达 '+(cn/threshold*100).toFixed(0)+'%</small>','<button class="linkBtn" onclick="xkSetTab(\'nat\',\'recon\')">口径对照 ›</button>'],
+    ...["陇原石化分公司","天山石化分公司"].map(org=>[org,"石油化工（原油加工、乙烯）","中国石油化工企业温室气体排放核算方法与报告指南（试行）",xkStatus("年度排放报告 · 拟纳入","warn"),"—",xkNum(entitySum(org))+'<small>2026 年度</small>','<span class="badText">2.6 万 tCO₂e</span>','<button class="linkBtn" onclick="go(\'组织碳排放\',\'核算分析\',\'行业核算明细\')">核算明细 ›</button>']),
+    ...["松原油田分公司","鄂南油气田分公司","塔河油田分公司"].map(org=>[org,"石油天然气开采","中国石油天然气生产企业温室气体排放核算方法与报告指南（试行）",xkStatus("年度排放报告","gray"),"—",xkNum(entitySum(org))+'<small>2026 年度 · CH₄ 按 GWP 21</small>','<span class="badText">2.6 万 tCO₂e</span>','<button class="linkBtn" onclick="go(\'组织碳排放\',\'核算分析\',\'行业核算明细\')">核算明细 ›</button>']),
+    ["西部管道分公司","油气输送","中国石油天然气生产企业温室气体排放核算方法与报告指南（试行）",xkStatus("年度排放报告","gray"),"—",xkNum(entitySum("西部管道分公司"))+'<small>2026 年度</small>','<span class="badText">2.6 万 tCO₂e</span>','<button class="linkBtn" onclick="go(\'组织碳排放\',\'核算分析\',\'行业核算明细\')">核算明细 ›</button>']
   ];
   const guides=[
     ["发电设施","企业温室气体排放核算与报告指南 发电设施","全国碳市场","化石燃料燃烧（元素碳实测）、购入电力","已内置"],
     ["钢铁","中国钢铁生产企业温室气体排放核算方法与报告指南（试行）","全国碳市场（2025 年纳入）","燃料燃烧、熔剂分解、电极、外购含碳原料、固碳产品","已内置"],
     ["水泥","中国水泥生产企业温室气体排放核算方法与报告指南（试行）","全国碳市场（2025 年纳入）","燃料燃烧、原料碳酸盐分解、生料有机碳","已内置"],
     ["铝冶炼","中国电解铝生产企业温室气体排放核算方法与报告指南（试行）","全国碳市场（2025 年纳入）","燃料燃烧、阳极消耗、阳极效应 PFCs","已内置"],
-    ["石油化工","中国石油化工企业温室气体排放核算方法与报告指南（试行）","未纳入 · 年度排放报告","燃料燃烧、火炬燃烧、催化裂化 / 重整烧焦、制氢、焦化、石灰石脱硫、CO₂ 回收扣减、净购入电热","已内置"],
-    ["石油天然气生产","中国石油和天然气生产企业温室气体排放核算方法与报告指南（试行）","未纳入 · 年度排放报告","燃料燃烧、火炬燃烧、工艺放空、设备逸散、CO₂ 回收","已内置"],
-    ["机械设备制造","机械设备制造企业温室气体排放核算方法与报告指南（试行）","未纳入 · 年度排放报告","燃料燃烧、CO₂ 保护焊、电气设备 SF₆ / HFCs / PFCs、净购入电热","已内置 · 本企业适用"],
+    ["石油化工","中国石油化工企业温室气体排放核算方法与报告指南（试行）","年度排放报告 · 拟纳入全国碳市场","燃料燃烧、火炬燃烧、催化裂化 / 重整烧焦、制氢、乙烯裂解、环氧乙烷、石油焦煅烧、氧化沥青、CO₂ 回收扣减、净购入电热","已内置 · 本企业适用"],
+    ["石油天然气生产","中国石油天然气生产企业温室气体排放核算方法与报告指南（试行）","年度排放报告","燃料燃烧、火炬燃烧、工艺放空、设备逃逸、酸性气体脱除、CO₂ / CH₄ 回收","已内置 · 本企业适用"],
+    ["机械设备制造","机械设备制造企业温室气体排放核算方法与报告指南（试行）","未纳入 · 年度排放报告","燃料燃烧、CO₂ 保护焊、电气设备 SF₆ / HFCs / PFCs、净购入电热","已内置"],
     ["化工","中国化工生产企业温室气体排放核算方法与报告指南（试行）","未纳入 · 年度排放报告","燃料燃烧、工业过程、CO₂ 回收、净购入电热","可配置"]
   ];
   const body=tab==="recon"?
-      xkPanel("制造板块：企业盘查口径 → 国家核算口径",xkTable(["排放源","类型","活动数据","企业盘查(tCO₂e)","国家口径(tCO₂e)","差异","说明"],rows.map(r=>[
+      xkPanel("滨海石化分公司：企业盘查口径 → 国家核算口径",xkTable(["排放源","类型","活动数据","企业盘查(tCO₂e)","国家口径(tCO₂e)","差异","说明"],rows.map(r=>[
         '<strong>'+textHtml(r.name)+'</strong><small>'+r.id+'</small>',r.kind,xkNum(r.qty)+" "+r.unit,xkNum(r.ent,1),xkNum(r.cn,1),'<b class="'+(Math.abs(r.cn-r.ent)>0.05?(r.cn>r.ent?'badText':'okText'):'')+'">'+(Math.abs(r.cn-r.ent)<0.05?'—':(r.cn>r.ent?'+':'')+xkNum(r.cn-r.ent,1))+'</b>','<span class="srcCell">'+textHtml(r.note)+'</span>']).concat([[
-        '<strong>合计</strong>',"","",'<b>'+xkNum(ent,1)+'</b>','<b>'+xkNum(cn,1)+'</b>','<b>'+(cn>ent?'+':'')+xkNum(cn-ent,1)+'</b>',"范围三不纳入国家口径"]])))
+        '<strong>合计</strong>',"","",'<b>'+xkNum(ent,1)+'</b>','<b>'+xkNum(cn,1)+'</b>','<b>'+(cn>ent?'+':'')+xkNum(cn-ent,1)+'</b>',"国家口径 CH₄ GWP 取 21，按法人边界"]])))
     :tab==="guide"?
       xkPanel("行业核算指南",xkTable(["行业","指南","管理方式","核算内容","系统支持"],guides.map(g=>[g[0],textHtml(g[1]),xkStatus(g[2],/全国碳市场/.test(g[2])?"ok":"gray"),'<span class="srcCell">'+textHtml(g[3])+'</span>',xkStatus(g[4],/本企业/.test(g[4])?"ok":/已内置/.test(g[4])?"ok":"gray")])))
     :xkPanel("报告主体",xkTable(["报告主体","行业","适用指南","全国碳市场","核查排放(tCO₂)","本年度(tCO₂)","报送门槛","",""],entities.map(e=>[ '<strong>'+e[0]+'</strong>',e[1],'<span class="srcCell">'+textHtml(e[2])+'</span>',e[3],e[4],e[5],e[6],e[7]])));
   return pageHead("国家核算报告",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]]),"碳履约 / 国家核算报告")+
-    '<div class="statRow">'+statTile("发电设施 · 核查量",xkNum(verified),year+" 年度 tCO₂")+statTile("制造板块 · 国家口径",xkNum(cn),"tCO₂ · 2026 年度")+
-      statTile("制造板块 · 企业盘查",xkNum(ent),"tCO₂e · 范围一、二")+statTile("报送门槛",(cn/threshold*100).toFixed(0)+"%","2.6 万 tCO₂e")+'</div>'+
+    '<div class="statRow">'+statTile("发电设施 · 核查量",xkNum(verified),year+" 年度 tCO₂")+statTile("滨海石化 · 国家口径",xkNum(cn),"tCO₂ · 2026 年度")+
+      statTile("滨海石化 · 企业盘查",xkNum(ent),"tCO₂e · 范围一、二")+statTile("年度报告主体",String(entities.length),"家 · 均超 2.6 万 tCO₂e")+'</div>'+
     xkTabs("nat",[["entity","报告主体"],["recon","口径对照"],["guide","行业核算指南",guides.length]],tab)+body;
 }
 const XK_DOCS = [
-  ["监测计划（2026 年度备案版）","嘉兴热电分公司","MP-RD-2026","周建华"],
-  ["排放设施及计量器具清单","嘉兴热电分公司","FAC-RD-2026","周建华"],
-  ["燃煤入厂 / 入炉计量记录（1–12 月）","嘉兴热电分公司","MRV","周建华"],
-  ["煤质化验报告：元素碳含量（月度）","嘉兴热电分公司","LAB-C","周建华"],
-  ["煤质化验报告：低位发热量（月度）","嘉兴热电分公司","LAB-NCV","周建华"],
-  ["检测机构资质证明（CMA / CNAS）","嘉兴热电分公司","QUAL-LAB-2026","周建华"],
-  ["发电量、供热量生产月报","嘉兴热电分公司","PRD-RD","周建华"],
-  ["上网 / 下网电量结算单","嘉兴热电分公司","ELE-RD","周建华"],
-  ["供热结算单","嘉兴热电分公司","HEAT-RD","周建华"],
-  ["计量器具检定 / 校准证书","嘉兴热电分公司","CAL-RD-2026","周建华"],
-  ["数据质量控制计划及内部审核记录","嘉兴热电分公司","DQ-RD-2026","林嘉怡"],
-  ["年度排放报告（初稿）","嘉兴热电分公司","RPT-RD-2026","林嘉怡"]
+  ["监测计划（2026 年度备案版）","滨海石化热电厂","MP-BHP-2026","赵海峰"],
+  ["排放设施及计量器具清单","滨海石化热电厂","FAC-BHP-2026","赵海峰"],
+  ["燃煤入厂 / 入炉计量记录（1–12 月）","滨海石化热电厂","MRV","赵海峰"],
+  ["煤质化验报告：元素碳含量（月度）","滨海石化热电厂","LAB-C","赵海峰"],
+  ["煤质化验报告：低位发热量（月度）","滨海石化热电厂","LAB-NCV","赵海峰"],
+  ["检测机构资质证明（CMA / CNAS）","滨海石化热电厂","QUAL-LAB-2026","赵海峰"],
+  ["发电量、供热量生产月报","滨海石化热电厂","PRD-BHP","赵海峰"],
+  ["上网 / 下网电量结算单","滨海石化热电厂","ELE-BHP","赵海峰"],
+  ["供热结算单","滨海石化热电厂","HEAT-BHP","赵海峰"],
+  ["计量器具检定 / 校准证书","滨海石化热电厂","CAL-BHP-2026","赵海峰"],
+  ["数据质量控制计划及内部审核记录","滨海石化热电厂","DQ-BHP-2026","高文博"],
+  ["年度排放报告（初稿）","滨海石化热电厂","RPT-BHP-2026","高文博"]
 ];
 function xkDocStatus(i) {
   const saved=xk().docs[i];
@@ -897,7 +885,7 @@ function xkVerifyPage() {
   const steps=[["监测计划备案","2026-03-15","done"],["月度数据存证","10 / 12 月","now"],["年度排放报告","截止 2027-03-31",""],["文件评审","",""],["现场核查","",""],["不符合项整改","",""],["核查报告","",""]];
   const manager=xkManager();
   return pageHead("核查管理",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]]),"碳履约 / 核查管理")+
-    '<div class="statRow">'+statTile("核查年度","2026","嘉兴热电分公司")+statTile("核查资料",ready+" / "+docs.length,"已归集")+
+    '<div class="statRow">'+statTile("核查年度","2026","滨海石化热电厂")+statTile("核查资料",ready+" / "+docs.length,"已归集")+
       statTile("不符合项",String(nc.filter(n=>n.status!=="已关闭").length),"未关闭 · 共 "+nc.length)+statTile("数据交叉核对",xkCrossRows().filter(r=>r.status==="超阈值").length+" 项","超阈值","go('组织碳排放','核算分析','数据交叉核对')")+'</div>'+
     '<section class="panel"><div class="panelHead"><h3>2026 年度核查进度</h3></div><ol class="flowSteps">'+steps.map((s,i)=>'<li class="'+s[2]+'"><i>'+(s[2]==="done"?'✓':i+1)+'</i>'+s[0]+(s[1]?'<small> · '+s[1]+'</small>':'')+'</li>').join("")+'</ol></section>'+
     xkPanel("核查资料清单",xkTable(["资料","主体","凭证编号","负责人","状态","归集时间",""],docs.map(x=>[
@@ -932,7 +920,10 @@ function xkSaveNc(i) {
 
 // ---------- 常见问题 ----------
 if(typeof FAQ!=="undefined"&&Array.isArray(FAQ)) FAQ.push(
-  ["核算","厂用电下网是转供电吗？","不是。厂用电下网是热电机组停运或启动期间自电网购入、供本厂自用的电量，计入范围二。外购电转供给园区租户的电量在「能源转供」单独登记，从范围二扣减并计入范围三 C3。"],
+  ["核算","厂用电下网是转供电吗？","不是。厂用电下网是热电机组停运或启动期间自电网购入、供本厂自用的电量，计入范围二。外购电转供给园区配套企业的电量在「能源转供」单独登记，从范围二扣减并计入范围三 C3。"],
+  ["核算","催化裂化烧焦为什么算工业过程排放？","按《中国石油化工企业温室气体排放核算方法与报告指南》，催化剂连续烧焦产生的 CO₂ 计入工业生产过程排放：烧焦量 × 焦炭含碳量 × 碳氧化率 × 44/12。烧焦量可由再生烟气量和组分反算，系统在「行业核算明细」中逐项展示参数。"],
+  ["核算","CO₂ 回收外供油田驱油，两边都能扣减吗？","不能。回收量只在捕集方扣减一次（滨海石化 T-S1-14），油田注入的外购 CO₂ 不得再次扣减，系统在「重复计算剔除」规则 R1 中自动检出。"],
+  ["核算","甲烷的 GWP 用多少？","切换核算口径即可：国内指南按 21，ISO 14064-1 按 28，GHG Protocol 按 IPCC AR6 的 27.9。工艺放空、设备逃逸和火炬未完全燃烧的 CH₄ 都按所选口径换算 CO₂e。"],
   ["核算","热电联产对外供电、供热怎么处理？","GHG Protocol / ISO 14064 口径下范围一全额计入，对外售出部分单独披露；国内企业核算指南口径下按输出量从范围一扣减。切换核算口径后排放清单自动按对应规则计算。"],
   ["核算","集团内部互供能源会重复计算吗？","「重复计算剔除」按规则自动检出集团内部能源互供、采购台账与供应商明细重叠、因子边界已含运输等情形，确认后在合并层面剔除并记录。"],
   ["因子","供应商因子过期了怎么办？","供应商因子按批准日起设置有效期（默认 12 个月）。到期前 30 天提醒，过期后自动改用行业平均因子（二级）计算，并可一键向供应商发起更新。"],

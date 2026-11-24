@@ -515,6 +515,7 @@ td small{display:block;color:var(--sub);font-size:11px}
 script = "\n".join([
     f"const demoSeed = {seed_json};",
     app,
+    (ROOT / "petro-data.js").read_text(),
     (ROOT / "offline-demo.js").read_text(),
     (ROOT / "interactive-demo.js").read_text(),
     (ROOT / "lca-workbench.js").read_text(),
@@ -530,6 +531,7 @@ script = "\n".join([
     (ROOT / "ets-scale.js").read_text(),
     (ROOT / "depth-kit.js").read_text(),
     (ROOT / "expert-kit.js").read_text(),
+    (ROOT / "petro-kit.js").read_text(),
     (ROOT / "export-kit.js").read_text(),
     """
 async function startDemo() {
@@ -570,7 +572,7 @@ UI_TEXT = [
     ("本报告由 Deloitte 碳排放管理系统演示环境生成，使用虚构企业与场景因子，不构成第三方核证结论", "本报告由 Deloitte 碳排放管理系统生成，经第三方核查前不构成核证结论"),
     ("当前原型通过右上角角色切换模拟权限；正式部署需接入统一登录与服务端权限校验", "账号与角色由系统管理员统一配置，可对接企业统一身份认证"),
     ("2026年度场景因子 · 仅用于演示", "2026 年度企业因子库"), ("企业电表及演示电力因子", "企业电表及电网排放因子"),
-    ("江南流体装备 · 2026 年度场景", "江南流体装备 · 2026 年度"),
+    ("北辰石油 · 2026 年度场景", "北辰石油 · 2026 年度"),
     ("外购蒸汽情景因子", "外购蒸汽因子"), ("R134a 制冷剂场景因子", "R134a 制冷剂 GWP 因子"),
     ("数据库：演示数据", "数据源：企业碳数据中心"),
     ("演示存储", "碳数据中心"), ("演示操作不可用", "该操作暂不支持"),
@@ -589,7 +591,7 @@ assert "</script" not in script.lower()
 html = (ROOT / "index.html").read_text()
 html = html.replace('<link rel="stylesheet" href="styles.css" />', f"<style>\n{css}\n</style>")
 html = html.replace('<script src="app.js"></script>', f"<script>\n{script}\n</script>")
-html = html.replace("当前组织：德勤中国 / ESG管理部", "江南流体装备集团").replace('<div class="avatar">M</div>', '<div class="avatar">林</div>')
+html = html.replace("当前组织：德勤中国 / ESG管理部", "北辰石油集团").replace('<div class="avatar">M</div>', '<div class="avatar">林</div>')
 html = html.replace("<title>Deloitte 碳排放管理系统</title>", "<title>Deloitte 碳排放管理系统 · 交互增强版</title>")
 target = ROOT / "Deloitte碳排放管理系统-交互增强版.html"
 target.write_text(html)

@@ -2,18 +2,18 @@
 
 // ---------- 采购台账与范围三分级核算 ----------
 const PROCUREMENT = [
-  {id:"PO-01",supplier:"苏州恒铸精密铸造",item:"HT250 泵体铸件",category:"C01",qty:8600000,unit:"kg",spend:9890,avg:"EF-M03"},
-  {id:"PO-02",supplier:"无锡华导铜业",item:"电磁线铜材",category:"C01",qty:2100000,unit:"kg",spend:16170,avg:"EF-M04"},
-  {id:"PO-03",supplier:"常州鑫叠电机材料",item:"定转子电工钢",category:"C01",qty:6400000,unit:"kg",spend:4480,avg:"EF-M02"},
-  {id:"PO-04",supplier:"嘉兴联运物流",item:"原材料公路运输",category:"C04",qty:9800000,unit:"t·km",spend:4116,avg:"EF-T01"},
-  {id:"PO-05",supplier:"浙江卧龙配套电机",item:"YE4 三相异步电机",category:"C01",spend:38600,eeio:"EF-S02"},
-  {id:"PO-06",supplier:"嘉善精工机加工",item:"泵轴机加工外协",category:"C01",spend:5200,eeio:"EF-S05"},
-  {id:"PO-07",supplier:"宁波安泰轴承",item:"深沟球轴承",category:"C01",spend:3350,eeio:"EF-S05"},
-  {id:"PO-08",supplier:"杭州联封密封件",item:"机械密封件",category:"C01",spend:2180,eeio:"EF-S03"},
-  {id:"PO-09",supplier:"湖州成越包装",item:"包装箱及托盘",category:"C01",spend:1260,eeio:"EF-S04"}
+  {id:"PO-01",supplier:"渤海钢管制造有限公司",item:"J55 油套管",category:"C01",qty:1300000,unit:"t",spend:780000,avg:"EF-P01"},
+  {id:"PO-02",supplier:"华东催化剂有限公司",item:"FCC 催化裂化催化剂",category:"C01",qty:98000,unit:"t",spend:245000,avg:"EF-P02"},
+  {id:"PO-03",supplier:"胜宇油田化学有限公司",item:"驱油用聚丙烯酰胺",category:"C01",qty:160000,unit:"t",spend:192000,avg:"EF-P03"},
+  {id:"PO-04",supplier:"海联油运股份有限公司",item:"进口原油 VLCC 海运",category:"C04",qty:320000000000,unit:"t·km",spend:1450000,avg:"EF-T05"},
+  {id:"PO-05",supplier:"中原石油钻采装备有限公司",item:"钻头、井下工具",category:"C01",spend:186000,eeio:"EF-S01"},
+  {id:"PO-06",supplier:"西北压缩机制造有限公司",item:"压缩机组备件及大修",category:"C01",spend:64000,eeio:"EF-S05"},
+  {id:"PO-07",supplier:"辽东化工助剂有限公司",item:"阻垢剂、缓蚀剂",category:"C01",spend:58000,eeio:"EF-S03"},
+  {id:"PO-08",supplier:"华北特种气体有限公司",item:"工业氮气、氧气",category:"C01",spend:42000,eeio:"EF-S03"},
+  {id:"PO-09",supplier:"渤海包装材料有限公司",item:"树脂包装袋及托盘",category:"C01",spend:21000,eeio:"EF-S04"}
 ];
 const QUALITY = {1:"一级 · 供应商一手数据",2:"二级 · 行业平均因子",3:"三级 · 支出法"};
-const SOURCE_QUALITY = {"钢材采购":"二级 · 行业平均因子","货物公路运输":"二级 · 行业平均因子","国内高铁差旅":"三级 · 支出法","员工私家车通勤":"二级 · 调查推算","产品使用电力":"二级 · 模型测算"};
+const SOURCE_QUALITY = {"外购原油（上游开采及炼前储运）":"二级 · 行业平均因子","进口天然气（管道气及 LNG 上游开采液化）":"二级 · 行业平均因子","无缝钢管及油套管":"二级 · 行业平均因子","工程建设与设备购置":"三级 · 支出法","员工通勤":"二级 · 调查推算","化工产品下游加工":"二级 · 行业平均因子","联营及合营企业（股权比例法）":"三级 · 支出法"};
 function factorById(id){return FACTOR_DB.find(row=>row.id===id);}
 function procurementSupplierIndex(line){return supplyScope3Items.findIndex(row=>row.supplier===line.supplier);}
 function procurementLines() {

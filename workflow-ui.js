@@ -1,10 +1,10 @@
 let currentRole = "管理者";
 let supplierIdentity = 1;
-const FILLERS = ["陈晓宁","周建华","沈嘉禾"];
-const MANAGER_NAME = "林嘉怡";
-let fillerIdentity = "陈晓宁";
+const FILLERS = PETRO_FILLERS;
+const MANAGER_NAME = "高文博";
+let fillerIdentity = "赵海峰";
 try {
-  const savedRole = JSON.parse(localStorage.getItem("carbon-demo-role") || "null");
+  const savedRole = JSON.parse(localStorage.getItem("carbon-petro-role") || "null");
   if (savedRole && ["管理者","填报人","供应商"].includes(savedRole.role)) {
     currentRole = savedRole.role;
     if (FILLERS.includes(savedRole.filler)) fillerIdentity = savedRole.filler;
@@ -12,7 +12,7 @@ try {
   }
 } catch {}
 function saveRoleChoice() {
-  try {localStorage.setItem("carbon-demo-role",JSON.stringify({role:currentRole,filler:fillerIdentity,supplier:supplierIdentity}));} catch {}
+  try {localStorage.setItem("carbon-petro-role",JSON.stringify({role:currentRole,filler:fillerIdentity,supplier:supplierIdentity}));} catch {}
 }
 function currentPerson() {
   return currentRole==="管理者"?MANAGER_NAME:currentRole==="填报人"?fillerIdentity:(supplyScope3Items[supplierIdentity]?.supplier||"供应商");
@@ -57,18 +57,7 @@ function prepareWorkflow() {
     }
   });
   if (!demo.workflowVersion) {
-    directTasks.forEach((task,index)=>{
-      const old=demo.directEntries[task.id];
-      const seed=[
-        {activity:8620,evidence:"GAS-JX-202607-021",status:"待审核"},
-        {activity:1280,evidence:"FUEL-HZ-202607-008",status:"草稿"},
-        {activity:12,evidence:"HVAC-202607-CHECK",status:"通过",note:"空调维保补充 R134a 12 kg"},
-        {activity:42100,evidence:"ELE-JX-202607-001",status:"通过"},
-        {activity:3260,evidence:"STM-HZ-202607-004",status:"退回",reviewNote:"蒸汽结算单数量与计量月报不一致，请补充 7 月计量表读数截图后重新提交"},
-        {activity:18000,evidence:"GEC-202607-019",status:"待审核"}
-      ][index];
-      demo.taskEntries[task.id]={...seed,...old};
-    });
+    Object.entries(petroSeedEntries()).forEach(([id,seed])=>{demo.taskEntries[id]={...seed};});
     demo.records.forEach(row=>{
       demo.taskEntries["REC-"+row.id]={
         activity:row.activity_value,evidence:row.evidence,status:"通过",note:row.note||""
@@ -78,20 +67,22 @@ function prepareWorkflow() {
   }
   if(!demo.auditLog.length) {
     demo.auditLog.push(
-      {taskId:"T-S1-03",action:"提交审核",actor:"填报人 陈晓宁",at:"2026/8/1 09:12:40"},
-      {taskId:"T-S2-01",action:"提交审核",actor:"填报人 周建华",at:"2026/8/1 10:03:18"},
-      {taskId:"T-S1-03",action:"审核通过",actor:"管理者 林嘉怡",at:"2026/8/2 14:20:05"},
-      {taskId:"T-S2-01",action:"审核通过",actor:"管理者 林嘉怡",at:"2026/8/2 14:22:41"},
-      {taskId:"SUP-SC-004",action:"供应商提交审核",actor:"供应商 常州鑫叠电机材料",at:"2026/8/3 16:45:10"},
-      {taskId:"T-S2-02",action:"提交审核",actor:"填报人 陈晓宁",at:"2026/8/4 09:30:22"},
-      {taskId:"SUP-SC-002",action:"供应商提交审核",actor:"供应商 无锡华导铜业",at:"2026/8/4 11:08:57"},
-      {taskId:"SUP-SC-004",action:"企业退回：电工钢牌号与采购订单不一致，请补充钢厂 EPD 或材质证明",actor:"管理者 林嘉怡",at:"2026/8/5 10:16:33"},
-      {taskId:"T-S2-02",action:"退回：蒸汽结算单数量与计量月报不一致，请补充 7 月计量表读数截图后重新提交",actor:"管理者 林嘉怡",at:"2026/8/5 10:40:02"},
-      {taskId:"T-S1-01",action:"提交审核",actor:"填报人 陈晓宁",at:"2026/8/6 15:02:47"},
-      {taskId:"T-S2-03",action:"提交审核",actor:"填报人 周建华",at:"2026/8/6 16:21:09"}
+      {taskId:"T-S1-03",action:"提交审核",actor:"填报人 赵海峰",at:"2026/11/3 09:12:40"},
+      {taskId:"T-S2-10",action:"提交审核",actor:"填报人 刘建平",at:"2026/11/3 10:03:18"},
+      {taskId:"T-S1-03",action:"审核通过",actor:"管理者 高文博",at:"2026/11/4 14:20:05"},
+      {taskId:"T-S2-10",action:"审核通过",actor:"管理者 高文博",at:"2026/11/4 14:22:41"},
+      {taskId:"SUP-SC-004",action:"供应商提交审核",actor:"供应商 胜宇油田化学有限公司",at:"2026/11/5 16:45:10"},
+      {taskId:"T-S1-06",action:"提交审核",actor:"填报人 赵海峰",at:"2026/11/6 09:30:22"},
+      {taskId:"SUP-SC-002",action:"供应商提交审核",actor:"供应商 华东催化剂有限公司",at:"2026/11/6 11:08:57"},
+      {taskId:"SUP-SC-004",action:"企业退回：聚丙烯酰胺分子量规格与采购订单不一致，请补充产品碳足迹报告或检测报告",actor:"管理者 高文博",at:"2026/11/7 10:16:33"},
+      {taskId:"T-S1-06",action:"退回：事故火炬气流速取设计值 4.6 万Nm³/h，请补充 DCS 流量曲线截图",actor:"管理者 高文博",at:"2026/11/7 10:40:02"},
+      {taskId:"T-S2-06",action:"退回：9 月蒸汽结算量与计量月报相差 4.2%，请补充计量表读数后重新提交",actor:"管理者 高文博",at:"2026/11/8 11:02:15"},
+      {taskId:"T-S1-02",action:"提交审核",actor:"填报人 赵海峰",at:"2026/11/10 15:02:47"},
+      {taskId:"T-S1-47",action:"提交审核",actor:"填报人 刘建平",at:"2026/11/11 16:21:09"},
+      {taskId:"T-S1-77",action:"提交审核",actor:"填报人 孙卫东",at:"2026/11/12 09:41:33"}
     );
-    const steel=supplyScope3Items.find(row=>row.id==="SC-004");
-    if(steel&&!steel.reviewNote)steel.reviewNote="电工钢牌号与采购订单不一致，请补充钢厂 EPD 或材质证明";
+    const pam=supplyScope3Items.find(row=>row.id==="SC-004");
+    if(pam&&!pam.reviewNote)pam.reviewNote="聚丙烯酰胺分子量规格与采购订单不一致，请补充产品碳足迹报告或检测报告";
   }
 }
 
@@ -158,23 +149,22 @@ function toggleSidebar() {
 }
 
 function workflowTasks() {
-  const direct=directTasks.map((row,index)=>({
-    ...row,scope:row.id.startsWith("T-S1")?"1":"2",category:"",
-    org:scenarioText(row.org),owner:index%2?"周建华":"陈晓宁",period:demoPeriod,
-    deadline:"2026-12-15",origin:"企业填报",
-    factor:[.0021622,.00268,1.43,.0005703,.11,0][index],
-    factorLabel:["天然气综合因子","柴油综合因子","R134a 制冷剂场景因子","外购电力因子","外购蒸汽情景因子","绿电凭证披露项（电量不重复计排）"][index],
-    locked:false
-  }));
+  const direct=directTasks.map(row=>{
+    const src=petroSource(row.id);
+    const entry=demo.taskEntries?.[row.id];
+    return {...row,scope:src.scope,category:"",org:row.org,owner:src.owner,period:demoPeriod,
+      deadline:"2026-12-15",origin:"企业填报",factor:+petroFactor(src,entry?.params,entry?.activity||src.activity).toPrecision(6),
+      factorLabel:petroFactorLabel(src),method:src.method,kind:src.kind,seg:src.seg,petro:true,locked:false};
+  });
   const records=demo.records.map(row=>({
     id:"REC-"+row.id,scope:"3",category:row.category_code,name:scenarioText(row.source_name),
-    unit:row.activity_unit,org:"杭州总部",owner:"沈嘉禾",period:row.period,deadline:"2026-12-15",
+    unit:row.activity_unit,org:"集团总部",owner:"孙卫东",period:row.period,deadline:"2026-12-15",
     origin:"企业填报",factor:Number(demo.factors.find(f=>f.id===row.factor_id)?.factor_value||0),
     factorLabel:demo.factors.find(f=>f.id===row.factor_id)?.name||"待匹配",locked:false
   }));
   const suppliers=supplyScope3Items.map((row,index)=>({
     id:"SUP-"+row.id,scope:"3",category:row.category,name:row.part,unit:row.unit,
-    org:"嘉兴装配工厂",owner:row.supplier,period:demoPeriod,deadline:"2026-12-15",origin:"供应商",
+    org:"滨海石化分公司",owner:row.supplier,period:demoPeriod,deadline:"2026-12-15",origin:"供应商",
     factor:row.unitCarbon/1000,factorLabel:row.factorSource||"供应商碳排因子",
     supplierIndex:index,locked:true
   }));
@@ -183,7 +173,7 @@ function workflowTasks() {
       const source=demo.sources.find(row=>row.category_code===category.code);
       const factor=demo.factors.find(row=>row.id===source?.default_factor_id);
       return {id:"T-S3-"+category.code,scope:"3",category:category.code,name:source?.name||category.name,
-        unit:source?.activity_unit||"项",org:"杭州总部",owner:"沈嘉禾",period:demoPeriod,deadline:"2026-12-15",
+        unit:source?.activity_unit||"项",org:"集团总部",owner:"孙卫东",period:demoPeriod,deadline:"2026-12-15",
         origin:"企业填报",factor:Number(factor?.factor_value||0),factorLabel:factor?.name||"待匹配",locked:false};
     });
   return [...direct,...records,...missing,...suppliers];
@@ -405,7 +395,7 @@ render = function () {
   }
   document.getElementById("roleSelect").value=currentRole;
   const pill=document.querySelector(".right .pill");
-  pill.innerHTML=currentRole==="管理者"?"江南流体装备 · "+MANAGER_NAME:
+  pill.innerHTML=currentRole==="管理者"?"北辰石油 · "+MANAGER_NAME:
     '<select id="identitySelect" aria-label="当前身份" onchange="enterIdentity(this.value)">'+
     (currentRole==="填报人"?FILLERS.map(name=>'<option '+(name===fillerIdentity?'selected':'')+'>'+name+'</option>').join(""):
       supplyScope3Items.map((row,index)=>'<option value="'+index+'" '+(index===supplierIdentity?'selected':'')+'>'+textHtml(row.supplier)+'</option>').join(""))+'</select>';
@@ -595,7 +585,7 @@ renderStandardReport=function () {
 downloadOrgReport=function (id) {
   const report=demo.reports.find(row=>row.id===id);
   const snapshot=JSON.parse(report.content_json);
-  downloadLcaFile("江南流体装备 · "+(report.type||"范围三专项报告")+"\n"+(report.status||"草稿")+"\n"+
+  downloadLcaFile("北辰石油 · "+(report.type||"范围三专项报告")+"\n"+(report.status||"草稿")+"\n"+
     standardName(report.standard_code)+"\n期间 "+report.period+"\n已批准排放 "+formatEmission(report.total_emission)+" tCO₂e\n\n"+
     snapshot.detail.map(row=>"范围"+(row.scope||"3")+" · "+scenarioText(row.source_name)+"\t"+row.activity_value+" "+row.activity_unit+
       "\t"+formatEmission(row.emission_tco2e)+" tCO₂e").join("\n")+
