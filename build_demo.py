@@ -529,6 +529,7 @@ script = "\n".join([
     (ROOT / "factor-lib.js").read_text(),
     (ROOT / "ets-scale.js").read_text(),
     (ROOT / "depth-kit.js").read_text(),
+    (ROOT / "expert-kit.js").read_text(),
     (ROOT / "export-kit.js").read_text(),
     """
 async function startDemo() {
