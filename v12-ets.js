@@ -51,7 +51,8 @@ function v12EtsBench() {
   ],{width:520,height:250,barW:110,valFmt:v=>fmt(v,0),axisFmt:v=>v12Big(v)});
   const org=v12Detail(Math.min(year,CURRENT_YEAR)),s1Org=org.filter(r=>String(r.scope)==="1").reduce((s,r)=>s+r.emission_tco2e,0);
   const facs=v12Facilities();
-  const link='<dl class="v12KV">'+[["纳管设施",facs.filter(f=>f.status==="纳管").map(f=>f.name).join("、")+"（"+facs.filter(f=>f.status==="纳管").length+" 个）"],["待纳入设施",facs.filter(f=>f.status!=="纳管").map(f=>f.name).join("、")||"—"],
+  const nIn=facs.filter(f=>f.status==="纳管").length;
+  const link='<div class="v12Counts">'+[["纳管设施",nIn+" 个"],["待纳入",(facs.length-nIn)+" 个"],["履约排放",v12Big(c.verified)+" t"],["占集团范围一",(s1Org?c.sums.coalEmission/s1Org*100:0).toFixed(1)+"%"]].map(([l,v])=>'<div><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div><dl class="v12KV">'+[["纳管设施",facs.filter(f=>f.status==="纳管").map(f=>f.name).join("、")+"（"+facs.filter(f=>f.status==="纳管").length+" 个）"],["待纳入设施",facs.filter(f=>f.status!=="纳管").map(f=>f.name).join("、")||"—"],
     ["与组织碳关系","纳管设施燃烧排放即组织碳台账范围一「燃煤热电联产」（T-S1-04），月度存证后自动同步"],["占集团范围一",(s1Org?c.sums.coalEmission/s1Org*100:0).toFixed(1)+"%（"+fmt(c.sums.coalEmission,0)+" / "+fmt(s1Org,0)+" tCO₂e）"],["履约口径","化石燃料燃烧排放；外购电力不计入履约排放"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v+'</dd></div>').join("")+'</dl>';
   const rows=ETS_YEARS.slice().reverse().map(y=>{const f=v12EtsFacts(y),s=etsStatus(y);
     return {click:"v12Set('etsYear',"+y+")",cls:y===year?"v12Cur":"",cells:[y+" 年度",f.c.verifiedDone?fmt(f.c.verified,0):'<span class="muted">'+fmt(f.c.verified,0)+'（预计）</span>',f.final?fmt(f.final.qty,0):'<span class="muted">'+fmt(f.c.alloc,0)+'（预计）</span>',
@@ -203,7 +204,7 @@ function v12QuotaAlloc(year) {
   return v12Panel(year+" 年度分设施配额计算",v12Table(["设施","供电量 (MWh)","供电基准值","修正系数","供电配额 (t)","供热量 (GJ)","供热基准值","供热配额 (t)","合计 (t)"],rows,{nopage:true})+
       (final&&Math.abs(final.qty-est.qty)>1?'<p class="v12Hint">主管部门核定 '+fmt(final.qty,0)+' t，按核查产出量计算 '+fmt(est.qty,0)+' t。</p>':''),
       final?.status==="待确认"&&etsEditable()?'<button class="btn" onclick="openAllocObjection('+year+')">提出异议</button><button class="btn primary" onclick="confirmAlloc('+year+')">确认核定结果</button>':final?.status==="异议处理中"&&etsEditable()?'<button class="btn" onclick="withdrawObjection('+year+')">撤回异议</button>':'')+
-    v12Panel("核定进度",'<ul class="v12Timeline">'+tl.map(([a,b,ok])=>'<li class="'+(ok?'pass':'')+'"><i></i><b>'+a+'</b><span>'+v12H(b)+'</span></li>').join("")+'</ul>'+
+    v12Panel("核定进度",v12Steps(tl.map(([a,b])=>[a,v12H(b)]),tl.findIndex(x=>!x[2]),null,i=>tl[i][2])+
       (final?.status==="待确认"?'<p class="v12Hint badText">'+(daysUntil(final.confirmBy)<=1?'今日（'+final.confirmBy+'）为确认截止日':'请在 '+final.confirmBy+' 前确认，剩余 '+daysUntil(final.confirmBy)+' 天')+'，逾期未提出异议视为确认。</p>':''));
 }
 function v12QuotaSurrender(year) {

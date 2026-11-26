@@ -144,6 +144,12 @@ tr.active td{background:#F6FAEF}.linkBtn.strong{font-weight:600;color:#1F2937}.v
 .v12PathT th.mark{color:#26890D}.v12PathT td,.v12PathT th{white-space:nowrap;font-size:12px}
 .v12TrackCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}.v12Track{background:#fff;border:1px solid var(--line);border-top:4px solid #26890D;border-radius:8px;padding:14px 16px;display:grid;grid-template-columns:118px 1fr;gap:10px 16px}
 .v12Track.bad{border-top-color:#D92D20}.v12Track .h{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}.v12Track .h b{font-size:15px}
+.v12Track{align-items:center}.v12Track dl{align-content:center}.v12Track dt{white-space:nowrap}.v12Track dd{white-space:nowrap;text-align:right}
+.v12Steps>li{flex:1 1 0;min-width:0}.v12Steps>li:last-child{margin-right:0}.v12FlowDef>.v12Steps{flex:1 1 100%;margin-bottom:0}
+.detailList.v12Two{display:grid;grid-template-columns:1fr 1fr;column-gap:32px}.detailList.v12Two>div.wide{grid-column:auto}
+.v12TrackSpark{grid-column:1/-1;border-top:1px solid #EEF2F6;padding-top:8px;position:relative}.v12TrackSpark svg{width:100%;height:96px;display:block;overflow:visible}
+.v12TrackSpark .lg{display:flex;gap:14px;font-size:12px;color:var(--sub);align-items:center;margin-bottom:4px}.v12TrackSpark .lg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}.v12TrackSpark .lg i.dash{background:repeating-linear-gradient(90deg,#98A2B3 0 4px,transparent 4px 7px)}.v12TrackSpark .lg em{margin-left:auto;font-style:normal}
+.v12TrackSpark .ax{position:relative;height:16px;font-size:11px;color:var(--sub)}.v12TrackSpark .ax span{position:absolute;transform:translateX(-50%);top:2px}.v12TrackSpark .ax span:first-child{transform:none}.v12TrackSpark .ax span:last-child{transform:translateX(-100%)}
 .v12Track dl{margin:0;display:grid;gap:6px;align-content:center}.v12Track dl>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed #EEF2F6;padding-bottom:4px}.v12Track dt{font-size:12px;color:var(--sub)}.v12Track dd{margin:0;font-weight:700;font-size:13px}
 .v12UnitSum{display:flex;gap:18px;font-size:13px;margin-bottom:10px;color:#475467;flex-wrap:wrap}
 .clickRow{cursor:pointer}.clickRow:hover td{background:#F6FAEF}.v12Code{min-width:180px;font-size:11px;background:#F8FAF5;border:1px solid #E5E7EB;border-radius:4px;padding:1px 5px;white-space:normal;display:inline-block;max-width:260px}

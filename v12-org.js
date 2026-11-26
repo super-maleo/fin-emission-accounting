@@ -189,7 +189,7 @@ function v12OrgDashboard() {
   const kinds=v12SumBy(rows.filter(r=>s12?String(r.scope)!=="3":String(r.scope)==="3"),r=>v12Kind(r));
   const bubbleData=Object.entries(kinds).filter(([,v])=>v>0).map(([k,v])=>({label:k,short:k.replace(/^类别(\d+) /,"C$1 ").replace("（扣减）",""),value:v,display:v12Wan(v,0)+" 万t",
     action:"v12ShowRows('"+v12Q(k)+"','v12Kind(r)===\\'"+v12Q(k)+"\\'')"}));
-  const bubblePanel=v12Panel("排放类型分布",v12Bubbles(bubbleData,{width:680,height:370})+'<ul class="v12Legend cols">'+bubbleData.sort((a,b)=>b.value-a.value).map((d,i)=>'<li class="click" onclick="'+d.action+'"><i style="background:'+v12Color(i)+'"></i><span>'+v12H(d.label)+'</span><b>'+d.display+'</b><em>'+(d.value/Object.values(kinds).filter(v=>v>0).reduce((a,b)=>a+b,0)*100).toFixed(1)+'%</em></li>').join("")+'</ul>',v12Seg([["12","范围一+二"],["3","范围三"]],v12State.dashS,"v12SetDashS"));
+  const bubblePanel=v12Panel("排放类型分布",v12Bubbles(bubbleData,{width:680,height:440})+'<ul class="v12Legend cols">'+bubbleData.sort((a,b)=>b.value-a.value).map((d,i)=>'<li class="click" onclick="'+d.action+'"><i style="background:'+v12Color(i)+'"></i><span>'+v12H(d.label)+'</span><b>'+d.display+'</b><em>'+(d.value/Object.values(kinds).filter(v=>v>0).reduce((a,b)=>a+b,0)*100).toFixed(1)+'%</em></li>').join("")+'</ul>',v12Seg([["12","范围一+二"],["3","范围三"]],v12State.dashS,"v12SetDashS"));
   // 趋势
   const tg=v12Targets();
   const t12=tg.items.find(t=>t.scope==="12"&&t.type==="absolute"),t3=tg.items.find(t=>t.scope==="3"&&t.type==="absolute");
@@ -334,14 +334,29 @@ function v12SaveTarget(id) {
   v12Persist();closeModal();render();showToast("目标已保存，已按年度分解");
 }
 
+function v12TrackSpark(t,year,ok) {
+  const by=v12Targets().baseYear,ys=[];for(let y=by;y<=t.targetYear;y++)ys.push(y);
+  const W=360,H=96,L=6,R=6,T=8,B=8,act=ys.filter(y=>y<=year).map(y=>[y,v12TActual(t,y)]),path=ys.map(y=>[y,v12TPath(t,y)]);
+  const vals=[...act,...path].map(a=>a[1]),mx=Math.max(...vals)*1.04,mn=Math.min(...vals)*0.94;
+  const X=y=>L+(y-by)/(t.targetYear-by)*(W-L-R),Y=v=>T+(mx-v)/(mx-mn)*(H-T-B);
+  const pl=a=>a.map(([y,v])=>X(y).toFixed(1)+","+Y(v).toFixed(1)).join(" ");
+  const c=ok?"#26890D":"#D92D20";
+  return '<div class="v12TrackSpark"><div class="lg"><span><i style="background:'+c+'"></i>实际</span><span><i class="dash"></i>目标路径</span><em>'+by+'–'+t.targetYear+'</em></div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+
+    '<polyline points="'+pl(path)+'" fill="none" stroke="#98A2B3" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>'+
+    '<polyline points="'+pl(act)+'" fill="none" stroke="'+c+'" stroke-width="2.2" vector-effect="non-scaling-stroke"/>'+
+    act.map(([y,v])=>'<circle cx="'+X(y).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="2.6" fill="'+c+'"><title>'+y+' 年实际 '+fmt(v,v12TDigits(t))+'</title></circle>').join("")+
+    '</svg><div class="ax">'+ys.filter((y,i)=>i===0||y===year||y===t.targetYear).map(y=>'<span style="left:'+(X(y)/W*100).toFixed(1)+'%">'+y+'</span>').join("")+'</div></div>';
+}
+
 // ================= 碳目标：目标跟踪 =================
 function v12TargetTrack() {
   const cfg=v12Targets(),year=Math.min(reportYear,CURRENT_YEAR);
   const cards='<div class="v12TrackCards">'+cfg.items.map(t=>{
     const s=v12TStatus(t,year);
     return '<div class="v12Track '+(s.ok?'ok':'bad')+'"><div class="h"><b>'+v12H(t.name)+'</b>'+v12Tag(s.ok?"符合路径":"落后路径",s.ok?"ok":"bad")+'</div>'+
-      '<div class="ring">'+v12Pie([{label:"完成",value:Math.max(0.001,s.progress),color:s.ok?"#26890D":"#D92D20"},{label:"剩余",value:100-Math.max(0,s.progress),color:"#EEF2F6"}],{size:118,legend:false,center:[Math.max(0,s.progress).toFixed(0)+"%","目标完成度"]})+
-      '<dl><div><dt>'+year+' 实际</dt><dd>'+fmt(s.actual,v12TDigits(t))+'</dd></div><div><dt>'+year+' 目标值</dt><dd>'+fmt(s.path,v12TDigits(t))+'</dd></div><div><dt>已下降 / 应下降</dt><dd>'+s.reduced.toFixed(1)+'% / '+s.need.toFixed(1)+'%</dd></div><div><dt>'+t.targetYear+' 目标</dt><dd>下降 '+t.reduction+'%</dd></div></dl></div></div>';
+      '<div class="ring">'+v12Pie([{label:"完成",value:Math.max(0.001,s.progress),color:s.ok?"#26890D":"#D92D20"},{label:"剩余",value:100-Math.max(0,s.progress),color:"#EEF2F6"}],{size:118,legend:false,center:[Math.max(0,s.progress).toFixed(0)+"%","目标完成度"]})+'</div>'+
+      '<dl><div><dt>'+year+' 实际</dt><dd>'+fmt(s.actual,v12TDigits(t))+'</dd></div><div><dt>'+year+' 目标值</dt><dd>'+fmt(s.path,v12TDigits(t))+'</dd></div><div><dt>已下降 / 应下降</dt><dd>'+s.reduced.toFixed(1)+'% / '+s.need.toFixed(1)+'%</dd></div><div><dt>'+t.targetYear+' 目标</dt><dd>下降 '+t.reduction+'%</dd></div></dl>'+v12TrackSpark(t,year,s.ok)+'</div>';
   }).join("")+'</div>';
   const t=cfg.items.find(x=>x.id===v12State.targetSel&&x.scope!=="3")||cfg.items.find(x=>x.scope==="12"&&x.type==="absolute")||cfg.items[0];
   const pct=y=>1-v12TPath(t,y)/v12TBase(t);
