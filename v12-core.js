@@ -381,7 +381,7 @@ function v12Progress(done,total,tone){const p=total?Math.round(done/total*100):0
 function v12Doc(cover,sections,opts={}) {
   const toc='<div class="wdPage wdTocPage"><h2 class="wdTocTitle">目 录</h2><ol class="wdToc">'+sections.map((s,i)=>'<li><a href="#wd-'+i+'" onclick="event.preventDefault();document.getElementById(\'wd-'+i+'\').scrollIntoView({behavior:\'smooth\'})">'+v12H(s.title)+'</a>'+
     (s.subs?.length?'<ol>'+s.subs.map(t=>'<li>'+v12H(t)+'</li>').join("")+'</ol>':'')+'</li>').join("")+'</ol></div>';
-  return '<article class="wdDoc rptDoc" data-title="'+v12H(cover.title)+'"><div class="wdPage wdCover">'+(cover.logo!==false?'<div class="wdLogo">北辰石油<small>BEICHEN PETROLEUM</small></div>':'')+
+  return '<article class="wdDoc rptDoc" data-title="'+v12H(cover.title||(cover.titleLines||[]).join(' '))+'"><div class="wdPage wdCover">'+(cover.logo!==false?'<div class="wdLogo">北辰石油<small>BEICHEN PETROLEUM</small></div>':'')+
     '<div class="wdCoverMid"><h1 class="wdTitle">'+cover.titleLines.map(v12H).join("<br>")+'</h1>'+(cover.en?'<p class="wdEn">'+v12H(cover.en)+'</p>':'')+(cover.sub?'<p class="wdSubT">'+v12H(cover.sub)+'</p>':'')+'</div>'+
     '<table class="wdMeta">'+cover.meta.map(([k,v])=>'<tr><th>'+v12H(k)+'</th><td>'+v12H(v)+'</td></tr>').join("")+'</table>'+
     '<div class="wdOrg">'+v12H(cover.org)+'<br>'+v12H(cover.date)+'</div></div>'+(opts.noToc?'':toc)+
