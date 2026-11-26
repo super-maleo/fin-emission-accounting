@@ -185,6 +185,8 @@ function v12Chrome() {
       v12Is("supplier")?'<select id="identitySelect" aria-label="当前身份" onchange="enterIdentity(this.value)">'+supplyScope3Items.map((row,i)=>'<option value="'+i+'" '+(i===supplierIdentity?'selected':'')+'>'+textHtml(row.supplier)+'</option>').join("")+'</select>':
       '北辰石油 · '+textHtml(v12Person());
   }
+  const av=document.querySelector(".right .avatar");
+  if(av)av.textContent=v12Is("sysAdmin")?"管":v12Is("supplier")?"供":String(v12Person()).slice(0,1);
   document.body.dataset.role=currentRole;
   document.body.dataset.v12role=v12Role;
   document.body.dataset.top=state.top;

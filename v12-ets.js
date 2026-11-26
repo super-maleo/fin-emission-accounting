@@ -149,7 +149,7 @@ function v12QuotaAlloc(year) {
       (final&&Math.abs(final.qty-est.qty)>1?'<p class="v12Hint">主管部门核定 '+fmt(final.qty,0)+' t，按核查产出量计算 '+fmt(est.qty,0)+' t。</p>':''),
       final?.status==="待确认"&&etsEditable()?'<button class="btn" onclick="openAllocObjection('+year+')">提出异议</button><button class="btn primary" onclick="confirmAlloc('+year+')">确认核定结果</button>':final?.status==="异议处理中"&&etsEditable()?'<button class="btn" onclick="withdrawObjection('+year+')">撤回异议</button>':'')+
     v12Panel("核定进度",'<ul class="v12Timeline">'+tl.map(([a,b,ok])=>'<li class="'+(ok?'pass':'')+'"><i></i><b>'+a+'</b><span>'+v12H(b)+'</span></li>').join("")+'</ul>'+
-      (final?.status==="待确认"?'<p class="v12Hint badText">请在 '+final.confirmBy+' 前确认或提出异议（剩余 '+Math.max(0,daysUntil(final.confirmBy))+' 天），逾期视为确认。</p>':''));
+      (final?.status==="待确认"?'<p class="v12Hint badText">'+(daysUntil(final.confirmBy)<=1?'今日（'+final.confirmBy+'）为确认截止日':'请在 '+final.confirmBy+' 前确认，剩余 '+daysUntil(final.confirmBy)+' 天')+'，逾期未提出异议视为确认。</p>':''));
 }
 function v12QuotaSurrender(year) {
   const c=etsCalc(year),cycle=c.cycle;

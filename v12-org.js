@@ -58,7 +58,7 @@ function v12HomeTasks() {
     demo.lcaModels.forEach(m=>items.push({tag:m.status||"草稿",tone:m.status==="已发布"?"ok":"warn",title:m.name,meta:(xkPcrOf(m)?.code||"未选择 PCR")+" · "+m.boundary,button:"建模",action:"selectLcaModel('"+m.id+"');go('产品碳排放','LCA建模与核算')"}));
     PRODUCT_CATALOG.filter(p=>p[5]==="待建模").slice(0,3).forEach(p=>items.push({tag:"待建模",tone:"gray",title:p[1],meta:p[2]+" · 年产量 "+fmt(p[4],0)+" t",button:"新建",primary:false,action:"go('产品碳排放','LCA建模与核算');setTimeout(()=>v12NewModel('"+v12Q(p[0])+"'),50)"}));
   } else if(role==="etsExpert") {
-    etsTodos().forEach(t=>items.push({tag:t.tag||"履约",tone:t.tone||"warn",title:t.title,meta:t.meta||"",button:"处理",action:"go('碳履约','配额管理')"}));
+    etsTodos().filter(t=>t.tag!=="监测").forEach(t=>items.push({tag:t.tag||"履约",tone:t.tone||"warn",title:t.title,meta:t.meta||"",button:"处理",action:"go('碳履约','配额管理')"}));
     const months=ets().monthly[CURRENT_YEAR].filter(m=>m.status==="待存证");
     months.forEach(m=>items.push({tag:"待存证",tone:"warn",title:CURRENT_YEAR+" 年 "+m.month+" 月监测数据",meta:"滨海石化热电厂 · 燃煤量 / 低位发热量 / 元素碳",button:"存证",action:"go('碳履约','排放监测')"}));
   } else if(role==="sysAdmin") {
@@ -106,7 +106,7 @@ home = function () {
   const r=v12R();
   const hour=new Date().getHours();
   const hello=hour<11?"早上好":hour<13?"中午好":hour<18?"下午好":"晚上好";
-  const sub=v12Is("supplier")?"北辰石油天然气集团有限公司 · 供应商碳数据协同":r.dept+" · "+reportYear+" 年度";
+  const sub=v12Is("supplier")?"北辰石油天然气集团有限公司 · 供应商碳数据协同":(r.dept||[...new Set(workflowTasks().filter(t=>t.owner===fillerIdentity).map(t=>t.org))].slice(0,2).join("、")+" · 碳排放填报")+" · "+reportYear+" 年度";
   const goals=v12Is("supplier","sysAdmin","supplyAdmin","lcaExpert")?"":v12GoalWidget();
   const etsW=v12Is("supplier","sysAdmin","supplyAdmin","lcaExpert","filler")?"":v12EtsWidget();
   const market=marketPanel();
@@ -433,7 +433,7 @@ saveUnifiedTask = async function (submit) {
 };
 flowSteps = function (status,supplier=false) {
   const e=supplier?{}:(demo.taskEntries?.[openTaskId]||{});
-  const steps=supplier?["供应商填报","提交","采购初审","碳管理复核","计入范围三"]:["填报数据","提交","二级单位审核","集团复核","计入碳台账"];
+  const steps=supplier?["供应商填报","提交","采购初审","碳管理复核","入库供应链因子"]:["填报数据","提交","二级单位审核","集团复核","计入碳台账"];
   const reached=status==="待审核"?(e.reviewStage===2?3:2):({"待填报":0,"草稿":0,"退回":0,"通过":5,"不适用":5}[status]??0);
   return '<ol class="flowSteps">'+steps.map((s,i)=>'<li class="'+(i<reached?'done':i===reached?(status==="退回"?'back':'now'):'')+'"><i>'+(i<reached?'✓':i+1)+'</i>'+s+(i===0&&status==="退回"?' · 已退回':'')+'</li>').join("")+'</ol>';
 };

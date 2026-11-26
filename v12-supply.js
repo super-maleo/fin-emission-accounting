@@ -81,10 +81,10 @@ function v12SupTasksAll() {
     const st=v12LegacyStatus(r.status);
     return {id:"SUP-"+r.id,legacy:i,supplier:r.supplier,name:r.part+" 单位产品碳排放",item:r.part,category:r.category,unit:r.unit,qty:r.qty,unitCarbon:r.unitCarbon,status:st,stage:st==="待审核"?2:0,
       deadline:"2026-12-15",evidence:r.evidence,method:r.factorSource||"产品碳足迹报告",note:r.reviewNote,customer:"北辰石油天然气集团有限公司",
-      node:st==="待审核"?"碳管理复核":st==="通过"?"已计入范围三":st==="退回"?"退回供应商":"供应商填报",open:"editDemoSupplier("+i+","+(currentRole!=="供应商")+")"};
+      node:st==="待审核"?"碳管理复核":st==="通过"?"已入库":st==="退回"?"退回供应商":"供应商填报",open:"editDemoSupplier("+i+","+(currentRole!=="供应商")+")"};
   });
   const own=v12SupTasksRaw().map(t=>({...t,customer:"北辰石油天然气集团有限公司",
-    node:t.status==="待审核"?(t.stage===2?"碳管理复核":"采购初审"):t.status==="通过"?"已计入范围三":t.status==="退回"?"退回供应商":"供应商填报",open:"v12OpenSupTask('"+t.id+"')"}));
+    node:t.status==="待审核"?(t.stage===2?"碳管理复核":"采购初审"):t.status==="通过"?"已入库":t.status==="退回"?"退回供应商":"供应商填报",open:"v12OpenSupTask('"+t.id+"')"}));
   return [...legacy,...own];
 }
 function v12MySupplierName(){return supplyScope3Items[supplierIdentity]?.supplier||supplyScope3Items[0].supplier;}
@@ -184,7 +184,7 @@ function v12OpenSupplier(code,tab) {
     v12Table(["维度","得分","平均","评价依据"],V12_ESG_AXES.map((a,i)=>[a,'<b>'+s.esgVals[i]+'</b>',avg[i],["ISO 14001、环保处罚记录、排污许可","碳盘查、减排目标、碳数据响应","安全事故、劳工合规、社区关系","反腐败、信息披露、股权结构","二级供应商管理、绿色采购"][i]]),{nopage:true})+
     '<p class="v12Hint">综合评分 <b>'+s.esg+'</b> · 风险等级 '+v12Tag(s.risk,{"高":"bad","中":"warn","低":"ok"}[s.risk])+'</p></div></div>';
   if(tab==="carbon")body=v12Table(["数据收集任务","范围三类别","申报值","排放 tCO₂e","状态"],tasks.map(t=>[v12H(t.name),v12CatLabel(t.category),t.unitCarbon?t.unitCarbon+" kgCO₂e/"+v12H(t.unit):"—",t.unitCarbon?fmt(v12SupEmission(t),0):"—",v12Tag(t.status,{"通过":"ok","待审核":"blue","退回":"bad"}[t.status]||"warn")]),{nopage:true,empty:"尚未发起数据收集"})+
-    '<p class="v12Hint">当前核算方式：'+v12H(s.method)+'。收到经审核的一手数据后自动替换支出法 / 行业平均结果。</p>';
+    '<p class="v12Hint">当前核算方式：'+v12H(s.method)+'。一手数据经两级审核后入库供应链因子，下一核算周期替换支出法 / 行业平均结果。</p>';
   if(tab==="dd"){
     const items=[["环境合规","近三年无重大环保处罚",s.esgVals[0]>60],["温室气体盘查","已开展组织层面盘查",s.esgVals[1]>65],["减排目标","设定量化减排目标",s.esgVals[1]>80],["安全生产","近三年无较大以上安全事故",s.esgVals[2]>55],["商业道德","签署供应商行为准则",s.esgVals[3]>50],["二级供应商","识别关键二级供应商",s.esgVals[4]>60]];
     body='<div class="v12DDHead">'+v12Tag("尽调 "+s.dd,s.dd==="已完成"?"ok":s.dd==="进行中"?"blue":"warn")+'<span>上次尽调 '+(s.dd==="已完成"?"2026-0"+(3+s.code.charCodeAt(6)%6)+"-15":"—")+'</span></div>'+
@@ -226,7 +226,7 @@ function v12SaveSupTask() {
   v12SupTasksRaw().push({id:"ST-"+Date.now().toString().slice(-6),supplier:s.name,name:item+" 单位产品碳排放",item,category:v12Val("ntCat"),unit:v12Val("ntUnit")||"t",qty:Number(v12Val("ntQty"))||0,status:"待填报",deadline:v12Val("ntDue")||"2026-12-20",req:v12Val("ntReq")});
   v12Persist();closeModal();render();showToast("任务已下发至 "+s.name);
 }
-const V12_SUP_FLOW = [["供应商填报","供应商碳数据联系人"],["采购初审","物资采购中心 · 陈思远"],["碳管理复核","集团 ESG 管理部 · 高文博"],["计入范围三","自动替换支出法结果"]];
+const V12_SUP_FLOW = [["供应商填报","供应商碳数据联系人"],["采购初审","物资采购中心 · 陈思远"],["碳管理复核","集团 ESG 管理部 · 高文博"],["入库供应链因子","下一核算周期替换支出法"]];
 function v12SupFlowIdx(t){return t.status==="通过"?4:t.status==="待审核"?(t.stage===2?2:1):0;}
 function v12SupReview() {
   const tab=v12State.supRevTab||"todo",all=v12SupTasksAll();
@@ -264,7 +264,7 @@ function v12OpenSupTask(id) {
     (log?'<details class="calculationHelp" open><summary>审批记录</summary><ul class="v12Log">'+log+'</ul></details>':'')+
     (canReview?'<label class="v12Wide">审核意见<input id="stNote" placeholder="退回时必填"></label>':''),
     '<button class="btn" data-close-modal="1">关闭</button>'+(editable?'<button class="btn" onclick="v12SubmitSupTask(\''+id+'\',false)">保存草稿</button><button class="btn primary" onclick="v12SubmitSupTask(\''+id+'\',true)">提交审核</button>':'')+
-    (canReview?'<button class="btn red" onclick="v12ReviewSupTask(\''+id+'\',false)">退回</button><button class="btn primary" onclick="v12ReviewSupTask(\''+id+'\',true)">'+(t.stage===2?'复核通过 · 计入范围三':'初审通过')+'</button>':''));
+    (canReview?'<button class="btn red" onclick="v12ReviewSupTask(\''+id+'\',false)">退回</button><button class="btn primary" onclick="v12ReviewSupTask(\''+id+'\',true)">'+(t.stage===2?'复核通过 · 入库供应链因子':'初审通过')+'</button>':''));
 }
 function v12SupPreview() {
   const t=v12SupTasksRaw().find(x=>document.getElementById("stQty")&&Number(document.getElementById("stQty").value)===x.qty)||{};
@@ -287,8 +287,8 @@ function v12ReviewSupTask(id,ok) {
   if(!ok){t.status="退回";t.note=note;t.stage=0;}
   else if(t.stage===2){t.status="通过";t.stage=0;}
   else t.stage=2;
-  (t.log ||= []).push([v12Now(),who,ok?(t.status==="通过"?"复核通过，计入范围三":"初审通过")+(note?"："+note:""):"退回："+note]);
-  v12Persist();closeModal();render();showToast(ok?(t.status==="通过"?"已计入范围三":"初审通过，转碳管理复核"):"已退回供应商");
+  (t.log ||= []).push([v12Now(),who,ok?(t.status==="通过"?"复核通过，入库供应链因子":"初审通过")+(note?"："+note:""):"退回："+note]);
+  v12Persist();closeModal();render();showToast(ok?(t.status==="通过"?"已入库":"初审通过，转碳管理复核"):"已退回供应商");
 }
 
 // ================= 供应商分析报告 =================
@@ -321,7 +321,7 @@ function v12SupReport() {
   ];
   if(v12Is("supplier")){sections.splice(4,1);sections[4].title="5 改进建议";}
   const doc=v12Doc({title:s.name+" 供应商碳绩效分析报告",titleLines:[s.name,"供应商碳绩效分析报告"],en:"Supplier Carbon Performance Report",sub:reportYear+" 年度",
-    meta:[["供应商编码",s.code],["物资类别",s.cat],["风险等级",s.risk],["编制单位","北辰石油 · 物资采购中心"],["编制日期",v12Today()]],org:"北辰石油天然气集团有限公司",date:v12Today().slice(0,7).replace("-"," 年 ")+" 月"},sections);
+    meta:[["供应商编码",s.code],["物资类别",s.cat],...(v12Is("supplier")?[]:[["风险等级",s.risk]]),["编制单位","北辰石油 · 物资采购中心"],["编制日期",v12Today()]],org:"北辰石油天然气集团有限公司",date:v12Today().slice(0,7).replace("-"," 年 ")+" 月"},sections);
   const pick=v12Is("supplier")?'':'<select class="v12Select" onchange="v12State.reportSup=this.value;render()">'+all.map(x=>'<option value="'+x.code+'" '+(x.code===s.code?'selected':'')+'>'+v12H(x.name)+'</option>').join("")+'</select>';
   return v12Head("供应商分析报告",pick+v12DocMenu())+'<div class="wdWrap">'+doc+'</div>';
 }
@@ -329,7 +329,7 @@ function v12SupReport() {
 // ================= 首页卡片 =================
 function v12SupplierHomeCard() {
   const me=v12MySupplierName(),s=v12Sup(me),tasks=v12SupplierMyTasks();
-  return v12Panel("我的碳数据档案",'<div class="v12LcaCards"><button onclick="go(\'供应链碳排放\',\'供应商分析报告\')"><span>ESG 综合评分</span><b>'+(s?s.esg:"—")+'</b><small>风险等级 '+(s?s.risk:"—")+'</small></button>'+
+  return v12Panel("我的碳数据档案",'<div class="v12LcaCards"><button onclick="go(\'供应链碳排放\',\'供应商分析报告\')"><span>ESG 综合评分</span><b>'+(s?s.esg:"—")+'</b><small>满分 100 · 按 ESG 问卷与碳数据质量评定</small></button>'+
     '<button onclick="go(\'供应链碳排放\',\'数据收集与审核\')"><span>已通过数据</span><b>'+tasks.filter(t=>t.status==="通过").length+' / '+tasks.length+'</b><small>项填报任务</small></button></div>'+
     '<ul class="v12Ol"><li>客户要求：2026-12-15 前提交本年度采购物资单位产品碳排放。</li><li>经第三方核查的产品碳足迹可直接作为一级数据使用。</li></ul>');
 }
