@@ -394,10 +394,10 @@ Object.assign(V12_PAGES_EXTRA, {
 .v12Split{display:flex;gap:20px;align-items:center}
 .v12Split .v12PieWrap{flex:1;min-width:0}
 .v12HBars{display:flex;flex-direction:column}
-.v12HBar{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr) 110px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid #F2F4F7;font-size:13px}
+.v12HBar{display:grid;grid-template-columns:minmax(180px,1.3fr) minmax(0,1.4fr) 96px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid #F2F4F7;font-size:13px}
 .v12HBar.click{cursor:pointer}.v12HBar.click:hover{background:#F8FCF3}
-.v12HBar .l{display:flex;align-items:center;gap:8px;min-width:0}.v12HBar .l small{color:var(--sub);font-size:11px;margin-left:6px;white-space:nowrap}
-.v12HBar .l em{font-style:normal;width:20px;height:20px;border-radius:4px;background:#F2F4F7;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.v12HBar .l{display:block;min-width:0;line-height:1.35}.v12HBar .l small{display:block;color:var(--sub);font-size:11px;margin-left:28px}
+.v12HBar .l em{font-style:normal;width:20px;height:20px;line-height:20px;text-align:center;border-radius:4px;background:#F2F4F7;display:inline-block;font-size:11px;font-weight:700;margin-right:8px}
 .v12HBar .t{height:12px;background:#F2F4F7;border-radius:3px;overflow:hidden}.v12HBar .t i{display:block;height:100%;border-radius:3px}
 .v12HBar .v{text-align:right;font-weight:600}.v12HBar .v small{font-weight:400;color:var(--sub)}
 .v12Stat{display:flex;flex-direction:column;gap:2px;padding:12px 14px;background:#F6F8F3;border-radius:6px;min-width:180px}

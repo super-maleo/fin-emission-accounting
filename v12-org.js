@@ -107,7 +107,7 @@ home = function () {
   const hour=new Date().getHours();
   const hello=hour<11?"早上好":hour<13?"中午好":hour<18?"下午好":"晚上好";
   const sub=v12Is("supplier")?"北辰石油天然气集团有限公司 · 供应商碳数据协同":r.dept+" · "+reportYear+" 年度";
-  const goals=v12Is("supplier","sysAdmin")?"":v12GoalWidget();
+  const goals=v12Is("supplier","sysAdmin","supplyAdmin","lcaExpert")?"":v12GoalWidget();
   const etsW=v12Is("supplier","sysAdmin","supplyAdmin","lcaExpert","filler")?"":v12EtsWidget();
   const market=marketPanel();
   let extra="";
@@ -116,10 +116,11 @@ home = function () {
   if(v12Is("lcaExpert"))extra=v12LcaHomeCard();
   if(v12Is("sysAdmin"))extra=v12SysHomeCard();
   if(v12Is("filler"))extra=v12FillerHomeCard();
-  return '<div class="v12Hello"><h1>'+v12H(v12Person())+'，'+hello+'</h1><p>'+v12H(sub)+'</p></div>'+
-    '<div class="v12HomeGrid">'+(goals||extra)+v12TaskWidget()+'</div>'+
-    '<div class="v12HomeGrid">'+(etsW||(goals?extra:"")||'')+(etsW||goals&&extra?market:market)+'</div>'+
-    (etsW&&extra&&goals?'<div class="v12HomeGrid one">'+extra+'</div>':'');
+  const hello1='<div class="v12Hello"><h1>'+v12H(v12Person())+'，'+hello+'</h1><p>'+v12H(sub)+'</p></div>';
+  const rows=[];
+  if(goals){rows.push([goals,v12TaskWidget()]);if(etsW){rows.push([etsW,market]);if(extra)rows.push([extra]);}else rows.push([extra||"",market].filter(Boolean));}
+  else{rows.push([extra,v12TaskWidget()].filter(Boolean));rows.push([market]);}
+  return hello1+rows.map(r=>'<div class="v12HomeGrid'+(r.length===1?' one':'')+'">'+r.join("")+'</div>').join("");
 };
 function v12FillerHomeCard() {
   const mine=myTasks(),orgs=[...new Set(mine.map(t=>t.org))];
