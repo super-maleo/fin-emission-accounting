@@ -533,6 +533,7 @@ script = "\n".join([
     (ROOT / "expert-kit.js").read_text(),
     (ROOT / "petro-kit.js").read_text(),
     (ROOT / "export-kit.js").read_text(),
+    *[(ROOT / name).read_text() for name in ["v12-core.js","v12-org.js","v12-orgreport.js","v12-product.js","v12-supply.js","v12-ets.js","v12-config.js","v12-boot.js"] if (ROOT / name).exists()],
     """
 async function startDemo() {
   if (location.protocol.startsWith("http")) {
