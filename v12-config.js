@@ -106,7 +106,7 @@ function v12Learn(q,id) {
 function v12MatchQuery(){return v12State.mq ||= {text:"燃料油（开工及备用）",unit:"t",scope:"1",region:"辽宁",year:CURRENT_YEAR,task:""};}
 function v12MatchPage() {
   const q=v12MatchQuery(),res=q.text?v12Match(q):[],w=v12MatchW(),fb=v12().matchFb||[];
-  const pend=workflowTasks().filter(t=>!t.locked&&(/缺省|行业平均|支出法/.test(t.factorLabel||"")||t.scope==="3")&&!demo.factorOverrides?.[t.id]).slice(0,40);
+  const pend=workflowTasks().filter(t=>!t.locked&&(/缺省|行业平均|支出法/.test(t.factorLabel||"")||t.scope==="3")&&!demo.factorOverrides?.[t.id]).slice(0,60);
   const acc=fb.length?fb.filter(m=>{const r=v12Match({text:m.q,unit:m.unit,scope:"",region:"",year:CURRENT_YEAR},1)[0];return r&&r.row.id===m.id;}).length/fb.length:null;
   const featLabel={text:"语义",unit:"单位",scope:"范围",region:"区域",recency:"时效",memory:"历史确认"};
   const form='<div class="v12MatchForm"><label class="wide">活动 / 排放源描述<input id="mqText" value="'+v12H(q.text)+'" placeholder="如：加热炉燃用天然气、柴油叉车、钢管采购"></label>'+
@@ -214,10 +214,10 @@ function v12PcrRulePage(){return xkPcrPage().replace(/<div class="breadcrumb">[^
 function v12OrgPeople(org) {
   const e=petroEntity(org)||{};
   const list=[];
-  if(e.owner)list.push([e.owner,"填报人","填报、上传凭证",e.merged?"汇总报送 "+e.merged+" 家":"本单位全部指标"]);
-  list.push([{"RF":"马俊","UP":"陈亮","PL":"冯涛","MK":"黄磊","ES":"许诺","HQ":"高文博"}[e.seg]||"—","二级单位审核人","单位审核","本板块"]);
-  list.push(["高文博","集团复核人","集团复核、计入碳台账","全集团"]);
-  if(org==="滨海石化热电厂")list.push(["王建国","碳资产管理","碳履约监测、清缴","热电厂"]);
+  if(e.owner)list.push([e.owner,"企业员工","填报、上传凭证",e.merged?"汇总报送 "+e.merged+" 家":"本单位全部指标"]);
+  list.push([{"RF":"马俊","UP":"陈亮","PL":"冯涛","MK":"黄磊","ES":"许诺","HQ":"陈立群"}[e.seg]||"—","ESG管理员","单位审核","本板块"]);
+  list.push(["高文博","ESG管理员","集团复核、计入碳台账","全集团"]);
+  if(org==="滨海石化热电厂")list.push(["王建国","ESG管理员","碳履约监测、清缴","热电厂"]);
   return list;
 }
 function v12OrgPage() {
@@ -229,17 +229,18 @@ function v12OrgPage() {
   const tasks=workflowTasks().filter(t=>t.org===sel);
   const detail=v12Panel(v12H(sel),'<dl class="detailList">'+[["组织编码",e.code],["所属板块",seg?.name],["上级组织",sel==="集团总部"?"—":e.parent||"集团总部"],["所在地",e.region],["生产规模",e.capacity],["主要装置",(e.units||[]).join("、")],["核算边界","运营控制权 · 100% 纳入"],["碳市场","滨海石化热电厂"===sel?"全国碳市场重点排放单位":"未纳入"],["填报指标",tasks.length+" 项"]].map(([k,v])=>'<div class="wide"><dt>'+k+'</dt><dd>'+v12H(v||"—")+'</dd></div>').join("")+'</dl>',
     '<button class="btn" onclick="showToast(\'已保存\')">编辑</button><button class="btn" onclick="v12AddOrg()">新增下级</button>')+
-    v12Panel("人员与权限",v12Table(["姓名","角色","权限","数据范围",""],v12OrgPeople(sel).map(p=>['<strong>'+p[0]+'</strong>',v12Tag(p[1],p[1]==="填报人"?"blue":p[1]==="集团复核人"?"ok":"gray"),p[2],p[3],'<button class="linkBtn" onclick="showToast(\'已打开权限设置\')">设置</button>']),{nopage:true}),'<button class="btn" onclick="v12AddPerson()">添加人员</button>');
+    v12Panel("人员与权限",v12Table(["姓名","角色","权限","数据范围",""],v12OrgPeople(sel).map(p=>['<strong>'+p[0]+'</strong>',v12Tag(p[1],p[1]==="企业员工"?"blue":"ok"),p[2],p[3],'<button class="linkBtn" onclick="showToast(\'已打开权限设置\')">设置</button>']),{nopage:true}),'<button class="btn" onclick="v12AddPerson()">添加人员</button>')+
+    v12Panel("填报配置",'<div class="v12Counts">'+[["范围一",tasks.filter(t=>t.scope==="1").length],["范围二",tasks.filter(t=>t.scope==="2").length],["范围三",tasks.filter(t=>t.scope==="3").length],["凭证",tasks.length?"必传":"—"]].map(([l,v])=>'<div><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div><dl class="v12KV"><div><dt>填报频次</dt><dd>月度 · 次月 10 日前</dd></div><div><dt>审批流</dt><dd>填报 → 单位审核 → 集团复核 → 计入碳台账</dd></div></dl>',tasks.length?'<button class="btn" onclick="go(\'基础配置\',\'指标模板配置\',\'填报模板\');setTimeout(()=>v12OpenTpl(\''+v12Q(sel)+'\'),50)">编辑模板</button>':'');
   return v12Head("组织与权限")+'<div class="v12OrgLayout">'+v12Panel("组织架构",tree)+'<div>'+detail+'</div></div>';
 }
 function v12AddOrg(){v12Modal("新增下级组织",'<div class="modalForm">'+v12Field("组织名称",'<input>')+v12Field("组织编码",'<input>')+v12Field("上级组织",'<input value="'+v12H(v12State.orgSel||"集团总部")+'" readonly>')+v12Field("控制关系",'<select><option>全资（运营控制）</option><option>控股</option><option>合营</option><option>联营</option></select>')+'</div>','<button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="closeModal();showToast(\'组织已新增，请在核算边界中确认纳入方式\')">保存</button>');}
 function v12AddPerson(){v12Modal("添加人员",'<div class="modalForm">'+v12Field("姓名",'<input>')+v12Field("账号（邮箱）",'<input type="email">')+v12Field("角色",'<select>'+V12_ROLES.map(r=>'<option>'+r.name+'</option>').join("")+'</select>')+v12Field("数据范围",'<input value="'+v12H(v12State.orgSel||"集团总部")+'">')+'</div>','<button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="closeModal();showToast(\'已发送账号开通邀请\')">保存</button>');}
 const V12_PERM_MODS = ["组织碳填报","组织碳审核","碳台账与报告","产品碳足迹","供应链管理","供应商填报","碳履约","基础配置","系统设置"];
-const V12_PERM = {carbonAdmin:["查看","审核","管理","查看","查看","—","查看","因子 / 模板","—"],filler:["填报","—","查看本单位","—","—","—","—","—","—"],supplier:["—","—","—","—","—","填报","—","—","—"],
-  supplyAdmin:["—","—","—","—","管理","初审","—","—","—"],lcaExpert:["—","—","—","管理","—","—","—","PCR","—"],etsExpert:["—","—","查看","—","—","—","管理","—","—"],sysAdmin:["—","—","—","—","—","—","—","管理","管理"]};
+const V12_PERM = {carbonAdmin:["审核","审核","管理","管理","管理","审核","管理","管理","管理"],filler:["填报","—","查看本单位","—","—","—","—","—","—"],supplier:["—","—","—","—","—","填报","—","—","—"],
+  sysAdmin:["—","—","—","—","—","—","—","管理","管理"]};
 function v12RolePage() {
-  const users=[["高文博","企业碳管理员","集团 ESG 管理部","启用"],["赵海峰","组织碳填报人","滨海石化分公司","启用"],["刘建平","组织碳填报人","松原油田分公司","启用"],["孙卫东","组织碳填报人","西部管道分公司 / 集团总部","启用"],
-    ["陈思远","供应商管理员","集团物资采购中心","启用"],["林雪","产品碳建模专家","石油化工研究院","启用"],["王建国","碳履约与核算专家","滨海石化热电厂","启用"],["渤海钢管制造有限公司","供应商","外部","启用"],["华东催化剂有限公司","供应商","外部","启用"],["何立新","组织碳填报人","陇原石化分公司","待激活"]];
+  const users=[["高文博","ESG管理员","集团 ESG 管理部","启用"],["赵海峰","企业员工","滨海石化分公司","启用"],["刘建平","企业员工","松原油田分公司","启用"],["孙卫东","企业员工","西部管道分公司 / 集团总部","启用"],
+    ["陈思远","ESG管理员","集团物资采购中心","启用"],["林雪","ESG管理员","石油化工研究院","启用"],["王建国","ESG管理员","滨海石化热电厂","启用"],["渤海钢管制造有限公司","外部供应商","外部","启用"],["华东催化剂有限公司","外部供应商","外部","启用"],["何立新","企业员工","陇原石化分公司","待激活"]];
   return v12Head("用户角色",'<button class="btn primary" onclick="v12AddPerson()">新增用户</button>')+
     v12Panel("角色权限矩阵",v12Table(["角色",...V12_PERM_MODS],V12_ROLES.map(r=>['<strong>'+r.name+'</strong>',...V12_PERM[r.id].map(p=>p==="—"?'<span class="muted">—</span>':v12Tag(p,/管理|审核|初审/.test(p)?"ok":/填报/.test(p)?"blue":"gray"))]),{nopage:true}))+
     v12Panel("用户账号",v12Table(["姓名 / 单位","角色","所属组织","状态",""],users.map(u=>['<strong>'+u[0]+'</strong>',u[1],u[2],v12Tag(u[3],u[3]==="启用"?"ok":"warn"),'<button class="linkBtn" onclick="showToast(\'已重置密码并发送邮件\')">重置密码</button>'])));
@@ -247,12 +248,13 @@ function v12RolePage() {
 const V12_FLOWS = [
   ["组织碳填报",[["填报","各单位填报人"],["单位审核","二级单位审核人"],["集团复核","集团 ESG 管理部"],["计入碳台账","自动"]],"5 个工作日 / 节点"],
   ["供应商碳数据",[["供应商填报","供应商联系人"],["采购初审","物资采购中心"],["碳管理复核","集团 ESG 管理部"],["入库供应链因子","下一核算周期替换支出法"]],"5 个工作日 / 节点"],
-  ["LCA 模型发布",[["建模","产品碳建模专家"],["完整性检查","系统"],["技术审核","产品碳足迹组组长"],["发布","更新产品碳足迹值"]],"10 个工作日"],
-  ["碳盘查报告",[["编制","企业碳管理员"],["内部审核","ESG 管理部负责人"],["第三方核查","核查机构"],["批准发布","分管领导"]],"按年度计划"],
-  ["配额清缴",[["清缴方案","碳履约与核算专家"],["资金审批","财务部"],["分管领导审批","分管领导"],["注册登记系统操作","碳资产管理岗"]],"截止前 30 日启动"]
+  ["LCA 模型发布",[["建模","ESG管理员"],["完整性检查","系统"],["技术审核","产品碳足迹组组长"],["发布","更新产品碳足迹值"]],"10 个工作日"],
+  ["碳盘查报告",[["编制","ESG管理员"],["内部审核","ESG 管理部负责人"],["第三方核查","核查机构"],["批准发布","分管领导"]],"按年度计划"],
+  ["配额清缴",[["清缴方案","ESG管理员"],["资金审批","财务部"],["分管领导审批","分管领导"],["注册登记系统操作","碳资产管理岗"]],"截止前 30 日启动"]
 ];
 function v12FlowPage() {
-  return v12Head("审批流程")+V12_FLOWS.map(([name,steps,sla])=>v12Panel(name+' <small>'+sla+'</small>','<div class="v12FlowDef">'+v12Steps(steps,-1)+'</div>','<button class="btn" onclick="showToast(\'流程配置已打开\')">配置</button>')).join("");
+  const stat=[["组织碳填报",workflowTasks().length+" 项任务","退回后重新进入单位审核","超时 3 日自动提醒上级"],["供应商碳数据",v12SupTasksAll().length+" 项任务","退回后由供应商修改再提交","截止前 7 日、1 日提醒"],["LCA 模型发布",demo.lcaModels.length+" 个模型","发布后修改生成新版本","—"],["碳盘查报告","1 份年度报告","核查意见需逐条关闭","按年度计划"],["配额清缴","1 个履约周期","资金审批不通过退回方案","截止前 30 日启动"]];
+  return v12Head("审批流程")+'<div class="v12FlowGrid">'+V12_FLOWS.map(([name,steps,sla],i)=>v12Panel(name+' <small>'+sla+'</small>','<div class="v12FlowDef">'+v12Steps(steps,-1)+'</div><dl class="v12FlowMeta"><div><dt>本年度</dt><dd>'+stat[i][1]+'</dd></div><div><dt>退回规则</dt><dd>'+stat[i][2]+'</dd></div><div><dt>催办</dt><dd>'+stat[i][3]+'</dd></div></dl>','<button class="btn" onclick="showToast(\'流程配置已打开\')">配置</button>')).join("")+'</div>';
 }
 function v12SysHomeCard() {
   return v12Panel("系统概况",'<div class="v12Counts">'+[["组织",PETRO_ENTITIES.length,""],["用户",10,""],["填报指标",v12Indicators().length,""],["因子",FACTOR_DB.length,"ok"]].map(([l,v,t])=>'<div class="'+t+'"><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div>'+
@@ -286,7 +288,7 @@ Object.assign(V12_PAGES_EXTRA, {
 .v12Pipe{list-style:none;counter-reset:p;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .v12Pipe li{counter-increment:p;background:#F6F8F3;border-radius:6px;padding:8px 10px;font-size:12.5px}.v12Pipe li::before{content:counter(p);display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:#86BC25;color:#fff;font-size:11px;margin-right:6px}
 .v12Pipe li small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
-.v12PendList{display:flex;flex-direction:column;max-height:900px;overflow:auto}
+.v12PendList{display:flex;flex-direction:column;overflow:auto;flex:1 1 0;min-height:420px}.v12Grid2>.panel>.v12PendList{margin:0}
 .v12PendList button{border:0;border-bottom:1px solid #F2F4F7;background:#fff;text-align:left;padding:8px 6px;cursor:pointer}.v12PendList button.active{background:#F3F8EA}
 .v12PendList b{display:block;font-size:13px}.v12PendList small{display:block;font-size:11px;color:var(--sub)}
 .v12TplList{display:grid;grid-template-columns:1fr 1fr;gap:6px}.v12TplList label{display:flex;gap:8px;align-items:flex-start;border:1px solid #EEF2F6;border-radius:6px;padding:6px 8px}
@@ -297,6 +299,55 @@ Object.assign(V12_PAGES_EXTRA, {
 .v12Tree .v12TN{padding:6px 8px 6px 18px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between}.v12Tree .v12TN.child{padding-left:34px}
 .v12Tree .v12TN small{color:var(--sub)}.v12Tree .v12TN:hover,.v12Tree .root:hover{background:#F6F8F3}.v12Tree .active{background:#E8F2DA!important;color:#26890D;font-weight:600}
 tr.v12GroupRow td{background:#F6F8F3}
+.v12FlowGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.v12FlowGrid>.panel{margin:0}.v12FlowGrid>.panel:last-child:nth-child(odd){grid-column:1/-1}.v12FlowMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line)}.v12FlowMeta dt{font-size:11.5px;color:var(--sub)}.v12FlowMeta dd{margin:2px 0 0;font-size:13px}
 @media(max-width:1000px){.v12OrgLayout{grid-template-columns:1fr}.v12MatchForm{grid-template-columns:1fr 1fr}.v12Pipe{grid-template-columns:1fr}}`;
   const el=document.createElement("style");el.textContent=css;document.head.appendChild(el);
 })();
+
+// ================= 帮助中心：用户手册（按 v12 菜单重写） =================
+const V12_MANUAL = [
+  {id:"start",title:"快速开始",roles:"全部角色",go:["首页"],
+    steps:[["选择身份与年度","右上角切换角色与报告年度；历史年度为只读。"],["处理首页待办","「我的任务」按业务分组列出待审核、待填报、待确认事项，点击直接进入处理页。"],["查看消息","顶部铃铛汇总审核结果、退回意见和到期提醒。"],["导出与打印","报告类页面右上角「导出报告」支持 Word、PDF、Excel。"]],
+    tips:["ESG管理员拥有全部菜单；企业员工只看到本人负责组织的填报任务；外部供应商只看到客户下发的数据请求。","所有修改都会写入操作日志，可在任务详情的审批记录中追溯。"]},
+  {id:"fill",title:"组织数据填报",roles:"企业员工",go:["组织碳排放","填报与审核","填报任务"],
+    steps:[["打开填报任务","「组织碳排放 / 填报与审核 / 填报任务」按范围一、二、三分组列出本人任务。"],["上传凭证","上传结算单、台账或计量报表，系统识别活动量并给出一致性校验。"],["填写参数","按排放类型填写活动量与实测参数（如低位发热量、含碳量），公式实时计算排放量。"],["提交审核","提交后进入单位审核 → 集团复核；被退回的任务在首页标红，按意见修改后再次提交。"]],
+    tips:["截止日为次月 10 日，逾期任务会推送提醒。","实测参数优先于缺省值；使用缺省值时需在备注说明原因。"]},
+  {id:"review",title:"审核与数据校验",roles:"ESG管理员",go:["组织碳排放","填报与审核","审核任务"],
+    steps:[["审核任务","「审核任务」打开待审项，核对凭证原件与识别值。"],["通过或退回","通过后计入碳台账；退回需填写原因，填报人收到通知。"],["数据校验","「碳核算 / 数据校验」自动识别同比波动、强度异常、凭证缺失与跨口径差异。"],["处理异常","对每条异常填写处理说明或退回填报人，处理结果进入报告附录。"]],
+    tips:["碳履约数据与组织碳 T-S1-04 自动对账，差异超过 0.5% 时生成校验项。"]},
+  {id:"factor",title:"排放因子与智能匹配",roles:"ESG管理员 · 系统管理员",go:["基础配置","因子库管理","因子智能匹配"],
+    steps:[["选择待匹配指标","左侧列出使用缺省值、行业平均或支出法的指标。"],["查看候选","引擎按语义、单位可换算、范围、区域电网、时效和历史确认综合打分，展示每项得分。"],["采用因子","点击「采用」自动换算单位并重算排放，原因子保留在变更记录。"],["私域因子建模","「企业私域因子库 / 因子建模」按燃料实测、热电联产热量法、供应商加权或 LCA 结果生成本企业因子。"]],
+    tips:["每次人工确认都会更新匹配权重，页面显示确认样本数与 Top-1 命中率。","单位无法换算的因子不会出现在候选中。"]},
+  {id:"supply",title:"供应商协同与范围三",roles:"ESG管理员 · 外部供应商",go:["供应链碳排放","数据收集与审核","收集任务"],
+    steps:[["导入供应商","「供应商管理」从 ERP 导入或新增供应商，维护分级、ESG 评分与尽调。"],["发起收集","「收集任务」选择供应商、物资与截止日，下发数据请求。"],["供应商填报","供应商在「我的填报任务」填写单位产品碳排放、核算方法并上传证明材料。"],["两级审核","采购初审 → 碳管理复核，通过后入库「供应链因子」，下一核算周期替换支出法结果。"]],
+    tips:["看板风险矩阵按 ESG 评分与碳强度划分四象限，点击圆点打开供应商档案。"]},
+  {id:"product",title:"产品碳足迹",roles:"ESG管理员",go:["产品碳排放","LCA建模与核算"],
+    steps:[["目标与范围","选择 PCR，自动带出功能单位、系统边界和截断规则。"],["清单分析","按原材料获取、生产制造、运输配送、使用、回收处置录入活动数据与因子。"],["影响评价","按 GWP100 计算 CO₂、CH₄、N₂O 贡献。"],["结果解释","完整性检查、敏感性分析通过后提交审核，发布后生成碳足迹评价报告。"]],
+    tips:["PCR 在「基础配置 / 指标模板配置 / PCR 规则库」维护。","证书在「碳足迹认证管理」上传，到期前 180 天提醒复评。"]},
+  {id:"ets",title:"碳履约",roles:"ESG管理员",go:["碳履约","履约工作台"],
+    steps:[["月度监测","「排放监测」按机组录入入炉煤量与元素碳实测值并存证。"],["报告与核查","次年 3 月 31 日前提交排放报告，登记第三方核查结论。"],["配额核定","「配额管理 / 配额核定」确认或对核定结果提出异议。"],["清缴","「配额清缴」使用 CCER（不超过 5%）抵销，缺口在交易所购入 CEA 后登记，完成清缴。"]],
+    tips:["只有滨海石化热电厂两台机组纳入全国碳市场，履约口径只算燃烧排放、不含购入电力。"]},
+  {id:"target",title:"减排目标",roles:"ESG管理员",go:["组织碳排放","碳目标管理","目标设置"],
+    steps:[["设置基准年","选择基准年并核对基准年排放，结构变化或方法变更超过 5% 阈值时重算。"],["新增目标","选择覆盖范围、绝对量或强度、目标年与降幅。"],["跟踪进度","「目标跟踪」按年度对比实际排放与路径值，落后路径的目标在首页标红。"]],
+    tips:[]},
+  {id:"report",title:"报告生成",roles:"ESG管理员",go:["组织碳排放","碳盘查报告"],
+    steps:[["选择标准","按 ISO 14064-1 或 GHG Protocol 生成报告结构。"],["预览与编辑","报告按 Word 版式预览，图表与表格随台账数据更新。"],["导出","导出 Word / PDF / Excel；Word 打开后按 F9 更新目录页码。"]],
+    tips:[]},
+  {id:"config",title:"系统配置",roles:"系统管理员",go:["基础配置","系统设置","组织与权限"],
+    steps:[["组织与权限","左侧组织树选择单位，右侧维护组织信息与人员权限。"],["用户角色","四类角色：ESG管理员、企业员工、外部供应商、系统管理员。"],["填报模板","按组织勾选填报指标，保存后下一填报周期生效。"],["审批流程","配置组织填报、供应商数据、LCA 发布、盘查报告与配额清缴的审批节点。"]],
+    tips:[]}
+];
+function helpManualPage() {
+  const ch=V12_MANUAL.find(r=>r.id===manualId)||V12_MANUAL[0];
+  const can=v12R().tops.includes(ch.go[0]);
+  const faq=(typeof FAQ!=="undefined"?FAQ:[]).filter(([tag,q])=>ch.title.includes(tag)||q.includes(ch.title.slice(0,2))).slice(0,3);
+  return v12Head("用户手册",'<button class="btn" onclick="window.print()">打印</button>',"帮助中心 / 用户手册")+
+    '<div class="manualGrid"><nav class="manualNav panel">'+V12_MANUAL.map((r,i)=>'<button class="'+(r.id===ch.id?'active':'')+'" onclick="manualId=\''+r.id+'\';render()"><span>'+(i+1)+'</span>'+r.title+'<small>'+r.roles+'</small></button>').join("")+'</nav>'+
+    '<div>'+v12Panel(ch.title+' <small>'+v12H(ch.roles)+'</small>','<p class="v12ManPath">菜单入口：'+ch.go.join(" / ")+'</p><ol class="v12ManSteps">'+ch.steps.map(([t,d])=>'<li><b>'+v12H(t)+'</b><span>'+v12H(d)+'</span></li>').join("")+'</ol>',can?'<button class="btn primary" onclick="go('+ch.go.map(x=>"\'"+x+"\'").join(",")+')">前往</button>':'')+
+      (()=>{const ps=[ch.tips.length?v12Panel("要点",'<ul class="v12ManTips">'+ch.tips.map(t=>'<li>'+v12H(t)+'</li>').join("")+'</ul>'):'',faq.length?v12Panel("相关问题",faq.map(([,q,a],i)=>'<details class="v12ManFaq" '+(i===0?'open':'')+'><summary>'+v12H(q)+'</summary><p>'+v12H(a)+'</p></details>').join("")):''].filter(Boolean);return ps.length===2?'<div class="v12Grid2">'+ps.join("")+'</div>':ps.join("");})()+'</div></div>';
+}
+(function(){const el=document.createElement("style");el.textContent=`.manualNav.panel{padding:8px;position:sticky;top:76px}.manualNav button{display:grid;grid-template-columns:22px 1fr;row-gap:2px;align-items:center}.manualNav button span{grid-row:span 2;width:20px;height:20px;border-radius:50%;background:#F2F4F7;font-size:11px;display:grid;place-items:center;color:#475467}
+.manualNav button.active span{background:#86BC25;color:#fff}.manualNav button small{grid-column:2;font-size:11px;color:var(--sub);font-weight:400}
+.v12ManPath{margin:0 0 12px;font-size:12.5px;color:var(--sub)}.v12ManSteps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v12ManSteps li{counter-increment:s;border:1px solid var(--line);border-radius:8px;padding:14px 14px 14px 50px;position:relative;background:#FCFDFB}.v12ManSteps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:24px;height:24px;border-radius:50%;background:#86BC25;color:#fff;font-weight:700;display:grid;place-items:center;font-size:12px}
+.v12ManSteps b{display:block;margin-bottom:4px}.v12ManSteps span{font-size:13px;color:#475467;line-height:1.6}.v12ManTips{margin:0;padding-left:18px;display:grid;gap:8px;font-size:13px;line-height:1.6}.v12ManFaq summary{cursor:pointer;padding:8px 0;font-weight:600;font-size:13px}.v12ManFaq p{margin:0 0 8px;font-size:13px;color:#475467}`;document.head.appendChild(el);})();

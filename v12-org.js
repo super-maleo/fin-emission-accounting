@@ -68,6 +68,9 @@ function v12HomeTasks() {
   } else {
     workflowTasks().filter(t=>taskEntry(t).status==="待审核").forEach(t=>{const e=taskEntry(t);items.push({tag:(e.reviewStage===2?"集团复核":"单位审核"),tone:"warn",title:t.name,meta:t.org+" · "+t.owner+" · 范围"+t.scope,button:"审核",action:"openUnifiedTask('"+t.id+"',true)"});});
     workflowTasks().filter(t=>taskEntry(t).status==="退回").forEach(t=>items.push({tag:"已退回",tone:"bad",title:t.name,meta:t.org+" · "+t.owner,button:"跟进",primary:false,action:"openUnifiedTask('"+t.id+"')"}));
+    v12SupTasksAll().filter(t=>t.status==="待审核").forEach(t=>items.push({tag:"供应商",tone:"warn",title:t.name,meta:t.supplier+" · "+t.node,button:"审核",action:t.open}));
+    etsTodos().filter(t=>t.tag!=="监测").slice(0,2).forEach(t=>items.push({tag:t.tag||"履约",tone:t.tone||"warn",title:t.title,meta:t.meta||"",button:"处理",action:"go('碳履约','配额管理')"}));
+    demo.lcaModels.filter(m=>m.status!=="已发布").slice(0,2).forEach(m=>items.push({tag:"LCA",tone:"gray",title:m.name,meta:(m.status||"草稿")+" · "+m.boundary,button:"建模",primary:false,action:"selectLcaModel('"+m.id+"');go('产品碳排放','LCA建模与核算')"}));
   }
   return items;
 }
@@ -80,9 +83,20 @@ function v12TaskWidget() {
     const c=s=>all.filter(t=>st(t)===s).length;
     counts='<div class="v12Counts">'+[["待填报",c("待填报")+c("草稿"),"warn"],["已退回",c("退回"),"bad"],["审核中",c("待审核"),""],["已通过",c("通过"),"ok"]].map(([l,v,t])=>'<div class="'+t+'"><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div>';
   }
+  let show=items,max=6;
+  if(v12Is("carbonAdmin")) {
+    const grp=t=>/审核|复核|退回/.test(t.tag)&&t.tag!=="供应商"?"org":t.tag==="供应商"?"sup":t.tag==="LCA"?"lca":"ets";
+    const g={org:[],sup:[],ets:[],lca:[]};items.forEach(t=>g[grp(t)].push(t));
+    counts='<div class="v12Counts">'+[["组织碳审核",g.org.length,"warn","go('组织碳排放','填报与审核','审核任务')"],["供应商审核",g.sup.length,"","go('供应链碳排放','数据收集与审核','审核任务')"],["碳履约",g.ets.length,"bad","go('碳履约','履约工作台')"],["LCA 建模",g.lca.length,"","go('产品碳排放','LCA建模与核算')"]].map(([l,v,t,a])=>'<div class="'+t+'" style="cursor:pointer" onclick="'+a+'"><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div>';
+    show=[];for(let i=0;show.length<items.length&&i<20;i++)["org","sup","ets","lca"].forEach(k=>{if(g[k][i])show.push(g[k][i]);});
+    max=5;
+  }
   const link=v12Is("filler")?"go('组织碳排放','填报与审核','填报任务')":v12Is("supplier")?"go('供应链碳排放','数据收集与审核')":v12Is("supplyAdmin")?"go('供应链碳排放','数据收集与审核','审核任务')":
     v12Is("lcaExpert")?"go('产品碳排放','LCA建模与核算')":v12Is("etsExpert")?"go('碳履约','履约工作台')":v12Is("sysAdmin")?"go('基础配置','系统设置')":"go('组织碳排放','填报与审核','审核任务')";
-  return v12Panel("我的任务 <em>"+items.length+"</em>",counts+(items.length?todoList(items.slice(0,6),""):'<div class="todoEmpty">暂无待办</div>')+(items.length>6?'<button class="linkBtn v12More" onclick="'+link+'">还有 '+(items.length-6)+' 项 ›</button>':''),'<button class="linkBtn" onclick="'+link+'">全部 ›</button>','v12Fill');
+  let recent="";
+  if(v12Is("filler")&&items.length<4){const r=myTasks().filter(t=>["待审核","通过"].includes(taskEntry(t).status)).sort((a,b)=>(taskEntry(a).status==="待审核"?0:1)-(taskEntry(b).status==="待审核"?0:1)).slice(0,4-items.length);
+    if(r.length)recent='<h4 class="v12H4">最近提交</h4>'+todoList(r.map(t=>{const st=taskEntry(t).status;return {tag:st==="待审核"?"审核中":"已通过",tone:st==="待审核"?"gray":"ok",title:t.name,meta:t.org+" · 范围"+t.scope,button:"查看",primary:false,action:"openUnifiedTask('"+t.id+"')"};}),"");}
+  return v12Panel("我的任务 <em>"+items.length+"</em>",counts+(items.length?todoList(show.slice(0,max),""):'<div class="todoEmpty">暂无待办</div>')+recent+(items.length>max?'<button class="linkBtn v12More" onclick="'+link+'">还有 '+(items.length-max)+' 项 ›</button>':''),'<button class="linkBtn" onclick="'+link+'">全部 ›</button>','v12Fill');
 }
 function v12GoalWidget() {
   const cfg=v12Targets();
@@ -92,7 +106,12 @@ function v12GoalWidget() {
     return '<button class="v12Goal" onclick="v12State.targetSel=\''+t.id+'\';go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')"><div class="h"><b>'+v12H(t.name)+'</b>'+v12Tag(s.ok?"符合路径":"落后路径",s.ok?"ok":"bad")+'</div>'+
       '<div class="bar"><i style="width:'+s.progress+'%"></i><em style="left:'+Math.min(100,s.need/t.reduction*100)+'%" title="'+year+' 年应达进度"></em></div>'+
       '<div class="f"><span>'+cfg.baseYear+' → '+t.targetYear+' 下降 '+t.reduction+'%</span><span>已下降 <b class="'+(s.reduced>=0?'':'badText')+'">'+s.reduced.toFixed(1)+'%</b> · 应下降 '+s.need.toFixed(1)+'%</span></div></button>';
-  }).join("")+'</div>',v12Is("carbonAdmin","etsExpert")||v12Is("filler")?'<button class="linkBtn" onclick="go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')">目标跟踪 ›</button>':'');
+  }).join("")+'</div>'+(v12Is("carbonAdmin")?v12GoalFoot(year):''),v12Is("carbonAdmin","etsExpert")||v12Is("filler")?'<button class="linkBtn" onclick="go(\'组织碳排放\',\'碳目标管理\',\'目标跟踪\')">目标跟踪 ›</button>':'');
+}
+function v12GoalFoot(year) {
+  const t=yearTotals(year),cfg=v12Targets(),t12=cfg.items.find(x=>x.scope==="12"&&x.type==="absolute");
+  const act=t["1"]+t["2"],path=t12?v12TPath(t12,year):0;
+  return '<div class="v12GoalFoot">'+[[year+" 年范围一+二",v12Wan(act,0)+" 万t"],["年度目标",path?v12Wan(path,0)+" 万t":"—"],[act<=path?"低于目标":"超出目标",v12Wan(Math.abs(path-act),0)+" 万t",act<=path?"okText":"badText"],["2030 目标",t12?v12Wan(v12TPath(t12,t12.targetYear),0)+" 万t":"—"]].map(([l,v,c])=>'<div><span>'+l+'</span><b class="'+(c||"")+'">'+v+'</b></div>').join("")+'</div>';
 }
 function v12EtsWidget() {
   const year=2025,c=etsCalc(year),st=etsStatus(year),cycle=c.cycle,days=daysUntil(cycle.deadline);
@@ -100,7 +119,8 @@ function v12EtsWidget() {
   return v12Panel("碳履约情况 · "+year+" 年度",'<div class="v12EtsMini"><div class="days"><b>'+days+'</b><span>天<br>清缴截止 '+cycle.deadline+'</span></div>'+
     '<dl><div><dt>纳入设施</dt><dd>滨海石化热电厂 · 2×350MW</dd></div><div><dt>核查排放（应清缴）</dt><dd>'+fmt(c.verified,0)+' t</dd></div>'+
     '<div><dt>可用配额 + CCER</dt><dd>'+fmt(c.available+c.pending+etsCcerFree(),0)+' t</dd></div><div><dt>缺口</dt><dd class="'+(c.gap<0?'badText':'okText')+'">'+(c.gap<0?fmt(-c.gap,0)+' t':'无')+'</dd></div></dl>'+
-    '<div class="st">'+v12Tag(st.label,st.tone)+'<small>石化装置尚未纳入全国碳市场，仅自备电厂（发电设施）履约</small></div></div>',can?'<button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button>':'');
+    '<div class="st">'+v12Tag(st.label,st.tone)+'<small>石化装置尚未纳入全国碳市场，仅自备电厂（发电设施）履约</small></div></div>'+
+    '<h4 class="v12H4">近年履约</h4>'+v12Table(["年度","核查排放 (t)","核定配额 (t)","状态"],[2023,2024,2025,2026].map(y=>{const k=etsCalc(y),s2=etsStatus(y);return [y+" 年",fmt(k.verified,0),fmt(k.alloc,0),v12Tag(s2.label,s2.tone)];}),{nopage:true}),can?'<button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button>':'');
 }
 home = function () {
   const r=v12R();
@@ -118,14 +138,20 @@ home = function () {
   if(v12Is("filler"))extra=v12FillerHomeCard();
   const hello1='<div class="v12Hello"><h1>'+v12H(v12Person())+'，'+hello+'</h1><p>'+v12H(sub)+'</p></div>';
   const rows=[];
-  if(goals){rows.push([goals,v12TaskWidget()]);if(etsW){rows.push([etsW,market]);if(extra)rows.push([extra]);}else rows.push([extra||"",market].filter(Boolean));}
+  if(v12Is("filler")){rows.push([v12TaskWidget(),extra]);rows.push([goals,market]);}
+  else if(goals){rows.push([goals,v12TaskWidget()]);if(etsW){rows.push([etsW,market]);if(extra)rows.push([extra]);}else rows.push([extra||"",market].filter(Boolean));}
   else{rows.push([extra,v12TaskWidget()].filter(Boolean));rows.push([market]);}
   return hello1+rows.map(r=>'<div class="v12HomeGrid'+(r.length===1?' one':'')+'">'+r.join("")+'</div>').join("");
 };
 function v12FillerHomeCard() {
   const mine=myTasks(),orgs=[...new Set(mine.map(t=>t.org))];
-  return v12Panel("填报进度 · 我负责的组织",'<div class="v12OrgProg">'+orgs.map(org=>{const list=mine.filter(t=>t.org===org);const done=list.filter(t=>["通过","待审核"].includes(taskEntry(t).status)).length;
-    return '<div><span>'+v12H(org)+'<small>'+list.length+' 项指标</small></span>'+v12Progress(done,list.length)+'</div>';}).join("")+'</div>');
+  const done=t=>["通过","待审核"].includes(taskEntry(t).status);
+  const dl=mine.map(t=>t.deadline).sort()[0]||"2026-12-15",left=daysUntil(dl);
+  const byScope=["1","2","3"].map(s=>{const l=mine.filter(t=>t.scope===s);return [s,l.length,l.filter(done).length];}).filter(x=>x[1]);
+  return v12Panel("填报进度",'<div class="v12FillTop"><div class="d"><b class="'+(left<15?'warnText':'')+'">'+left+'</b><span>天<br>截止 '+dl+'</span></div><div class="p"><b>'+mine.filter(done).length+' / '+mine.length+'</b><span>已提交指标</span>'+v12Progress(mine.filter(done).length,mine.length)+'</div></div>'+
+    '<h4 class="v12H4">按组织</h4><div class="v12OrgProg">'+orgs.map(org=>{const list=mine.filter(t=>t.org===org);
+    return '<div><span>'+v12H(org)+'<small>'+list.length+' 项指标</small></span>'+v12Progress(list.filter(done).length,list.length)+'</div>';}).join("")+'</div>'+
+    '<h4 class="v12H4">按范围</h4><div class="v12OrgProg">'+byScope.map(([s,n,d])=>'<div><span>范围'+["一","二","三"][s-1]+'<small>'+n+' 项</small></span>'+v12Progress(d,n)+'</div>').join("")+'</div>');
 }
 
 // ================= 组织碳看板 =================
@@ -157,13 +183,13 @@ function v12OrgDashboard() {
   const segs=v12SegTotals(rows);
   const segTotal=segs.reduce((s,x)=>s+x.value,0);
   const segPanel=v12Panel("板块排放构成 <small>范围一+二</small>",v12Pie(segs.map(x=>({label:x.seg.name,value:x.value,color:x.seg.color,display:v12Wan(x.value,0)+" 万t",
-    action:"v12ShowRows('"+x.seg.name+"','r.scope!=3&&v12SegOf(r)?.id===\\'"+x.seg.id+"\\'')"})),{center:[v12Wan(segTotal,0)+" 万t","范围一+二"],size:210}));
+    action:"v12ShowRows('"+x.seg.name+"','r.scope!=3&&v12SegOf(r)?.id===\\'"+x.seg.id+"\\'')"})),{center:[v12Wan(segTotal,0)+" 万t","范围一+二"],size:220}));
   // 排放类型气泡
   const s12=v12State.dashS==="12";
   const kinds=v12SumBy(rows.filter(r=>s12?String(r.scope)!=="3":String(r.scope)==="3"),r=>v12Kind(r));
   const bubbleData=Object.entries(kinds).filter(([,v])=>v>0).map(([k,v])=>({label:k,short:k.replace(/^类别(\d+) /,"C$1 ").replace("（扣减）",""),value:v,display:v12Wan(v,0)+" 万t",
     action:"v12ShowRows('"+v12Q(k)+"','v12Kind(r)===\\'"+v12Q(k)+"\\'')"}));
-  const bubblePanel=v12Panel("排放类型分布",v12Bubbles(bubbleData,{width:680,height:270})+'<ul class="v12Legend cols">'+bubbleData.sort((a,b)=>b.value-a.value).map((d,i)=>'<li class="click" onclick="'+d.action+'"><i style="background:'+v12Color(i)+'"></i><span>'+v12H(d.label)+'</span><b>'+d.display+'</b><em>'+(d.value/Object.values(kinds).filter(v=>v>0).reduce((a,b)=>a+b,0)*100).toFixed(1)+'%</em></li>').join("")+'</ul>',v12Seg([["12","范围一+二"],["3","范围三"]],v12State.dashS,"v12SetDashS"));
+  const bubblePanel=v12Panel("排放类型分布",v12Bubbles(bubbleData,{width:680,height:370})+'<ul class="v12Legend cols">'+bubbleData.sort((a,b)=>b.value-a.value).map((d,i)=>'<li class="click" onclick="'+d.action+'"><i style="background:'+v12Color(i)+'"></i><span>'+v12H(d.label)+'</span><b>'+d.display+'</b><em>'+(d.value/Object.values(kinds).filter(v=>v>0).reduce((a,b)=>a+b,0)*100).toFixed(1)+'%</em></li>').join("")+'</ul>',v12Seg([["12","范围一+二"],["3","范围三"]],v12State.dashS,"v12SetDashS"));
   // 趋势
   const tg=v12Targets();
   const t12=tg.items.find(t=>t.scope==="12"&&t.type==="absolute"),t3=tg.items.find(t=>t.scope==="3"&&t.type==="absolute");
@@ -181,7 +207,7 @@ function v12OrgDashboard() {
   const gapTable=v12Table(["",yr+" 实际 (万t)","占比","较基准年"],[...gapRows.map(([l,a],i)=>{const b=yearTotals(tg.baseYear)[scopes[i]];return [l,v12Wan(a),(a/tActual*100).toFixed(1)+"%",((a-b)/b*100>0?"+":"")+((a-b)/b*100).toFixed(1)+"%"];}),
     {cls:"totalRow",cells:["合计 / 目标",v12Wan(tActual)+" / "+v12Wan(tTarget),"",'<b class="'+(tActual<=tTarget?'okText':'badText')+'">'+(tActual<=tTarget?"低于目标 ":"超出目标 ")+v12Wan(Math.abs(tActual-tTarget))+" 万t</b>"]}],{nopage:true});
   const trendPanel=v12Panel("碳排放趋势",'<div class="v12Two"><div><h4 class="v12Sub">历年排放与年度目标</h4>'+trendBars+v12LegendRow([["实际排放","#86BC25"],["目标年度（未发生）","#B9DB86"],["年度目标","#D92D20","line"]])+'</div>'+
-    '<div><h4 class="v12Sub">分范围排放与目标差异</h4>'+stackSvg+v12LegendRow(scopes.map((k,i)=>["范围"+["一","二","三"][Number(k)-1],["#26890D","#86BC25","#2C6AA0"][i]]).concat([["年度目标","#D92D20","line"]]))+gapTable+'</div></div>',
+    '<div><h4 class="v12Sub">分范围排放与目标差异</h4>'+stackSvg+v12LegendRow(scopes.map((k,i)=>["范围"+["一","二","三"][Number(k)-1],["#26890D","#86BC25","#2C6AA0"][i]]).concat([["年度目标","#D92D20","line"]]))+'</div></div><div class="v12TrendTable">'+gapTable+'</div>',
     v12Seg([["12","范围一+二"],["123","范围一+二+三"]],mode,"v12SetTrend"));
   // 来源构成
   const srcRows=rows.filter(r=>!v12State.srcScope||String(r.scope)===v12State.srcScope);
@@ -212,8 +238,8 @@ function v12OrgDashboard() {
   const orgPanel=v12Panel("组织碳排放 <small>范围一+二 · 各单位</small>",orgSvg+v12LegendRow([...PETRO_SEGMENTS.filter(s=>units.some(u=>u.e.seg===s.id)).map(s=>[s.name,s.color]),...(metric==="emission"?[["排放强度 tCO₂e/百万元","#2C6AA0","line"]]:[])]),
     v12Seg([["emission","排放量"],["intensity","排放强度"]],metric,"v12SetOrgMetric"));
   return v12Head("组织碳看板","",'组织碳排放 / 组织碳看板 · '+year+' 年度')+kpis+
-    '<div class="v12Grid2 a">'+segPanel+bubblePanel+'</div>'+trendPanel+
-    '<div class="v12Grid2">'+srcPanel+s3Panel+'</div>'+orgPanel;
+    '<div class="v12Grid2">'+segPanel+srcPanel+'</div>'+
+    '<div class="v12Grid2 a2">'+bubblePanel+s3Panel+'</div>'+trendPanel+orgPanel;
 }
 function v12SetDashS(v){v12Set("dashS",v);}
 function v12SetTrend(v){v12Set("trendMode",v);}

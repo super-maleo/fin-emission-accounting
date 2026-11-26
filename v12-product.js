@@ -238,7 +238,7 @@ function v12OpenProduct(code,tab) {
   let body="";
   if(tab==="base")body='<dl class="detailList">'+[["产品编码",p.code],["产品名称",p.name],["产品线",p.line],["功能单位",p.fu],["年销量",fmt(p.sales||0,0)+" t"],["生产单位",p.org||(p.line==="成品油"||p.line==="沥青"||p.line==="石油焦"?"滨海石化分公司":"滨海石化分公司 · 化工部")],["适用 PCR",(xkPcrs().find(x=>x.status==="有效"&&x.id!=="PCR-05"&&x.match.test(p.name))||{code:"GB/T 24067-2024（通则）"}).code],["数据来源",p.src==="ERP"?"ERP 物料主数据":"手工维护"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v12H(v)+'</dd></div>').join("")+'</dl>';
   if(tab==="bom")body=bom.length?v12Table(["类别","物料编码","物料名称","规格","千吨产品用量 (t)","对应 LCA 活动"],bom.map(b=>[b.type,b.code,'<strong>'+v12H(b.name)+'</strong>',v12H(b.spec),fmt(b.qty,2),b.link.startsWith("截断")?v12Tag(b.link,"gray"):v12H(b.link)]),{nopage:true}):
-    v12Empty('尚未维护 BOM。<button class="btn" onclick="showToast(\'已从 ERP 拉取 BOM，待产品碳建模专家确认\')">从 ERP 拉取 BOM</button>');
+    v12Empty('尚未维护 BOM。<button class="btn" onclick="showToast(\'已从 ERP 拉取 BOM，待确认\')">从 ERP 拉取 BOM</button>');
   if(tab==="comp"){
     const sum=comp.reduce((s,c)=>s+c.emission,0);
     body=comp.length?v12HBars(comp.filter(c=>c.emission>0).sort((a,b)=>b.emission-a.emission).map(c=>({label:c.name,sub:c.type,value:c.emission,display:v12Kg(c.emission,1)})),{unit:" kg"})+
@@ -263,7 +263,7 @@ function v12CfpAnalysis() {
   const certs=v12Certs().filter(c=>model.name.startsWith(c.product.slice(0,6))||c.product.slice(0,4)===model.name.slice(0,4));
   const hist=[...certs.map(c=>({label:c.from.slice(0,4)+" 认证",value:parseFloat(String(c.value).replace(/,/g,""))||0,color:"#A3B18A"})).filter(r=>r.value).reverse(),
     ...(model.history||[]).slice(-3).map((h,i)=>({label:"快照 "+((model.history.length-Math.min(3,model.history.length))+i+1),value:h.total,color:"#86BC25"})),{label:"当前",value:total,color:"#26890D"}];
-  const sens=v12Sensitivity(model,8);
+  const sens=v12Sensitivity(model,6);
   const stages=v12StageTotals(model);
   const perStage=v12Columns(stages.map((s,i)=>({label:s.name,value:s.total,color:V12_STAGE_COLORS[i],display:v12Kg(s.total,0)})),{width:560,height:240,barW:60});
   const byAct={};lines.forEach(l=>{const k=/电力|用电/.test(l.name)?"电力":/蒸汽/.test(l.name)?"蒸汽":/运|配送|管道|铁路/.test(l.name)?"运输":/燃烧|烧焦|干气/.test(l.name)?"燃料燃烧与工艺":/原油|乙烯|丁烯|MTBE|催化剂|包装/.test(l.name)?"原料与物料":"其他";byAct[k]=(byAct[k]||0)+l.emission;});
@@ -274,7 +274,8 @@ function v12CfpAnalysis() {
     '<div class="v12Grid2">'+v12Panel("生命周期阶段分布",perStage)+v12Panel("按排放类型",v12Pie(Object.entries(byAct).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>({label:k,value:v,display:v12Kg(v,0)+" kg"})),{size:170}))+'</div>'+
     '<div class="v12Grid2">'+v12Panel("产品间对比 <small>从摇篮到大门 · kgCO₂e / t</small>",cmp+v12LegendRow(lifecycleStages.slice(0,3).map((s,i)=>[s,V12_STAGE_COLORS[i]])))+
       v12Panel("历次核算与认证",v12Columns(hist,{width:560,height:250,barW:56,valFmt:v=>v12Kg(v,0)}))+'</div>'+
-    '<div class="v12Grid2">'+v12Panel("数据来源构成 <small>按排放量</small>",src)+v12Panel("敏感性 <small>单项 ±10% 对结果的影响</small>",
+    '<div class="v12Grid2">'+v12Panel("数据来源构成 <small>按排放量</small>",'<div class="v12SrcWrap">'+src+'<div class="v12StageQ"><h4 class="v12Sub">各阶段一手数据占比</h4>'+stages.map((st,i)=>{const ls=lines.filter(l=>l.stage===st.name),t=ls.reduce((a,l)=>a+l.emission,0),p=ls.filter(l=>/实测|供应商/.test(l.quality||"")).reduce((a,l)=>a+l.emission,0);
+      return '<div class="r"><span>'+v12H(st.name)+'<small>'+ls.length+' 条</small></span><i><b style="width:'+(t?p/t*100:0)+'%;background:'+V12_STAGE_COLORS[i]+'"></b></i><em>'+(t?(p/t*100).toFixed(0)+'%':'—')+'</em></div>';}).join("")+'</div></div>')+v12Panel("敏感性 <small>单项 ±10% 对结果的影响</small>",
       v12HBars(sens.map(s=>({label:s.name,sub:s.stage,value:s.delta,display:"±"+s.delta.toFixed(2)+"%"})),{color:"#B7791F"}))+'</div>'+
     v12Panel("活动明细",v12Table(["阶段","活动","参考流排放 kgCO₂e","占比","数据类型"],lines.sort((a,b)=>b.emission-a.emission).map(l=>({click:"v12OpenLine("+l.si+","+l.li+")",cells:[l.stage,'<strong>'+v12H(l.name)+'</strong>',v12Kg(l.emission,2),(l.emission/(total||1)*100).toFixed(2)+"%",v12H(l.quality||"—")]})),{nopage:true}));
 }
@@ -394,7 +395,7 @@ Object.assign(V12_PAGES_EXTRA, {
 .v12Split{display:flex;gap:20px;align-items:center}
 .v12Split .v12PieWrap{flex:1;min-width:0}
 .v12HBars{display:flex;flex-direction:column}
-.v12HBar{display:grid;grid-template-columns:minmax(180px,1.3fr) minmax(0,1.4fr) 96px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid #F2F4F7;font-size:13px}
+.v12SrcWrap{display:grid;gap:14px}.v12StageQ .r{display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:12.5px;padding:5px 0}.v12StageQ .r small{color:var(--sub);margin-left:6px}.v12StageQ i{height:8px;background:#F2F4F7;border-radius:4px;overflow:hidden;display:block}.v12StageQ i b{display:block;height:100%}.v12StageQ em{font-style:normal;text-align:right;font-weight:600}\n.v12HBar{display:grid;grid-template-columns:minmax(180px,1.3fr) minmax(0,1.4fr) 96px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid #F2F4F7;font-size:13px}
 .v12HBar.click{cursor:pointer}.v12HBar.click:hover{background:#F8FCF3}
 .v12HBar .l{display:block;min-width:0;line-height:1.35}.v12HBar .l small{display:block;color:var(--sub);font-size:11px;margin-left:28px}
 .v12HBar .l em{font-style:normal;width:20px;height:20px;line-height:20px;text-align:center;border-radius:4px;background:#F2F4F7;display:inline-block;font-size:11px;font-weight:700;margin-right:8px}

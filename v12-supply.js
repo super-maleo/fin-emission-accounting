@@ -98,6 +98,7 @@ function v12SupplyDash() {
   const covered=sups.filter(s=>tasks.some(t=>t.supplier===s.name));
   const st=k=>tasks.filter(t=>t.status===k).length;
   const overdue=tasks.filter(t=>["待填报","草稿","退回"].includes(t.status)&&daysUntil(t.deadline)<0);
+  const dueList=tasks.filter(t=>["待填报","草稿","退回"].includes(t.status)&&daysUntil(t.deadline)<=30).sort((a,b)=>daysUntil(a.deadline)-daysUntil(b.deadline)).slice(0,5);
   const prog=[["通过",st("通过"),"#26890D"],["待审核",st("待审核"),"#2C6AA0"],["退回",st("退回"),"#D92D20"],["填报中",st("草稿"),"#B7791F"],["待填报",st("待填报"),"#D0D5DD"]];
   const progBar='<div class="v12StackBar">'+prog.map(([l,v,c])=>v?'<i style="flex:'+v+';background:'+c+'" title="'+l+' '+v+'"></i>':'').join("")+'</div>'+v12LegendRow(prog.map(([l,v,c])=>[l+' '+v,c]));
   const byCat={};tasks.forEach(t=>{const k=v12CatLabel(t.category);(byCat[k] ||= {n:0,done:0}).n++;if(t.status==="通过")byCat[k].done++;});
@@ -107,13 +108,13 @@ function v12SupplyDash() {
   const catPie=v12Pie(V12_SUP_CATS.map((c,i)=>({label:c,value:sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0),display:v12Big(sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0))+" t"})).filter(d=>d.value>0),{size:150,legend:true});
   const ddc=k=>sups.filter(s=>s.dd===k).length;
   const risk=v12Scatter(sups.map(s=>({x:s.esg,y:Math.min(3.9,Math.max(0.05,s.intensity)),r:3+Math.sqrt(s.spend/16000),color:{"高":"#D92D20","中":"#B7791F","低":"#26890D"}[s.risk],label:s.name+" · ESG "+s.esg+" · 强度 "+s.intensity.toFixed(2)+" tCO₂e/万元",tag:"",action:"v12OpenSupplier('"+s.code+"')"})),
-    {width:560,height:300,xmin:40,xmax:100,ymin:0,ymax:Math.min(4,Math.max(...sups.map(s=>s.intensity))*1.1),xLabel:"ESG 评分",yLabel:"碳强度 tCO₂e/万元",quad:[70,1.0],quadLabels:[["高排放 · 低 ESG",54,30],["高排放 · 高 ESG",540,30,"end"],["低排放 · 低 ESG",54,256],["低排放 · 高 ESG",540,256,"end"]]});
+    {width:560,height:440,xmin:40,xmax:100,ymin:0,ymax:Math.min(4,Math.max(...sups.map(s=>s.intensity))*1.1),xLabel:"ESG 评分",yLabel:"碳强度 tCO₂e/万元",quad:[70,1.0],quadLabels:[["高排放 · 低 ESG",54,30],["高排放 · 高 ESG",540,30,"end"],["低排放 · 低 ESG",54,396],["低排放 · 高 ESG",540,396,"end"]]});
   return v12Head("供应链看板",'<button class="btn" onclick="go(\'供应链碳排放\',\'供应商分析报告\')">供应商分析报告</button><button class="btn primary" onclick="go(\'供应链碳排放\',\'数据收集与审核\',\'收集任务\')">发起收集</button>')+
     '<div class="statRow">'+v12Kpi("供应商",String(sups.length),"家 · 战略 "+sups.filter(s=>s.tier==="战略").length+" · 重要 "+sups.filter(s=>s.tier==="重要").length,"go('供应链碳排放','供应商管理')")+
       v12Kpi("年度采购额",v12Big(spend*10000).replace(" 亿"," 亿元").replace(" 万"," 万元"),"已发起数据收集的供应商覆盖 "+(covered.reduce((s,x)=>s+x.spend,0)/(spend||1)*100).toFixed(0)+"%")+
       v12Kpi("采购相关排放",v12Big(em)+" t","tCO₂e · 一手数据 "+(sups.filter(s=>s.method==="供应商一手数据").reduce((a,s)=>a+s.emission,0)/(em||1)*100).toFixed(0)+"%")+
       v12Kpi("数据收集",st("通过")+" / "+tasks.length,"已通过 · 逾期 "+overdue.length+" 项","go('供应链碳排放','数据收集与审核','收集任务')",overdue.length?"warnText":"")+'</div>'+
-    '<div class="v12Grid2">'+v12Panel("数据收集进度",progBar+'<h4 class="v12H4">按范围三类别</h4>'+catProg+(overdue.length?'<h4 class="v12H4">逾期未提交</h4>'+overdue.map(t=>'<div class="v12Line"><span>'+v12H(t.supplier)+'<small>'+v12H(t.name)+'</small></span><em class="badText">逾期 '+(-daysUntil(t.deadline))+' 天</em><button class="linkBtn" onclick="v12RemindSup(\''+t.id+'\')">催办</button></div>').join(""):''),
+    '<div class="v12Grid2">'+v12Panel("数据收集进度",progBar+'<h4 class="v12H4">按范围三类别</h4>'+catProg+(dueList.length?'<h4 class="v12H4">逾期及临近截止</h4>'+dueList.map(t=>'<div class="v12Line"><span>'+v12H(t.supplier)+'<small>'+v12H(t.name)+' · '+t.status+'</small></span><em class="'+(daysUntil(t.deadline)<0?'badText':'warnText')+'">'+(daysUntil(t.deadline)<0?'逾期 '+(-daysUntil(t.deadline))+' 天':'剩 '+daysUntil(t.deadline)+' 天')+'</em><button class="linkBtn" onclick="v12RemindSup(\''+t.id+'\')">催办</button></div>').join(""):''),
         '<button class="linkBtn" onclick="go(\'供应链碳排放\',\'数据收集与审核\',\'收集任务\')">收集任务 ›</button>')+
       v12Panel("供应商概况",'<div class="v12Split">'+tierPie+'</div><h4 class="v12H4">按物资类别（采购相关排放）</h4>'+catPie)+'</div>'+
     '<div class="v12Grid2">'+v12Panel("排放 TOP 10 供应商",v12HBars(top.map((s,i)=>({rank:i+1,label:s.name,sub:s.cat+" · "+s.method,value:s.emission,display:v12Big(s.emission)+" t",color:s.method==="供应商一手数据"?"#26890D":"#A3B18A",action:"v12OpenSupplier('"+s.code+"')"}))),
@@ -230,7 +231,7 @@ const V12_SUP_FLOW = [["供应商填报","供应商碳数据联系人"],["采购
 function v12SupFlowIdx(t){return t.status==="通过"?4:t.status==="待审核"?(t.stage===2?2:1):0;}
 function v12SupReview() {
   const tab=v12State.supRevTab||"todo",all=v12SupTasksAll();
-  const mine=t=>t.status==="待审核"&&(v12Is("supplyAdmin")?t.stage!==2:v12Is("carbonAdmin")?t.stage===2:true);
+  const mine=t=>t.status==="待审核";
   const todo=all.filter(mine),done=all.filter(t=>["通过","退回"].includes(t.status)||(t.status==="待审核"&&!mine(t)));
   const list=tab==="todo"?todo:done;
   return v12Head("审核任务")+v12Panel("审批流程",'<div class="v12FlowDef">'+v12Steps(V12_SUP_FLOW,-1)+'</div>')+
@@ -248,7 +249,7 @@ function v12SupplierTaskPage() {
 function v12OpenSupTask(id) {
   const t=v12SupTasksRaw().find(x=>x.id===id);if(!t)return;
   const supplierView=v12Is("supplier"),editable=supplierView&&["待填报","草稿","退回"].includes(t.status);
-  const canReview=!supplierView&&t.status==="待审核"&&(v12Is("supplyAdmin")?t.stage!==2:v12Is("carbonAdmin")?t.stage===2:false);
+  const canReview=!supplierView&&t.status==="待审核"&&v12Is("carbonAdmin");
   const idx=v12SupFlowIdx(t);
   const ro=editable?'':' readonly';
   const log=(t.log||[]).map(l=>'<li><b>'+l[0]+'</b> '+v12H(l[1])+' · '+v12H(l[2])+'</li>').join("");
@@ -283,7 +284,7 @@ async function v12SubmitSupTask(id,submit) {
 function v12ReviewSupTask(id,ok) {
   const t=v12SupTasksRaw().find(x=>x.id===id),note=v12Val("stNote");
   if(!ok&&!note){showToast("请填写退回原因");return;}
-  const who=v12Person()+(t.stage===2?"（碳管理复核）":"（采购初审）");
+  const who=(t.stage===2?"高文博（碳管理复核）":"陈思远（采购初审）");
   if(!ok){t.status="退回";t.note=note;t.stage=0;}
   else if(t.stage===2){t.status="通过";t.stage=0;}
   else t.stage=2;

@@ -88,8 +88,14 @@ function v12EtsMonitor() {
   const repPanel=v12Panel("年度排放报告与核查",v12Steps(steps,idx)+'<dl class="v12KV">'+[["报告编号",cycle.report.no||"—"],["提交日期",cycle.report.submittedAt||"—"],["报告排放量",(cycle.report.reportedQty||rep==="已核查")?fmt(cycle.report.reportedQty||c.verified,0)+" tCO₂":"—"],
     ["核查机构",cycle.report.verifier||ETS_VERIFIER],["核查报告",cycle.report.verifyNo||"—"],["核查排放量",c.verifiedDone?fmt(c.verified,0)+" tCO₂":"—"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v12H(v)+'</dd></div>').join("")+'</dl>',
     rep==="待提交"?'<button class="btn primary" onclick="openEtsReport('+year+')">提交排放报告</button>':rep==="已提交"?'<button class="btn primary" onclick="openEtsVerify('+year+')">登记核查结论</button>':'');
-  const recon=v12Panel("与组织碳台账核对",'<dl class="v12KV">'+[["碳履约 · 入炉煤量",fmt(sums.coal,0)+" t"],["组织碳 · T-S1-04 燃煤热电联产",fmt(orgQty,0)+" t"],["差异",fmt(orgQty-sums.coal,0)+" t（"+(sums.coal?((orgQty-sums.coal)/sums.coal*100).toFixed(2):0)+"%）"],
-    ["同步方式","月度存证后自动写入组织碳填报任务，热电厂填报人无需重复填报"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v12H(v)+'</dd></div>').join("")+'</dl>',
+  const orgEm=year<=CURRENT_YEAR&&REPORT_YEARS.includes(year)?v12Detail(year).filter(r=>r.org==="滨海石化热电厂"&&String(r.scope)==="1").reduce((x,r)=>x+r.emission_tco2e,0):0;
+  const df=(a,b)=>b?'<span class="'+(Math.abs(a-b)/b<0.005?'okText':'badText')+'">'+(a-b>=0?'+':'')+fmt(a-b,0)+'（'+((a-b)/b*100).toFixed(2)+'%）</span>':'—';
+  const recon=v12Panel("与组织碳台账核对",v12Table(["项目","碳履约","组织碳 T-S1-04","差异"],[
+    ["入炉煤量 (t)",fmt(sums.coal,0),fmt(orgQty,0),df(orgQty,sums.coal)],
+    ["燃烧排放 (tCO₂)",fmt(sums.coalEmission,0),orgEm?fmt(orgEm,0):"—",orgEm?df(orgEm,sums.coalEmission):"—"],
+    ["排放因子 (tCO₂/t)",(sums.coal?sums.coalEmission/sums.coal:0).toFixed(4),orgEm&&orgQty?(orgEm/orgQty).toFixed(4):"—",""],
+    ["核算方法","元素碳实测 · 月度","同一实测参数",""],["外购电力","不纳入（发电行业口径）","计入范围二",""]],{nopage:true})+
+    '<p class="v12Hint">月度存证后自动写入组织碳填报任务 T-S1-04，热电厂填报人无需重复填报；差异超过 0.5% 时在数据校验中生成待处理项。</p>',
     '<button class="linkBtn" onclick="go(\'组织碳排放\',\'碳核算\',\'碳台账\')">碳台账 ›</button>');
   return v12Head("排放监测")+v12EtsYearBar()+
     '<div class="statRow">'+v12Kpi("已存证",months.filter(m=>m.status==="已存证").length+" / 12","个月")+v12Kpi("累计燃煤",fmt(sums.coal,0),"t")+v12Kpi("累计排放",fmt(sums.coalEmission,0),"tCO₂")+
