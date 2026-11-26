@@ -39,6 +39,7 @@ currentPerson = function () {return v12Person();};
 function v12Is(...ids){return ids.includes(v12Role);}
 function v12Admin(){return v12Is("carbonAdmin");}
 
+var V12_PAGES_EXTRA = {};
 // ---------- 菜单 ----------
 const V12_MENUS = {
   "首页":{"首页总览":["系统总览"]},
@@ -226,7 +227,7 @@ function v12Table(heads,rows,opts={}) {
 }
 function v12Num(v,d=0){return fmt(v,d);}
 function v12Wan(v,d=1){return fmt(v/10000,d);}
-function v12Big(v){const a=Math.abs(v);return a>=1e8?fmt(v/1e8,2)+" 亿":a>=1e4?fmt(v/1e4,a>=1e6?0:1)+" 万":fmt(v,1);}
+function v12Big(v){const a=Math.abs(v);return a>=1e8?fmt(v/1e8,2)+" 亿":a>=1e4?fmt(v/1e4,a>=1e6?0:1)+" 万":fmt(v,a>=100?0:1);}
 function v12Kpi(label,value,note,action,tone) {
   return '<div class="statTile'+(action?' clickable':'')+'" '+(action?'role="button" tabindex="0" onclick="'+action+'"':'')+'><span>'+label+'</span><b'+(tone?' class="'+tone+'"':'')+'>'+value+'</b><small>'+(note||"")+'</small></div>';
 }

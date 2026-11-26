@@ -12,6 +12,7 @@ const V12_PAGES = {
   "组织碳排放|碳核算|数据校验":()=>v12CheckPage(),
   "组织碳排放|碳盘查报告":()=>v12OrgReport()
 };
+Object.assign(V12_PAGES,V12_PAGES_EXTRA);
 // 沿用既有实现的页面：映射到原菜单位置后调用原渲染
 const V12_LEGACY = {
   "组织碳排放|盘查准备|排放源":{top:"组织碳排放",group:"盘查准备",page:"排放源"},
@@ -154,13 +155,13 @@ tr.active td{background:#F6FAEF}.linkBtn.strong{font-weight:600;color:#1F2937}.v
 .wdPage{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:72px 80px;margin:0 auto 20px;min-height:400px;position:relative}
 .wdCover{min-height:1060px;display:flex;flex-direction:column}.wdLogo{font-family:Arial,sans-serif;font-weight:700;color:#26890D;font-size:18px}.wdLogo small{display:block;font-size:10px;letter-spacing:2px;color:#86BC25}
 .wdCoverMid{margin:180px 0 80px;text-align:center}.wdTitle{font-family:"SimHei","Heiti SC",sans-serif;font-size:30px;line-height:1.6;margin:0}.wdEn{font-family:Arial;color:#555;margin-top:12px}.wdSubT{margin-top:6px}
-.wdMeta{width:76%;margin:0 auto;border-collapse:collapse;font-size:14px}.wdMeta th{text-align:right;font-weight:400;padding:6px 10px;width:30%;color:#333;white-space:nowrap}.wdMeta td{border-bottom:1px solid #333;padding:6px 10px}
+.wdMeta{width:76%;margin:0 auto;border-collapse:collapse;font-size:14px}.wdMeta th{background:none!important;text-align:right;font-weight:400;padding:6px 10px;width:30%;color:#333;white-space:nowrap}.wdMeta td{border-bottom:1px solid #333;padding:6px 10px}
 .wdOrg{margin-top:auto;text-align:center;font-weight:700;line-height:2}
 .wdTocTitle{text-align:center;font-family:"SimHei",sans-serif;font-size:22px;border:0!important}.wdToc{list-style:none;padding:0;margin:20px 0}.wdToc>li{margin:6px 0}.wdToc a{color:#111;text-decoration:none;border-bottom:1px dotted #999}.wdToc ol{list-style:none;padding-left:2em;margin:2px 0;color:#444;font-size:13px}
 .wdSec h2{font-family:"SimHei","Heiti SC",sans-serif;font-size:20px;margin:0 0 16px;padding-bottom:6px;border-bottom:2px solid #86BC25}
 .wdSec h3{font-family:"SimHei","Heiti SC",sans-serif;font-size:16px;margin:20px 0 8px}.wdSec h4{font-size:14px;margin:14px 0 6px}
 .wdSec p{text-indent:2em;margin:6px 0;text-align:justify}.wdSec p.wdNote{text-indent:0;font-size:12px;color:#555}.wdSec ul{margin:6px 0 6px 2em;padding:0}
-.wdTable{width:100%;border-collapse:collapse;margin:10px 0 14px;font-size:12.5px;font-family:Arial,"Microsoft YaHei",sans-serif}.wdTable caption{font-weight:700;margin-bottom:6px;font-size:13px}
+.wdTable{width:100%;min-width:0!important;table-layout:auto;word-break:break-word;border-collapse:collapse;margin:10px 0 14px;font-size:12.5px;font-family:Arial,"Microsoft YaHei",sans-serif}.wdTable caption{font-weight:700;margin-bottom:6px;font-size:13px}
 .wdTable th,.wdTable td{border:1px solid #9AA0A6;padding:5px 8px;text-align:left;vertical-align:top}.wdTable th{background:#E8F2DA;text-align:center}.wdTable tr.sub td{background:#F6F8F3;font-weight:700}.wdTable tr.total td{font-weight:700;background:#FAFAFA}
 .wdFig{margin:12px 0;text-align:center}.wdFig svg{max-width:100%;height:auto}.wdFig figcaption{font-size:12px;color:#555;margin-top:4px}.wdFig .v12PieWrap{justify-content:center}
 .wdSign{display:flex;justify-content:space-between;margin-top:30px}.wdSign p{text-indent:0}
