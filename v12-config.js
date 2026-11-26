@@ -13,7 +13,7 @@ function v12PrivatePage() {
 function v12PfCat(c){v12Set("pfCat",c);}
 const V12_FB_TYPES = {
   fuel:{name:"燃料实测因子",formula:"EF = NCV × CC × OF × 44/12",fields:[["ncv","低位发热量 NCV（GJ/t）",21.2],["cc","单位热值含碳量 CC（tC/GJ）",0.0263],["of","碳氧化率 OF",0.98]],unit:"tCO₂/t",calc:v=>v.ncv*v.cc*v.of*44/12},
-  chp:{name:"热电联产分摊（热量法）",formula:"EF电 = E × 供电×3.6 ÷ (供电×3.6 + 供热) ÷ 供电",fields:[["e","机组排放 E（tCO₂）",3385486],["sup","供电量（MWh）",2935300],["heat","供热量（GJ）",7717900]],unit:"tCO₂/MWh",calc:v=>v.e*(v.sup*3.6/(v.sup*3.6+v.heat))/v.sup},
+  chp:{name:"热电联产分摊（热量法）",formula:"EF电 = E × 供电×3.6 ÷ (供电×3.6 + 供热) ÷ 供电",fields:[["e","设施排放 E（tCO₂）",3385486],["sup","供电量（MWh）",2935300],["heat","供热量（GJ）",7717900]],unit:"tCO₂/MWh",calc:v=>v.e*(v.sup*3.6/(v.sup*3.6+v.heat))/v.sup},
   supplier:{name:"供应商加权因子",formula:"EF = Σ(采购量ᵢ × 单位碳排ᵢ) ÷ Σ采购量ᵢ",fields:[["q1","供应商 A 采购量",1300000],["u1","供应商 A 单位碳排（tCO₂e/t）",1.86],["q2","供应商 B 采购量",86000],["u2","供应商 B 单位碳排（tCO₂e/t）",1.42]],unit:"tCO₂e/t",calc:v=>(v.q1*v.u1+v.q2*v.u2)/(v.q1+v.q2)},
   lca:{name:"引用 LCA 模型结果",formula:"EF = 产品碳足迹（从摇篮到大门）÷ 1000",fields:[],unit:"tCO₂e/t",calc:()=>v12GateTotal(activeLca())/1000}
 };
@@ -325,8 +325,8 @@ const V12_MANUAL = [
     steps:[["目标与范围","选择 PCR，自动带出功能单位、系统边界和截断规则。"],["清单分析","按原材料获取、生产制造、运输配送、使用、回收处置录入活动数据与因子。"],["影响评价","按 GWP100 计算 CO₂、CH₄、N₂O 贡献。"],["结果解释","完整性检查、敏感性分析通过后提交审核，发布后生成碳足迹评价报告。"]],
     tips:["PCR 在「基础配置 / 指标模板配置 / PCR 规则库」维护。","证书在「碳足迹认证管理」上传，到期前 180 天提醒复评。"]},
   {id:"ets",title:"碳履约",roles:"ESG管理员",go:["碳履约","履约工作台"],
-    steps:[["月度监测","「排放监测」按机组录入入炉煤量与元素碳实测值并存证。"],["报告与核查","次年 3 月 31 日前提交排放报告，登记第三方核查结论。"],["配额核定","「配额管理 / 配额核定」确认或对核定结果提出异议。"],["清缴","「配额清缴」使用 CCER（不超过 5%）抵销，缺口在交易所购入 CEA 后登记，完成清缴。"]],
-    tips:["只有滨海石化热电厂两台机组纳入全国碳市场，履约口径只算燃烧排放、不含购入电力。"]},
+    steps:[["月度监测","「排放监测 / 履约设施」新增或选择设施，按月录入燃料量与实测参数并存证。"],["报告与核查","次年 3 月 31 日前提交排放报告，登记第三方核查结论。"],["配额核定","「配额管理 / 配额核定」确认或对核定结果提出异议。"],["清缴","「配额清缴」使用 CCER（不超过 5%）抵销，缺口在交易所购入 CEA 后登记，完成清缴。"]],
+    tips:["当前纳管设施为滨海石化热电厂 1、2 号发电机组；乙烯、炼油等设施可先登记为「待纳入」，行业扩围后转为纳管。","履约口径只算燃烧排放，不含购入电力。"]},
   {id:"target",title:"减排目标",roles:"ESG管理员",go:["组织碳排放","碳目标管理","目标设置"],
     steps:[["设置基准年","选择基准年并核对基准年排放，结构变化或方法变更超过 5% 阈值时重算。"],["新增目标","选择覆盖范围、绝对量或强度、目标年与降幅。"],["跟踪进度","「目标跟踪」按年度对比实际排放与路径值，落后路径的目标在首页标红。"]],
     tips:[]},
@@ -351,3 +351,18 @@ function helpManualPage() {
 .v12ManPath{margin:0 0 12px;font-size:12.5px;color:var(--sub)}.v12ManSteps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .v12ManSteps li{counter-increment:s;border:1px solid var(--line);border-radius:8px;padding:14px 14px 14px 50px;position:relative;background:#FCFDFB}.v12ManSteps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:24px;height:24px;border-radius:50%;background:#86BC25;color:#fff;font-weight:700;display:grid;place-items:center;font-size:12px}
 .v12ManSteps b{display:block;margin-bottom:4px}.v12ManSteps span{font-size:13px;color:#475467;line-height:1.6}.v12ManTips{margin:0;padding-left:18px;display:grid;gap:8px;font-size:13px;line-height:1.6}.v12ManFaq summary{cursor:pointer;padding:8px 0;font-weight:600;font-size:13px}.v12ManFaq p{margin:0 0 8px;font-size:13px;color:#475467}`;document.head.appendChild(el);})();
+
+// ================= 公共因子库：并入行业平均 / 支出法缺省因子 =================
+const v12PubOrig = publicFactorPage;
+publicFactorPage = function () {
+  const tab=v12State.pubTab||"ef";
+  const lib=factorLibrary(),eeio=lib.filter(r=>r.category==="支出法（EEIO）"),avg=lib.filter(r=>r.category==="原材料"||r.core&&r.scope==="3"&&r.unit!=="万元");
+  const cut=html=>{const i=html.indexOf('<div class="catTabs">');const j=html.indexOf('</div>',i);return i<0?html:html.slice(j+6);};
+  let body;
+  if(tab==="ef"){const h=v12PubOrig();const i=h.indexOf('<div class="catTabs">');body=i<0?h:h.slice(i);}
+  else {fallbackTab={avg:"avg",eeio:"eeio",rule:"rule"}[tab];body=cut(fallbackFactorPage());}
+  return pageHead("公共因子库",exportMenu("exportPageTables",[["xlsx","Excel"],["csv","CSV"]]),"基础配置 / 因子库管理 / 公共因子库")+
+    '<div class="statRow five">'+statTile("因子总数",String(lib.length),"条 · 版本 "+FACTOR_VERSION.lib)+statTile("排放因子",String(lib.length-eeio.length-avg.length),"燃料、过程、电力、运输")+statTile("行业平均因子",String(avg.length),"按物料 · 缺省值")+statTile("支出法因子",String(eeio.length),"按行业 · 缺省值")+statTile("最近更新",FACTOR_VERSION.updated,"")+'</div>'+
+    v12Tabs([["ef","全部因子",lib.length],["avg","行业平均因子（缺省）",avg.length],["eeio","支出法因子（缺省）",eeio.length],["rule","缺省值使用规则"]],tab,"v12PubTab")+body;
+};
+function v12PubTab(t){v12Set("pubTab",t);}

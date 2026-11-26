@@ -50,8 +50,9 @@ function v12EtsBench() {
     {label:"履约来源",stack:[{label:"预分配",value:pre?.qty||0,color:"#26890D"},{label:"核定补发",value:final?Math.max(0,final.qty-(pre?.qty||0)):0,color:"#86BC25"},{label:"CCER 抵销",value:c.ccer,color:"#0097A9"},{label:"净买入",value:Math.max(0,bought-sold),color:"#B7791F"}]}
   ],{width:520,height:250,barW:110,valFmt:v=>fmt(v,0),axisFmt:v=>v12Big(v)});
   const org=v12Detail(Math.min(year,CURRENT_YEAR)),s1Org=org.filter(r=>String(r.scope)==="1").reduce((s,r)=>s+r.emission_tco2e,0);
-  const link='<dl class="v12KV">'+[["纳入设施","滨海石化热电厂 · 2×350 MW 超临界燃煤热电联产机组（全国碳市场 · 发电行业）"],["未纳入","炼油、乙烯、化工装置等石化生产设施尚未纳入全国碳市场，按组织碳盘查口径管理"],
-    ["与组织碳关系","机组燃煤排放即组织碳台账范围一「燃煤热电联产」（T-S1-04），月度存证后自动同步"],["占集团范围一",(s1Org?c.sums.coalEmission/s1Org*100:0).toFixed(1)+"%（"+fmt(c.sums.coalEmission,0)+" / "+fmt(s1Org,0)+" tCO₂e）"],["履约口径","化石燃料燃烧排放；外购电力不计入履约排放"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v+'</dd></div>').join("")+'</dl>';
+  const facs=v12Facilities();
+  const link='<dl class="v12KV">'+[["纳管设施",facs.filter(f=>f.status==="纳管").map(f=>f.name).join("、")+"（"+facs.filter(f=>f.status==="纳管").length+" 个）"],["待纳入设施",facs.filter(f=>f.status!=="纳管").map(f=>f.name).join("、")||"—"],
+    ["与组织碳关系","纳管设施燃烧排放即组织碳台账范围一「燃煤热电联产」（T-S1-04），月度存证后自动同步"],["占集团范围一",(s1Org?c.sums.coalEmission/s1Org*100:0).toFixed(1)+"%（"+fmt(c.sums.coalEmission,0)+" / "+fmt(s1Org,0)+" tCO₂e）"],["履约口径","化石燃料燃烧排放；外购电力不计入履约排放"]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v+'</dd></div>').join("")+'</dl>';
   const rows=ETS_YEARS.slice().reverse().map(y=>{const f=v12EtsFacts(y),s=etsStatus(y);
     return {click:"v12Set('etsYear',"+y+")",cls:y===year?"v12Cur":"",cells:[y+" 年度",f.c.verifiedDone?fmt(f.c.verified,0):'<span class="muted">'+fmt(f.c.verified,0)+'（预计）</span>',f.final?fmt(f.final.qty,0):'<span class="muted">'+fmt(f.c.alloc,0)+'（预计）</span>',
       fmt(f.c.ccer,0),(f.bought-f.sold>=0?'+':'')+fmt(f.bought-f.sold,0),'<b class="'+(f.alloc-f.c.verified>=0?'okText':'badText')+'">'+(f.alloc-f.c.verified>=0?'+':'')+fmt(f.alloc-f.c.verified,0)+'</b>',f.cycle.surrender.at||"—",f.cycle.deadline,'<span class="status '+s.tone+'">'+s.label+'</span>']};});
@@ -71,11 +72,7 @@ function v12EtsBench() {
 function v12EtsMonitor() {
   const year=v12EY(),c=etsCalc(year),cycle=c.cycle,months=ets().monthly[year];
   const units=ETS_UNITS.map(u=>{const m=scaleMonths(months,year,u.id),s=etsSums(m);return {...u,m,s};});
-  const unitCards='<div class="v12Units">'+units.map(u=>'<div class="v12Unit"><div class="h"><b>'+u.name+'</b><small>投运 '+u.commissioned+'</small></div><p>'+v12H(u.spec)+'</p>'+
-    '<dl><div><dt>燃煤量</dt><dd>'+fmt(u.s.coal,0)+' t</dd></div><div><dt>供电量</dt><dd>'+fmt(u.s.supply,0)+' MWh</dd></div><div><dt>供热量</dt><dd>'+fmt(u.s.heat,0)+' GJ</dd></div><div><dt>排放</dt><dd><b>'+fmt(u.s.coalEmission,0)+' tCO₂</b></dd></div>'+
-    '</dl></div>').join("")+
-    '<div class="v12UnitNote"><b>什么是机组</b><p>机组指一台锅炉与其配套汽轮发电机组成的发电单元，是全国碳市场发电行业核算和配额分配的基本单元。每台机组分别计量入炉煤量、元素碳、供电量和供热量，分别计算排放和配额，全厂汇总后履约。</p>'+
-    '<p class="v12Formula">E = Σ（FC × NCV × CC × OF × 44/12）<small>FC 入炉煤量 · NCV 低位发热量 · CC 单位热值含碳量 · OF 碳氧化率 '+CHP_PARAMS.of+'</small></p></div></div>';
+  const unitCards=v12FacilityTable(year,units);
   const chart=v12Columns(months.map((m,i)=>({label:m.month+"月",stack:units.map((u,k)=>({label:u.name,value:etsMonthEmission(u.m[i]).coal,color:["#26890D","#86BC25"][k]})),action:m.status!=="未到期"?"openEtsMonth("+year+","+m.month+")":""})),{width:1000,height:240,barW:46,labels:false});
   const rows=months.map(m=>{const e=etsMonthEmission(m);return {cells:[m.month+" 月",fmt(m.coal,0),m.ncv,m.cc,m.status==="未到期"?"—":fmt(e.coal,0),fmt(m.supply,0),fmt(m.heat,0),
     '<span class="status '+({"已存证":"ok","待存证":"warn"}[m.status]||"gray")+'">'+m.status+'</span>'+(m.at?'<small>'+m.at+'</small>':''),
@@ -100,10 +97,62 @@ function v12EtsMonitor() {
   return v12Head("排放监测")+v12EtsYearBar()+
     '<div class="statRow">'+v12Kpi("已存证",months.filter(m=>m.status==="已存证").length+" / 12","个月")+v12Kpi("累计燃煤",fmt(sums.coal,0),"t")+v12Kpi("累计排放",fmt(sums.coalEmission,0),"tCO₂")+
       v12Kpi("综合排放因子",(sums.coal?sums.coalEmission/sums.coal:0).toFixed(4),"tCO₂ / t 煤")+'</div>'+
-    v12Panel("纳入机组",unitCards)+v12Panel("月度排放（分机组）",chart+v12LegendRow(units.map((u,k)=>[u.name,["#26890D","#86BC25"][k]])))+
+    v12Panel("履约设施",unitCards,'<button class="btn primary" onclick="v12NewFacility()">新增设施</button>')+v12Panel("月度排放 · 纳管设施",chart+v12LegendRow(units.map((u,k)=>[u.name,["#26890D","#86BC25"][k]])))+
     v12Panel("月度监测数据",v12Table(["月份","入炉煤量 (t)","低位发热量 (GJ/t)","单位热值含碳量 (tC/GJ)","排放量 (tCO₂)","供电量 (MWh)","供热量 (GJ)","状态",""],rows,{nopage:true}))+
     '<div class="v12Grid2">'+repPanel+recon+'</div>';
 }
+
+// ================= 履约设施 =================
+ETS_UNITS.forEach(u=>{u.name=u.id+" 号发电机组";});
+const V12_FAC_TYPES = ["发电机组","工业锅炉","乙烯裂解炉","炼油装置","合成氨 / 甲醇装置","水泥熟料生产线","其他"];
+const V12_FAC_MARKETS = ["全国碳市场 · 发电行业","全国碳市场 · 钢铁 / 水泥 / 铝冶炼","全国碳市场 · 石化行业（扩围待纳入）","全国碳市场 · 化工行业（扩围待纳入）","地方碳市场","暂未纳入"];
+function v12FacCustom(){const v=v12();if(!v.etsFac)v.etsFac=[{id:"F-01",name:"1 号乙烯裂解炉",type:"乙烯裂解炉",org:"滨海石化分公司",market:"全国碳市场 · 石化行业（扩围待纳入）",status:"待纳入",since:"2014-08",spec:"乙烯 100 万 t/a · 燃料气",method:"燃料燃烧 + 工业过程",data:{}},
+  {id:"F-02",name:"2 号催化裂化装置",type:"炼油装置",org:"滨海石化分公司",market:"全国碳市场 · 石化行业（扩围待纳入）",status:"待纳入",since:"2012-05",spec:"催化裂化 350 万 t/a",method:"燃料燃烧 + 烧焦过程",data:{}}];return v.etsFac;}
+function v12Facilities(){return [...ETS_UNITS.map(u=>({id:"U"+u.id,name:u.name,type:"发电机组",org:"滨海石化热电厂",market:"全国碳市场 · 发电行业",status:"纳管",since:u.commissioned,spec:u.spec,method:"燃料燃烧",unit:u})),...v12FacCustom()];}
+function v12FacSums(f){const vals=Object.values(f.data||{});return {fuel:vals.reduce((a,d)=>a+d.qty,0),em:vals.reduce((a,d)=>a+d.em,0),n:vals.length};}
+function v12FacilityTable(year,units) {
+  const rows=v12Facilities().map(f=>{
+    const u=f.unit?units.find(x=>x.id===f.unit.id):null,cs=u?null:v12FacSums(f);
+    return {click:"v12OpenFacility('"+f.id+"')",cells:['<strong>'+v12H(f.name)+'</strong><small class="muted">'+v12H(f.spec||"")+'</small>',v12H(f.type),v12H(f.org),v12H(f.market),v12Tag(f.status,f.status==="纳管"?"ok":"gray"),
+      u?fmt(u.s.coal,0)+" t 煤":cs.n?fmt(cs.fuel,0)+" "+v12H(Object.values(f.data)[0].unit):'<span class="muted">—</span>',
+      u?'<b>'+fmt(u.s.coalEmission,0)+'</b>':cs.n?'<b>'+fmt(cs.em,0)+'</b>':'<span class="muted">—</span>',
+      u?(u.m.filter(m=>m.status==="已存证").length+" / 12 月"):(cs.n+" 个月"),
+      '<button class="linkBtn" onclick="event.stopPropagation();'+(u?"v12FacEnter('"+f.id+"',"+year+")":"v12FacData('"+f.id+"')")+'">录入</button>']};});
+  return v12Table(["设施","类型","所属单位","碳市场","状态",year+" 年燃料量","排放 (tCO₂)","监测数据",""],rows,{nopage:true});
+}
+function v12FacEnter(id,year){const m=ets().monthly[year].find(x=>x.status==="待存证");if(m)openEtsMonth(year,m.month);else showToast("本年度已到期月份均已存证");}
+function v12OpenFacility(id) {
+  const f=v12Facilities().find(x=>x.id===id);if(!f)return;
+  const cs=f.unit?null:v12FacSums(f);
+  v12Modal(v12H(f.name),'<dl class="detailList">'+[["设施类型",f.type],["所属单位",f.org],["碳市场",f.market],["状态",f.status],["投运时间",f.since],["规模",f.spec],["核算方法",f.method]].map(([k,v])=>'<div><dt>'+k+'</dt><dd>'+v12H(v||"—")+'</dd></div>').join("")+'</dl>'+
+    (cs&&cs.n?v12Table(["月份","燃料","消耗量","低位发热量","单位热值含碳量","排放 (tCO₂)"],Object.entries(f.data).sort().map(([m,d])=>[m,v12H(d.fuel),fmt(d.qty,0)+" "+v12H(d.unit),d.ncv,d.cc,fmt(d.em,0)]),{nopage:true}):''),
+    '<button class="btn" data-close-modal="1">关闭</button>'+(f.unit?'':'<button class="btn" onclick="v12DelFacility(\''+id+'\')">删除</button><button class="btn primary" onclick="closeModal();v12FacData(\''+id+'\')">录入监测数据</button>'));
+}
+function v12NewFacility() {
+  v12Modal("新增履约设施",'<div class="modalForm">'+v12Field("设施名称",'<input id="nfName" placeholder="如：3 号发电机组、2 号乙烯裂解炉">')+v12Field("设施类型",'<select id="nfType">'+V12_FAC_TYPES.map(t=>'<option>'+t+'</option>').join("")+'</select>')+
+    v12Field("所属单位",'<select id="nfOrg">'+PETRO_ENTITIES.map(e=>'<option>'+v12H(e.org)+'</option>').join("")+'</select>')+v12Field("碳市场",'<select id="nfMarket">'+V12_FAC_MARKETS.map(t=>'<option>'+t+'</option>').join("")+'</select>')+
+    v12Field("状态",'<select id="nfStatus"><option>纳管</option><option selected>待纳入</option></select>')+v12Field("投运时间",'<input id="nfSince" type="month">')+v12Field("规模",'<input id="nfSpec" placeholder="装机容量 / 产能">')+
+    v12Field("核算方法",'<select id="nfMethod"><option>燃料燃烧</option><option>燃料燃烧 + 工业过程</option><option>燃料燃烧 + 烧焦过程</option></select>')+'</div>',
+    '<button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="v12SaveFacility()">保存</button>');
+}
+function v12SaveFacility(){const name=v12Val("nfName");if(!name){showToast("请填写设施名称");return;}const list=v12FacCustom();
+  list.push({id:"F-"+String(list.length+1).padStart(2,"0")+Date.now().toString().slice(-3),name,type:v12Val("nfType"),org:v12Val("nfOrg"),market:v12Val("nfMarket"),status:v12Val("nfStatus"),since:v12Val("nfSince")||"—",spec:v12Val("nfSpec"),method:v12Val("nfMethod"),data:{}});
+  v12Persist();closeModal();render();showToast("设施已新增");}
+function v12DelFacility(id){const v=v12();v.etsFac=v12FacCustom().filter(f=>f.id!==id);v12Persist();closeModal();render();showToast("已删除");}
+function v12FacData(id) {
+  const f=v12FacCustom().find(x=>x.id===id);if(!f)return;
+  const months=Array.from({length:12},(_,i)=>CURRENT_YEAR+"-"+String(i+1).padStart(2,"0"));
+  v12Modal(v12H(f.name)+" · 监测数据录入",'<div class="modalForm">'+v12Field("月份",'<select id="fdMonth">'+months.map(m=>'<option '+(f.data[m]?'':'')+'>'+m+'</option>').join("")+'</select>')+
+    v12Field("燃料品种",'<select id="fdFuel"><option data-u="万Nm³" data-n="389.31" data-c="0.0153">天然气</option><option data-u="t" data-n="45.92" data-c="0.01735">炼厂干气 / 燃料气</option><option data-u="t" data-n="41.816" data-c="0.0211">燃料油</option><option data-u="t" data-n="20.86" data-c="0.02618">原煤</option></select>')+
+    v12Field("消耗量",'<input id="fdQty" type="number" step="any" oninput="v12FdCalc()">')+v12Field("低位发热量 NCV",'<input id="fdNcv" type="number" step="any" value="389.31" oninput="v12FdCalc()">')+
+    v12Field("单位热值含碳量 CC",'<input id="fdCc" type="number" step="any" value="0.0153" oninput="v12FdCalc()">')+v12Field("碳氧化率 OF",'<input id="fdOf" type="number" step="any" value="0.99" oninput="v12FdCalc()">')+'</div><p class="calcPreview" id="fdOut">E = FC × NCV × CC × OF × 44/12</p>',
+    '<button class="btn" data-close-modal="1">取消</button><button class="btn primary" onclick="v12SaveFacData(\''+id+'\')">保存</button>');
+  document.getElementById("fdFuel").onchange=e=>{const o=e.target.selectedOptions[0];document.getElementById("fdNcv").value=o.dataset.n;document.getElementById("fdCc").value=o.dataset.c;v12FdCalc();};
+}
+function v12FdCalc(){const q=+v12Val("fdQty"),e=q*v12Val("fdNcv")*v12Val("fdCc")*v12Val("fdOf")*44/12;const o=document.getElementById("fdOut");if(o)o.innerHTML=q>0?'排放 <b>'+fmt(e,1)+' tCO₂</b>':'E = FC × NCV × CC × OF × 44/12';return e;}
+function v12SaveFacData(id){const f=v12FacCustom().find(x=>x.id===id),q=+v12Val("fdQty");if(!(q>0)){showToast("请填写消耗量");return;}
+  const o=document.getElementById("fdFuel").selectedOptions[0];f.data[v12Val("fdMonth")]={fuel:o.textContent,unit:o.dataset.u,qty:q,ncv:+v12Val("fdNcv"),cc:+v12Val("fdCc"),of:+v12Val("fdOf"),em:v12FdCalc()};
+  v12Persist();closeModal();render();showToast("已保存");}
 
 // ================= 配额管理 =================
 function v12QuotaTab(t){v12Set("quotaTab",t);}
@@ -123,7 +172,7 @@ function v12EtsCfg() {
 function v12QuotaSetting(year) {
   const cfg=v12EtsCfg(),p=ETS_PROFILE[year];
   const yearsRows=ETS_YEARS.slice().reverse().map(y=>[y+" 年度",ETS_PROFILE[y].be,ETS_PROFILE[y].bh,y<2021?"2019–2020 年度方案":y<2023?"2021–2022 年度方案":"2023–2024 年度方案及后续",y===year?v12Tag("当前","ok"):""]);
-  return '<div class="v12Grid2">'+v12Panel("分配参数 · "+year+" 年度",'<dl class="v12KV">'+[["机组类别","300 MW 等级以上常规燃煤机组"],["供电基准值",p.be+" tCO₂/MWh"],["供热基准值",p.bh+" tCO₂/GJ"],
+  return '<div class="v12Grid2">'+v12Panel("分配参数 · "+year+" 年度",'<dl class="v12KV">'+[["设施类别","发电机组 · 300 MW 等级以上常规燃煤"],["供电基准值",p.be+" tCO₂/MWh"],["供热基准值",p.bh+" tCO₂/GJ"],
       ["冷却方式修正系数",cfg.coolingK.toFixed(3)+"（"+cfg.cooling+"）"],["供热量修正系数",cfg.heatK.toFixed(3)],["负荷（出力）系数修正系数",cfg.loadK.toFixed(3)],["预分配比例",cfg.preRatio+"%（按上年度产出量）"],["CCER 抵销上限",cfg.ccerCap+"% × 核查排放"],["清缴截止",etsCycle(year).deadline]].map(([k,val])=>'<div><dt>'+k+'</dt><dd>'+v12H(val)+'</dd></div>').join("")+'</dl>',
       etsEditable()?'<button class="btn" onclick="v12EditEtsCfg('+year+')">编辑参数</button>':'')+
     v12Panel("配额计算公式",'<p class="v12Formula">配额 = 供电量 × 供电基准值 × 冷却方式修正 × 供热量修正 × 负荷修正<br>　　 + 供热量 × 供热基准值</p>'+
@@ -151,7 +200,7 @@ function v12QuotaAlloc(year) {
   const rows=units.map(x=>[x.u.name,fmt(x.s.supply,0),p.be,"1.000",fmt(x.power,0),fmt(x.s.heat,0),p.bh,fmt(x.heat,0),'<b>'+fmt(x.power+x.heat,0)+'</b>']);
   rows.push({cls:"totalRow",cells:["全厂",fmt(units.reduce((s,x)=>s+x.s.supply,0),0),"","",fmt(est.power,0),fmt(units.reduce((s,x)=>s+x.s.heat,0),0),"",fmt(est.heat,0),'<b>'+fmt(est.qty,0)+'</b>']});
   const tl=[["预分配",pre?fmt(pre.qty,0)+" t · "+pre.at:"未下发",!!pre],["核定结果下发",final?fmt(final.qty,0)+" t · "+final.at:"核查完成后下发",!!final],["企业确认",final?.status==="已确认"?final.confirmedAt:final?.status||"—",final?.status==="已确认"],["补发到账",final?.status==="已确认"?fmt(final.qty-(pre?.qty||0),0)+" t":"—",final?.status==="已确认"]];
-  return v12Panel(year+" 年度分机组配额计算",v12Table(["机组","供电量 (MWh)","供电基准值","修正系数","供电配额 (t)","供热量 (GJ)","供热基准值","供热配额 (t)","合计 (t)"],rows,{nopage:true})+
+  return v12Panel(year+" 年度分设施配额计算",v12Table(["设施","供电量 (MWh)","供电基准值","修正系数","供电配额 (t)","供热量 (GJ)","供热基准值","供热配额 (t)","合计 (t)"],rows,{nopage:true})+
       (final&&Math.abs(final.qty-est.qty)>1?'<p class="v12Hint">主管部门核定 '+fmt(final.qty,0)+' t，按核查产出量计算 '+fmt(est.qty,0)+' t。</p>':''),
       final?.status==="待确认"&&etsEditable()?'<button class="btn" onclick="openAllocObjection('+year+')">提出异议</button><button class="btn primary" onclick="confirmAlloc('+year+')">确认核定结果</button>':final?.status==="异议处理中"&&etsEditable()?'<button class="btn" onclick="withdrawObjection('+year+')">撤回异议</button>':'')+
     v12Panel("核定进度",'<ul class="v12Timeline">'+tl.map(([a,b,ok])=>'<li class="'+(ok?'pass':'')+'"><i></i><b>'+a+'</b><span>'+v12H(b)+'</span></li>').join("")+'</ul>'+

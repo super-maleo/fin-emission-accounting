@@ -92,6 +92,18 @@ function v12SupplierMyTasks(){const me=v12MySupplierName();return v12SupTasksAll
 function v12SupEmission(t){return (Number(t.qty)||0)*(Number(t.unitCarbon)||0)/1000;}
 
 // ================= 供应链看板 =================
+function v12SupDrill(kind,val) {
+  const list=v12Suppliers().filter(x=>kind==="tier"?x.tier===val:kind==="cat"?x.cat===val:kind==="risk"?x.risk===val:true).sort((a,b)=>b.emission-a.emission);
+  const em=list.reduce((a,x)=>a+x.emission,0),sp=list.reduce((a,x)=>a+x.spend,0);
+  v12Modal((kind==="tier"?val+"供应商":kind==="risk"?val+"风险供应商":val)+" · "+list.length+" 家",
+    '<div class="v12Counts">'+[["供应商",list.length+" 家"],["年采购额",fmt(sp,0)+" 万元"],["采购相关排放",v12Big(em)+" t"],["一手数据占比",(list.filter(x=>x.method==="供应商一手数据").reduce((a,x)=>a+x.emission,0)/(em||1)*100).toFixed(0)+"%"]].map(([l,v])=>'<div><b>'+v+'</b><span>'+l+'</span></div>').join("")+'</div>'+
+    v12Table(["供应商","物资类别","分级","年采购额 (万元)","采购相关排放 (tCO₂e)","核算方式","ESG","风险"],list.map(x=>({click:"closeModal();v12OpenSupplier('"+x.code+"')",cells:['<strong>'+v12H(x.name)+'</strong>',x.cat,x.tier,fmt(x.spend,0),fmt(x.emission,0),v12H(x.method),x.esg,v12Tag(x.risk,{"高":"bad","中":"warn","低":"ok"}[x.risk])]})),{nopage:true}),
+    '<button class="btn" data-close-modal="1">关闭</button><button class="btn primary" onclick="v12State.supCat=\''+(kind==="cat"?val:"")+'\';v12State.supTier=\''+(kind==="tier"?val:"")+'\';v12State.supRisk=\''+(kind==="risk"?val:"")+'\';closeModal();go(\'供应链碳排放\',\'供应商管理\')">在供应商管理中查看</button>');
+}
+function v12TaskDrill(st,label) {
+  const list=v12SupTasksAll().filter(t=>t.status===st);
+  v12Modal(label+"任务 · "+list.length+" 项",v12Table(["供应商","数据对象","范围三类别","截止日期","当前节点",""],list.map(t=>({click:"closeModal();"+t.open,cells:['<strong>'+v12H(t.supplier)+'</strong>',v12H(t.name),v12CatLabel(t.category),t.deadline+(daysUntil(t.deadline)<0&&st!=="通过"?' <small class="badText">逾期</small>':''),v12H(t.node),'<button class="linkBtn">打开</button>']})),{nopage:true,empty:"没有任务"}),'<button class="btn" data-close-modal="1">关闭</button>');
+}
 function v12SupplyDash() {
   const sups=v12Suppliers(),tasks=v12SupTasksAll();
   const spend=sups.reduce((s,x)=>s+x.spend,0),em=sups.reduce((s,x)=>s+x.emission,0);
@@ -100,12 +112,13 @@ function v12SupplyDash() {
   const overdue=tasks.filter(t=>["待填报","草稿","退回"].includes(t.status)&&daysUntil(t.deadline)<0);
   const dueList=tasks.filter(t=>["待填报","草稿","退回"].includes(t.status)&&daysUntil(t.deadline)<=30).sort((a,b)=>daysUntil(a.deadline)-daysUntil(b.deadline)).slice(0,5);
   const prog=[["通过",st("通过"),"#26890D"],["待审核",st("待审核"),"#2C6AA0"],["退回",st("退回"),"#D92D20"],["填报中",st("草稿"),"#B7791F"],["待填报",st("待填报"),"#D0D5DD"]];
-  const progBar='<div class="v12StackBar">'+prog.map(([l,v,c])=>v?'<i style="flex:'+v+';background:'+c+'" title="'+l+' '+v+'"></i>':'').join("")+'</div>'+v12LegendRow(prog.map(([l,v,c])=>[l+' '+v,c]));
+  const stKey={"通过":"通过","待审核":"待审核","退回":"退回","填报中":"草稿","待填报":"待填报"};
+  const progBar='<div class="v12StackBar">'+prog.map(([l,v,c])=>v?'<i style="flex:'+v+';background:'+c+';cursor:pointer" title="'+l+' '+v+'" onclick="v12TaskDrill(\''+stKey[l]+'\',\''+l+'\')"></i>':'').join("")+'</div>'+v12LegendRow(prog.map(([l,v,c])=>[l+' '+v,c]));
   const byCat={};tasks.forEach(t=>{const k=v12CatLabel(t.category);(byCat[k] ||= {n:0,done:0}).n++;if(t.status==="通过")byCat[k].done++;});
   const catProg='<div class="v12OrgProg">'+Object.entries(byCat).map(([k,v])=>'<div><span>'+v12H(k)+'<small>'+v.n+' 项任务</small></span>'+v12Progress(v.done,v.n)+'</div>').join("")+'</div>';
   const top=sups.slice().sort((a,b)=>b.emission-a.emission).slice(0,10);
-  const tierPie=v12Pie(["战略","重要","一般"].map((k,i)=>({label:k+"供应商",value:sups.filter(s=>s.tier===k).length,display:sups.filter(s=>s.tier===k).length+" 家",color:["#26890D","#86BC25","#A3B18A"][i]})),{size:150,center:[String(sups.length),"家供应商"]});
-  const catPie=v12Pie(V12_SUP_CATS.map((c,i)=>({label:c,value:sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0),display:v12Big(sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0))+" t"})).filter(d=>d.value>0),{size:150,legend:true});
+  const tierPie=v12Pie(["战略","重要","一般"].map((k,i)=>({label:k+"供应商",value:sups.filter(s=>s.tier===k).length,display:sups.filter(s=>s.tier===k).length+" 家",color:["#26890D","#86BC25","#A3B18A"][i],action:"v12SupDrill('tier','"+k+"')"})),{size:150,center:[String(sups.length),"家供应商"]});
+  const catPie=v12Pie(V12_SUP_CATS.map((c,i)=>({label:c,value:sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0),display:v12Big(sups.filter(s=>s.cat===c).reduce((a,s)=>a+s.emission,0))+" t",action:"v12SupDrill('cat','"+c+"')"})).filter(d=>d.value>0),{size:150,legend:true});
   const ddc=k=>sups.filter(s=>s.dd===k).length;
   const risk=v12Scatter(sups.map(s=>({x:s.esg,y:Math.min(3.9,Math.max(0.05,s.intensity)),r:3+Math.sqrt(s.spend/16000),color:{"高":"#D92D20","中":"#B7791F","低":"#26890D"}[s.risk],label:s.name+" · ESG "+s.esg+" · 强度 "+s.intensity.toFixed(2)+" tCO₂e/万元",tag:"",action:"v12OpenSupplier('"+s.code+"')"})),
     {width:560,height:440,xmin:40,xmax:100,ymin:0,ymax:Math.min(4,Math.max(...sups.map(s=>s.intensity))*1.1),xLabel:"ESG 评分",yLabel:"碳强度 tCO₂e/万元",quad:[70,1.0],quadLabels:[["高排放 · 低 ESG",54,30],["高排放 · 高 ESG",540,30,"end"],["低排放 · 低 ESG",54,396],["低排放 · 高 ESG",540,396,"end"]]});
@@ -131,13 +144,14 @@ function v12RemindSup(id){showToast("已向供应商发送催办通知（站内�
 
 // ================= 供应商管理 =================
 function v12SupplierMgmt() {
-  const f=v12State.supCat||"",r=v12State.supRisk||"",q=(v12State.supQ||"").toLowerCase();
-  const all=v12Suppliers(),list=all.filter(s=>(!f||s.cat===f)&&(!r||s.risk===r)&&(!q||(s.name+s.code).toLowerCase().includes(q)));
+  const f=v12State.supCat||"",r=v12State.supRisk||"",tr=v12State.supTier||"",q=(v12State.supQ||"").toLowerCase();
+  const all=v12Suppliers(),list=all.filter(s=>(!f||s.cat===f)&&(!r||s.risk===r)&&(!tr||s.tier===tr)&&(!q||(s.name+s.code).toLowerCase().includes(q)));
   const tasks=v12SupTasksAll();
   return v12Head("供应商管理",'<button class="btn" onclick="v12ErpImport()">从 ERP 导入</button><button class="btn primary" onclick="v12NewSupplier()">新增供应商</button>')+
     '<div class="statRow">'+v12Kpi("供应商",String(all.length),"家 · ERP "+all.filter(s=>s.src==="ERP").length+" · 手工 "+all.filter(s=>s.src==="手工").length)+v12Kpi("战略供应商",String(all.filter(s=>s.tier==="战略").length),"家 · 采购额 ≥ 10 亿元")+
       v12Kpi("平均 ESG 评分",String(Math.round(all.reduce((a,s)=>a+s.esg,0)/all.length)),"分")+v12Kpi("高风险",String(all.filter(s=>s.risk==="高").length),"家","v12Set('supRisk','高')","badText")+'</div>'+
     v12Panel("供应商名录",'<div class="taskToolbar"><label>物资类别<select onchange="v12Set(\'supCat\',this.value)"><option value="">全部</option>'+V12_SUP_CATS.map(c=>'<option '+(c===f?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
+      '<label>分级<select onchange="v12Set(\'supTier\',this.value)"><option value="">全部</option>'+["战略","重要","一般"].map(c=>'<option '+(c===tr?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
       '<label>风险等级<select onchange="v12Set(\'supRisk\',this.value)"><option value="">全部</option>'+["高","中","低"].map(c=>'<option '+(c===r?'selected':'')+'>'+c+'</option>').join("")+'</select></label>'+
       '<label class="taskSearch">搜索<input placeholder="供应商名称 / 编码" value="'+v12H(v12State.supQ||"")+'" onchange="v12Set(\'supQ\',this.value)"></label><span>'+list.length+' 家</span></div>'+
       v12Table(["编码","供应商","物资类别","地区","分级","年采购额 (万元)","采购相关排放 (tCO₂e)","核算方式","ESG","风险","碳数据",""],list.map(s=>{
@@ -193,7 +207,7 @@ function v12OpenSupplier(code,tab) {
   }
   v12Modal(v12H(s.name)+' <small class="muted">'+s.code+'</small>',v12Tabs([["base","基本信息"],["esg","ESG 画像"],["carbon","碳数据"],["dd","尽职调查"]],tab,"v12SupTab")+'<div class="v12ModalBody">'+body+'</div>',
     '<button class="btn" data-close-modal="1">关闭</button>'+(tab==="dd"&&s.dd!=="已完成"&&!v12Is("supplier")?'<button class="btn" onclick="v12StartDD(\''+s.code+'\')">'+(s.dd==="进行中"?'完成尽调':'启动尽调')+'</button>':'')+
-    (!v12Is("supplier")?'<button class="btn" onclick="v12State.reportSup=\''+s.code+'\';closeModal();go(\'供应链碳排放\',\'供应商分析报告\')">分析报告</button><button class="btn primary" onclick="closeModal();v12NewSupTask(\''+s.code+'\')">发起数据收集</button>':''));
+    (!v12Is("supplier")?'<button class="btn" onclick="v12State.reportSup=\''+s.code+'\';v12State.keepRep=1;closeModal();go(\'供应链碳排放\',\'供应商分析报告\')">分析报告</button><button class="btn primary" onclick="closeModal();v12NewSupTask(\''+s.code+'\')">发起数据收集</button>':''));
 }
 function v12SupTab(t){v12OpenSupplier(v12State.supOpen,t);}
 function v12StartDD(code){const s=v12Sup(code);(v12().dd ||= {})[s.name]=s.dd==="进行中"?"已完成":"进行中";v12SupRefresh();v12Persist();v12OpenSupplier(code,"dd");render();showToast("尽调状态已更新");}
@@ -293,10 +307,27 @@ function v12ReviewSupTask(id,ok) {
 }
 
 // ================= 供应商分析报告 =================
+function v12SupReports(){const v=v12();if(!v.supReports){v.supReports={};v12Suppliers().slice().sort((a,b)=>b.emission-a.emission).slice(0,6).forEach((x,i)=>v.supReports[x.code]={at:"2026-11-"+String(18+i).padStart(2,"0"),by:"陈思远",sent:i<4});}return v.supReports;}
+function v12SupReportList() {
+  const sups=v12Suppliers().slice().sort((a,b)=>b.emission-a.emission),rep=v12SupReports(),tasks=v12SupTasksAll();
+  const f=v12State.repCat||"",q=(v12State.repQ||"").toLowerCase();
+  const list=sups.filter(x=>(!f||x.cat===f)&&(!q||(x.name+x.code).toLowerCase().includes(q)));
+  return v12Head("供应商分析报告",'<button class="btn primary" onclick="v12BatchSupReport()">批量生成</button>')+
+    '<div class="statRow">'+v12Kpi("供应商",String(sups.length),"家 · 每家一份年度报告")+v12Kpi("已生成",String(Object.keys(rep).length),"份")+v12Kpi("已发送供应商",String(Object.values(rep).filter(r=>r.sent).length),"份")+v12Kpi("待生成",String(sups.length-Object.keys(rep).length),"份")+'</div>'+
+    v12Panel(reportYear+" 年度供应商报告",'<div class="taskToolbar"><label>物资类别<select onchange="v12Set(\'repCat\',this.value)"><option value="">全部</option>'+V12_SUP_CATS.map(c=>'<option '+(c===f?'selected':'')+'>'+c+'</option>').join("")+'</select></label><label class="taskSearch">搜索<input placeholder="供应商名称 / 编码" value="'+v12H(v12State.repQ||"")+'" onchange="v12Set(\'repQ\',this.value)"></label><span>'+list.length+' 家</span></div>'+
+      v12Table(["供应商","物资类别","分级","采购相关排放 (tCO₂e)","碳数据","ESG","报告","操作"],list.map(x=>{const r=rep[x.code],ts=tasks.filter(t=>t.supplier===x.name);
+        return {click:"v12State.reportSup='"+x.code+"';render()",cells:['<strong>'+v12H(x.name)+'</strong><small class="muted"> '+x.code+'</small>',x.cat,x.tier,fmt(x.emission,0),ts.length?ts.filter(t=>t.status==="通过").length+" / "+ts.length+" 已通过":'<span class="muted">支出法估算</span>',x.esg,
+          r?v12Tag(r.sent?"已发送":"已生成",r.sent?"ok":"blue")+'<small class="muted"> '+r.at+'</small>':v12Tag("待生成","gray"),
+          '<button class="linkBtn" onclick="event.stopPropagation();v12State.reportSup=\''+x.code+'\';render()">'+(r?"查看":"生成")+'</button>'+(r&&!r.sent?'<button class="linkBtn" onclick="event.stopPropagation();v12SendSupReport(\''+x.code+'\')">发送</button>':'')]};})));
+}
+function v12BatchSupReport(){const rep=v12SupReports();let n=0;v12Suppliers().forEach(x=>{if(!rep[x.code]){rep[x.code]={at:v12Today(),by:v12Person(),sent:false};n++;}});v12Persist();render();showToast("已生成 "+n+" 份报告");}
+function v12SendSupReport(code){const r=v12SupReports()[code];if(r){r.sent=true;r.sentAt=v12Today();}v12Persist();render();showToast("报告已发送至供应商门户");}
 function v12SupReport() {
   const sups=v12Suppliers();
   if(v12Is("supplier"))v12State.reportSup=v12Sup(v12MySupplierName())?.code;
-  const s=v12Sup(v12State.reportSup)||sups.slice().sort((a,b)=>b.emission-a.emission)[0];
+  else if(!v12State.reportSup||!v12Sup(v12State.reportSup))return v12SupReportList();
+  const s=v12Sup(v12State.reportSup);
+  if(!v12Is("supplier")){const rep=v12SupReports();if(!rep[s.code]){rep[s.code]={at:v12Today(),by:v12Person(),sent:false};v12Persist();}}
   const tasks=v12SupTasksAll().filter(t=>t.supplier===s.name);
   const all=sups.slice().sort((a,b)=>b.emission-a.emission),rank=all.findIndex(x=>x.code===s.code)+1;
   const s3=yearTotals?yearTotals(reportYear):null;
@@ -305,11 +336,12 @@ function v12SupReport() {
   const peerInt=peers.reduce((a,x)=>a+x.intensity,0)/(peers.length||1);
   const avg=V12_ESG_AXES.map((_,i)=>Math.round(sups.reduce((a,x)=>a+x.esgVals[i],0)/sups.length));
   const T=(h,r,c)=>v12DocTable(h,r,{caption:c});const P=t=>'<p>'+t+'</p>';
+  const hist=[[reportYear-2,s.intensity*1.09],[reportYear-1,s.intensity*1.04],[reportYear,s.intensity]];
   const sections=[
     {title:"1 供应商概况",body:T(["项目","内容"],[["供应商名称",v12H(s.name)],["供应商编码",s.code],["物资类别",s.cat],["地区",s.region],["分级",s.tier+"供应商"],["主要采购物资",v12H(s.items.join("、"))],["管理体系认证",s.certs.join("、")||"无"]],"表 1-1 基本信息")},
-    {title:"2 采购与范围三贡献",body:P(reportYear+" 年度向该供应商采购 "+fmt(s.spend,0)+" 万元，对应采购相关排放 "+fmt(s.emission,0)+" tCO₂e，占供应链采购相关排放的 "+(s.emission/(totalSup||1)*100).toFixed(2)+"%，在 "+sups.length+" 家供应商中排第 "+rank+" 位。")+
-      T(["指标","本供应商","同类别平均"],[["碳强度（tCO₂e / 万元）",s.intensity.toFixed(3),peerInt.toFixed(3)],["核算方式",v12H(s.method),"—"],["范围三类别",v12CatLabel(s.category),"—"]],"表 2-1 排放强度对比")+
-      v12Fig(v12Columns(peers.slice().sort((a,b)=>b.intensity-a.intensity).slice(0,8).map(x=>({label:x.name.slice(0,6),value:x.intensity,color:x.code===s.code?"#26890D":"#C9D5B5",display:x.intensity.toFixed(2)})),{width:560,height:230,barW:40,axisFmt:v=>v.toFixed(1)}),"图 2-1 同类别供应商碳强度对比（tCO₂e / 万元）")},
+    {title:"2 采购与范围三贡献",body:P(reportYear+" 年度北辰石油向贵司采购 "+fmt(s.spend,0)+" 万元，对应采购相关排放 "+fmt(s.emission,0)+" tCO₂e，计入北辰石油"+v12CatLabel(s.category)+"。当前核算方式为「"+v12H(s.method)+"」。")+
+      T(["指标","贵司","同品类平均"],[["碳强度（tCO₂e / 万元）",s.intensity.toFixed(3),peerInt.toFixed(3)],["较同品类平均",((s.intensity-peerInt)/(peerInt||1)*100>0?"+":"")+((s.intensity-peerInt)/(peerInt||1)*100).toFixed(1)+"%","—"],["范围三类别",v12CatLabel(s.category),"—"]],"表 2-1 排放强度对比（同品类平均为匿名统计）")+
+      v12Fig(v12Columns(hist.map(h=>({label:h[0]+" 年",value:h[1],color:h[0]===reportYear?"#26890D":"#A3C77A",display:h[1].toFixed(3),target:peerInt})),{width:560,height:230,barW:56,axisFmt:v=>v.toFixed(2)}),"图 2-1 贵司碳强度变化（红线：同品类平均）")},
     {title:"3 碳数据提交与质量",body:T(["数据对象","单位碳排","核算方法","状态"],tasks.map(t=>[v12H(t.name),t.unitCarbon?t.unitCarbon+" kgCO₂e/"+v12H(t.unit):"—",v12H(t.method||"—"),t.status]),"表 3-1 数据收集任务")+
       P(tasks.length?"共下发 "+tasks.length+" 项数据收集任务，已通过 "+tasks.filter(t=>t.status==="通过").length+" 项。"+(tasks.some(t=>t.status==="退回")?"存在退回任务，主要问题为一手数据不足。":""):"尚未发起数据收集任务，当前采用支出法估算。")},
     {title:"4 ESG 评估",body:v12Fig(v12Radar(V12_ESG_AXES,[{values:s.esgVals,color:"#26890D"},{values:avg,color:"#98A2B3"}],{size:260}),"图 4-1 ESG 画像（绿色：本供应商；灰色：平均）")+
@@ -323,8 +355,9 @@ function v12SupReport() {
   if(v12Is("supplier")){sections.splice(4,1);sections[4].title="5 改进建议";}
   const doc=v12Doc({title:s.name+" 供应商碳绩效分析报告",titleLines:[s.name,"供应商碳绩效分析报告"],en:"Supplier Carbon Performance Report",sub:reportYear+" 年度",
     meta:[["供应商编码",s.code],["物资类别",s.cat],...(v12Is("supplier")?[]:[["风险等级",s.risk]]),["编制单位","北辰石油 · 物资采购中心"],["编制日期",v12Today()]],org:"北辰石油天然气集团有限公司",date:v12Today().slice(0,7).replace("-"," 年 ")+" 月"},sections);
-  const pick=v12Is("supplier")?'':'<select class="v12Select" onchange="v12State.reportSup=this.value;render()">'+all.map(x=>'<option value="'+x.code+'" '+(x.code===s.code?'selected':'')+'>'+v12H(x.name)+'</option>').join("")+'</select>';
-  return v12Head("供应商分析报告",pick+v12DocMenu())+'<div class="wdWrap">'+doc+'</div>';
+  const r=v12SupReports()[s.code];
+  const pick=v12Is("supplier")?'':'<button class="btn" onclick="v12State.reportSup=\'\';render()">‹ 返回报告列表</button>'+(r&&!r.sent?'<button class="btn" onclick="v12SendSupReport(\''+s.code+'\')">发送给供应商</button>':'');
+  return v12Head(v12Is("supplier")?"供应商分析报告":v12H(s.name),pick+v12DocMenu(),v12Is("supplier")?"":"供应链碳排放 / 供应商分析报告 / "+v12H(s.name))+'<div class="wdWrap">'+doc+'</div>';
 }
 
 // ================= 首页卡片 =================
@@ -365,3 +398,5 @@ Object.assign(V12_PAGES_EXTRA, {
 @media(max-width:900px){.v12EsgView{grid-template-columns:1fr}}`;
   const el=document.createElement("style");el.textContent=css;document.head.appendChild(el);
 })();
+
+(function(){const g=go;go=function(top,group,page){if(group==="供应商分析报告"&&!v12State.keepRep)v12State.reportSup="";v12State.keepRep=0;return g.apply(this,arguments);};})();

@@ -117,9 +117,9 @@ function v12EtsWidget() {
   const year=2025,c=etsCalc(year),st=etsStatus(year),cycle=c.cycle,days=daysUntil(cycle.deadline);
   const can=v12R().tops.includes("碳履约");
   return v12Panel("碳履约情况 · "+year+" 年度",'<div class="v12EtsMini"><div class="days"><b>'+days+'</b><span>天<br>清缴截止 '+cycle.deadline+'</span></div>'+
-    '<dl><div><dt>纳入设施</dt><dd>滨海石化热电厂 · 2×350MW</dd></div><div><dt>核查排放（应清缴）</dt><dd>'+fmt(c.verified,0)+' t</dd></div>'+
+    '<dl><div><dt>纳入设施</dt><dd>滨海石化热电厂 · 2 台发电机组</dd></div><div><dt>核查排放（应清缴）</dt><dd>'+fmt(c.verified,0)+' t</dd></div>'+
     '<div><dt>可用配额 + CCER</dt><dd>'+fmt(c.available+c.pending+etsCcerFree(),0)+' t</dd></div><div><dt>缺口</dt><dd class="'+(c.gap<0?'badText':'okText')+'">'+(c.gap<0?fmt(-c.gap,0)+' t':'无')+'</dd></div></dl>'+
-    '<div class="st">'+v12Tag(st.label,st.tone)+'<small>石化装置尚未纳入全国碳市场，仅自备电厂（发电设施）履约</small></div></div>'+
+    '<div class="st">'+v12Tag(st.label,st.tone)+'<small>纳管设施 '+v12Facilities().filter(f=>f.status==="纳管").length+' 个 · 待纳入 '+v12Facilities().filter(f=>f.status!=="纳管").length+' 个</small></div></div>'+
     '<h4 class="v12H4">近年履约</h4>'+v12Table(["年度","核查排放 (t)","核定配额 (t)","状态"],[2023,2024,2025,2026].map(y=>{const k=etsCalc(y),s2=etsStatus(y);return [y+" 年",fmt(k.verified,0),fmt(k.alloc,0),v12Tag(s2.label,s2.tone)];}),{nopage:true}),can?'<button class="linkBtn" onclick="go(\'碳履约\',\'履约工作台\')">履约工作台 ›</button>':'');
 }
 home = function () {
