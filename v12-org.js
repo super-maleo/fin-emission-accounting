@@ -258,7 +258,7 @@ function v12TargetSetup() {
     const m=V12_METHODS[t.method]||V12_METHODS.custom;
     return {cls:t.id===sel?.id?"active":"",cells:['<button class="linkBtn strong" onclick="v12State.targetSel=\''+t.id+'\';render()">'+v12H(t.name)+'</button>',v12ScopeLabel(t.scope),t.type==="intensity"?"强度":"绝对量",'<span class="srcCell">'+m.label+'</span>',
       fmt(v12TBase(t),v12TDigits(t))+' <small>'+v12TUnit(t)+'</small>',t.targetYear,t.reduction+'%',fmt(v12TPath(t,t.targetYear),v12TDigits(t)),t.netZero?'2050 净零':'—',v12Tag(t.status||"已发布","ok"),
-      edit?'<button class="btn" onclick="v12OpenTarget(\''+t.id+'\')">编辑</button>':'']};
+      edit?v12Ops("v12OpenTarget('"+t.id+"')","v12DelTarget('"+t.id+"')"):'']};
   }),{nopage:true}));
   let detail="";
   if(sel){

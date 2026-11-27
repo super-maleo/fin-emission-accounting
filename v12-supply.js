@@ -157,7 +157,7 @@ function v12SupplierMgmt() {
       v12Table(["编码","供应商","物资类别","地区","分级","年采购额 (万元)","采购相关排放 (tCO₂e)","核算方式","ESG","风险","碳数据",""],list.map(s=>{
         const ts=tasks.filter(t=>t.supplier===s.name);
         return {click:"v12OpenSupplier('"+s.code+"')",cells:['<span class="v12Code0">'+s.code+'</span>','<strong>'+v12H(s.name)+'</strong>',s.cat,s.region,v12Tag(s.tier,s.tier==="战略"?"ok":s.tier==="重要"?"blue":"gray"),fmt(s.spend,0),fmt(s.emission,0),v12H(s.method),
-          '<b>'+s.esg+'</b>',v12Tag(s.risk,{"高":"bad","中":"warn","低":"ok"}[s.risk]),ts.length?ts.filter(t=>t.status==="通过").length+" / "+ts.length+" 已通过":'<span class="muted">未发起</span>','<button class="linkBtn" onclick="event.stopPropagation();v12OpenSupplier(\''+s.code+'\')">画像</button>']};
+          '<b>'+s.esg+'</b>',v12Tag(s.risk,{"高":"bad","中":"warn","低":"ok"}[s.risk]),ts.length?ts.filter(t=>t.status==="通过").length+" / "+ts.length+" 已通过":'<span class="muted">未发起</span>',v12Ops("v12SupForm('"+s.code+"')","v12SupDel('"+s.code+"')",'<button class="linkBtn" onclick="event.stopPropagation();v12OpenSupplier(\''+s.code+'\')">画像</button>')]};
       })));
 }
 function v12ErpImport() {

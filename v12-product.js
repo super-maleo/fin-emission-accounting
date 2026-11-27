@@ -190,7 +190,7 @@ function v12ProductInfo() {
   const lines=[...new Set(all.map(p=>p.line))];
   const rows=list.map(p=>({click:"v12OpenProduct('"+v12Q(p.code)+"')",cells:['<span class="v12Code0">'+v12H(p.code)+'</span>','<strong>'+v12H(p.name)+'</strong>',v12H(p.line),v12H(p.fu),fmt(p.sales||0,0),
     p.model?'<b>'+v12Kg(lcaTotal(p.model),0)+'</b><small>kgCO₂e/t · '+v12H(p.model.boundary)+'</small>':'—',
-    v12Tag(p.status,p.status==="已发布"?"ok":p.status==="建模中"?"warn":"gray"),v12H(p.src),'<button class="linkBtn" onclick="event.stopPropagation();v12OpenProduct(\''+v12Q(p.code)+'\')">查看</button>']}));
+    v12Tag(p.status,p.status==="已发布"?"ok":p.status==="建模中"?"warn":"gray"),v12H(p.src),v12Ops("v12ProdForm('"+v12Q(p.code)+"')","v12ProdDel('"+v12Q(p.code)+"')",'<button class="linkBtn" onclick="event.stopPropagation();v12OpenProduct(\''+v12Q(p.code)+'\')">查看</button>')]}));
   return v12Head("产品信息",'<button class="btn" onclick="v12ErpSyncProducts()">从 ERP 同步</button><button class="btn primary" onclick="v12NewProduct()">新增产品</button>')+
     '<div class="statRow">'+v12Kpi("产品",String(all.length),"个 · "+lines.length+" 条产品线")+v12Kpi("已发布碳足迹",String(all.filter(p=>p.status==="已发布").length),"个")+v12Kpi("建模中",String(all.filter(p=>p.status==="建模中").length),"个")+v12Kpi("待建模",String(all.filter(p=>p.status==="待建模").length),"个")+'</div>'+
     v12Panel("产品清单",'<div class="taskToolbar"><label>产品线<select onchange="v12Set(\'prodLine\',this.value)"><option value="">全部</option>'+lines.map(l=>'<option '+(l===f?'selected':'')+'>'+v12H(l)+'</option>').join("")+'</select></label>'+
