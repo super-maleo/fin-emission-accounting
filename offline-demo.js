@@ -1,4 +1,4 @@
-const storageKey = "deloitte-carbon-petro-v1";
+const storageKey = "deloitte-carbon-v12";
 let savedDemoData;
 try {
   savedDemoData = JSON.parse(localStorage.getItem(storageKey));
